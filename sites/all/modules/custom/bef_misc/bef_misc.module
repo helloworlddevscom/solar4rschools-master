@@ -1,0 +1,194 @@
+<?php
+
+include_once 'includes/bef_misc.theme.inc';
+
+/**
+ * Implements hook_theme_registry_alter().
+ */
+function bef_misc_theme_registry_alter(&$theme_registry) {
+  if (!empty($theme_registry['form_element'])) {
+    $theme_registry['form_element']['function'] = 'bef_misc_form_element';
+  }
+}
+
+/**
+ * Implements hook_init().
+ */
+function bef_misc_init() {
+  $legacy_domain = variable_get('bef_misc_legacy_domain', 'solar4rschools.org');
+  $primary_domain = variable_get('bef_misc_primary_domain', 'cebrightfutures.org');
+  $current_domain = $_SERVER['HTTP_HOST'];
+  $path = request_path();
+
+//  $subdomain = variable_get('bef_misc_redirect_www', TRUE) ? 'www.' : '';
+  // On legacy domain, check path to see if we should redirect
+  if ($current_domain === $legacy_domain || $current_domain === "www.${legacy_domain}") {
+    $www = $current_domain === $legacy_domain ? 'www.' : '';
+
+    if (strpos($path, 'kiosk-') !== 0 && strpos($path, 'generation-') !== 0) {
+      drupal_goto('https://' . $www . $primary_domain . '/' . $path, array(
+        'query' => drupal_get_query_parameters(),
+      ), 301);
+    }
+  }
+  // Redirect http to https for primary domain.
+  else if (!drupal_is_https() && ($current_domain === $primary_domain || $current_domain === "www.${primary_domain}")) {
+    $www = $current_domain === $primary_domain ? 'www.' : '';
+
+    drupal_goto('https://' . $www . $current_domain . '/' . $path, array(
+      'query' => drupal_get_query_parameters(),
+    ), 301);
+  }
+}
+
+/**
+ * Implements hook_form_alter().
+ * Changes the Page Title of the add activity content type
+ */
+function bef_misc_form_alter(&$form, &$form_state, $form_id) {
+  // Changes the Page Title of the form used to add "Activity" content type
+  if (($form_id == 'activity_node_form') && (!isset($form['#node']->nid))) {
+    drupal_set_title(t('Upload New Teacher Activity'));
+  }
+
+  if (($form_id == 'user_profile_form')) {
+    $form['#after_build'][] = 'bef_misc_timezone_modify';
+  }
+}
+
+/**
+ * Call the new timezones for the user edit page
+ */
+function bef_misc_timezone_modify($form, &$form_state) {
+  $form['timezone']['timezone']['#options'] = _bef_misc_timezones();
+  return $form;
+}
+
+/**
+ * Custom Timezone display for BEF
+ * Generate an array of time zones and their local time&date.
+ *
+ * @param $blank
+ *   If evaluates true, prepend an empty time zone option to the array.
+ */
+function _bef_misc_timezones($blank = NULL) {
+  $zonelist = timezone_identifiers_list();
+  $zones = $blank ? array('' => t('- None selected -')) : array();
+  foreach ($zonelist as $zone) {
+    // Because many time zones exist in PHP only for backward compatibility
+    // reasons and should not be used, the list is filtered by a regular
+    // expression.
+    if (preg_match('!^((Africa|America|Antarctica|Arctic|Asia|Atlantic|Australia|Europe|Indian|Pacific)/|UTC$)!', $zone)) {
+      $zones[$zone] = t('@zone: @date', array(
+        '@zone' => t(str_replace('_', ' ', $zone)),
+        '@date' => format_date(REQUEST_TIME, 'custom', 'D, n/j - h:ia', $zone)
+        )
+      );
+    }
+  }
+  // Sort the translated time zones alphabetically.
+  asort($zones);
+  return $zones;
+}
+
+/**
+ * Implements hook_custom_theme().
+ */
+function bef_misc_custom_theme() {
+  // We cannot use menu_get_item() or menu_get_object() here because it will
+  // cause a theme initialization when the node is loaded. Since we haven't
+  // determined the theme yet, we cannot initialize it.
+  $path = current_path();
+  if (drupal_match_path($path, 'node/*')) {
+    $nid = arg(1);
+    $extra = arg(2);
+    $ignored_extras = array(
+      'edit',
+      'revisions',
+      'devel',
+    );
+    if ((empty($extra) || !in_array($extra, $ignored_extras)) && !empty($nid)) {
+      $type = db_query('SELECT type FROM {node} WHERE nid=:nid AND status=1', array(
+        ':nid' => $nid
+      ))->fetchField();
+      if ($type == 'kiosk') {
+        return 'kiosk';
+      }
+    }
+  }
+}
+
+/**
+ * Implements hook_stream_wrappers().
+ */
+function bef_misc_stream_wrappers() {
+  return array(
+      'legacy' => array(
+          'name' => t('Legacy files'),
+          'class' => 'LegacyFilesStreamWrapper',
+          'description' => t('Provides read-only paths to legacy files.'),
+          //'type' => STREAM_WRAPPERS_READ_VISIBLE,
+      ),
+      'legtheme' => array(
+          'name' => t('Legacy theme files'),
+          'class' => 'LegacyThemeStreamWrapper',
+          'description' => t('Provides read-only paths to legacy theme files.'),
+          //'type' => STREAM_WRAPPERS_READ_VISIBLE,
+      ),
+  );
+}
+
+/**
+ * Legacy files (legacy://) stream wrapper class.
+ */
+class LegacyFilesStreamWrapper extends DrupalPublicStreamWrapper {
+  public function getDirectoryPath() {
+    return 'sites/all/files';
+  }
+
+  public function getExternalUrl() {
+    // Using: file_create_url() complained of: file_stream_wrapper_get_instance_by_uri($uri = *uninitialized*)
+    $path = file_uri_target($this->uri);
+
+    return url("sites/all/files/$path", array('absolute' => TRUE));
+  }
+}
+
+/**
+ * Legacy theme (legtheme://) stream wrapper class.
+ */
+class LegacyThemeStreamWrapper extends DrupalPublicStreamWrapper {
+  public function getDirectoryPath() {
+    return 'sites/all/themes/kiosk/images';
+  }
+
+  public function getExternalUrl() {
+    // Using: file_create_url() complained of: file_stream_wrapper_get_instance_by_uri($uri = *uninitialized*)
+    $path = file_uri_target($this->uri);
+
+    return url("sites/all/themes/kiosk/images/$path", array('absolute' => TRUE));
+  }
+}
+
+/**
+ * Implements hook_mail_alter().
+ *
+ * Track emails to troubleshoot account signup emails with missing accounts
+ */
+function bef_misc_mail_alter(&$message) {
+  if ($message['id'] == 'user_register_pending_approval_admin'){
+    $log_message = "User register pending approval emails sent. <br>";
+    $log_message .= "User ID: @user_id <br>";
+    $log_message .= "User name: @user_name <br>";
+    $log_message .= "Email: @user_email <br>";
+    $log_message .= "message sent: @sent";
+    $sent = ($message['send'] ? 'true' : 'false');
+    $args = array(
+      '@user_id' => $message['params']['account']->uid,
+      '@user_name' => $message['params']['account']->realname,
+      '@user_email' => $message['params']['account']->mail,
+      '@sent' => $sent
+    );
+    watchdog('bef_misc', $log_message, $args);
+  }
+}

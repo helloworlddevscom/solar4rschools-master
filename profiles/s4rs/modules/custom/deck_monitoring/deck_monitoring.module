@@ -1,0 +1,58 @@
+<?php
+/**
+ * @file
+ * DECK Monitoring API module.
+ */
+
+/**
+ * Page callback: Allows setting the DECK API key.
+ *
+ * Path: admin/config/providers/deck-monitoring
+ */
+function deck_monitoring_admin($form, &$form_state) {
+  $form['deck_monitoring_api_key'] = array(
+    '#type' => 'textfield',
+    '#title' => t('DECK Monitoring API key'),
+    '#default_value' => variable_get('deck_monitoring_api_key', ''),
+    '#size' => 36,
+    '#maxlength' => 36,
+    '#description' => t('Your DECK Monitoring API key.'),
+    '#required' => TRUE,
+  );
+
+  module_load_include('inc', 'generation', 'generation.admin');
+  _generation_set_admin_provider_breadcrumb();
+  return system_settings_form($form);
+}
+
+/**
+ * Implements hook_menu().
+ */
+function deck_monitoring_menu() {
+  $items = array();
+  $items['admin/config/generation/providers/deck-monitoring'] = array(
+    'title' => 'DECK Monitoring',
+    'description' => 'Edit DECK Monitoring API configuration.',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('deck_monitoring_admin'),
+    'access arguments' => array('administer generation api'),
+    'type' => MENU_NORMAL_ITEM,
+  );
+  return $items;
+}
+
+/**
+ * Implements hook_generation_providers().
+ */
+function deck_monitoring_generation_providers() {
+  return array(
+    'deck_monitoring' => array(
+      'name' => t('DECK Monitoring'),
+      'description' => t('Queries data using the DECK Monitoring API.'),
+      'site types' => array('deck'),
+      'provider class' => 'DeckMonitoringGenerationProvider',
+      'file' => 'deck_monitoring.generation.inc',
+      'configure' => 'admin/config/generation/providers/deck-monitoring',
+    ),
+  );
+}

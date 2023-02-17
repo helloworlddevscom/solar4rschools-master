@@ -1,0 +1,64 @@
+<?php
+/**
+ * @file
+ * Updates and install hooks for core feature.
+ */
+
+/**
+ * Enable and configure the login_destination module.
+ */
+function solar_core_update_7000() {
+  module_enable(array(login_destination));
+  $redirect = array(
+    'destination_type' => '0',
+    'destination' => '<current>',
+    'triggers' => 'a:1:{s:5:"login";s:5:"login";}',
+    'pages_type' => '0',
+    'pages' => '',
+    'roles' => 'a:0:{}',
+    'weight' => '0',
+    'id' => '1',
+  );
+  // Submit the value to the db.
+  drupal_write_record('login_destination', $redirect);
+}
+
+/**
+ * Update article view mode settings.
+ */
+function solar_core_update_7001() {
+  $settings = variable_get('field_bundle_settings_node__articles', array());
+  $settings['extra_fields']['display']['flag_my_background_topics']['teaser']['visible'] = FALSE;
+  variable_set('field_bundle_settings_node__articles', $settings);
+}
+
+/**
+ * Enable date_views and cebf_events modules.
+ */
+function solar_core_update_7002() {
+  $module_list = array(
+    'date_views',
+    'cebf_events',
+  );
+  module_enable($module_list, TRUE);
+}
+
+/**
+ * Enable calendar module.
+ */
+function solar_core_update_7003() {
+  $module_list = array(
+    'calendar',
+  );
+  module_enable($module_list, TRUE);
+}
+
+/**
+ * Enable addtocal module.
+ */
+function solar_core_update_7004() {
+  $module_list = array(
+    'addtocal',
+  );
+  module_enable($module_list, TRUE);
+}

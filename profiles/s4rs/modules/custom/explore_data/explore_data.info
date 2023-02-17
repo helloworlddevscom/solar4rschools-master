@@ -1,0 +1,5 @@
+core = 7.x
+dependencies[] = "generation_charts"
+description = "Provides the Explore Data page."
+name = "Explore Data"
+package = "Solar 4R Schools"

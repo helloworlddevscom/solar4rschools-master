@@ -1,0 +1,334 @@
+/**
+ * Base styling for form elements.
+ */
+
+
+$form-field-height: 30px;
+
+
+// Forms
+
+form {
+  margin: 20px 0;
+}
+
+
+// Placeholders
+
+::placeholder {
+  color: #868585;
+}
+::-webkit-input-placeholder {
+  color: #868585;
+}
+::-moz-placeholder {
+  color: #868585;
+}
+:-ms-input-placeholder {
+  color: #868585;
+}
+:-moz-placeholder {
+  color: #868585;
+}
+
+
+// Labels
+
+label {
+  color: #595959;
+  cursor: pointer;
+  display: block;
+  font-size: 0.875rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+}
+
+label .form-required {
+  color: #B5171A;
+}
+
+
+// Descriptions
+
+form .description {
+  font-size: .8rem;
+  line-height: 1.5;
+}
+
+// Select
+
+select {
+  max-width: 100%;
+  height: $form-field-height;
+  -webkit-border-radius: 3px;
+  -moz-border-radius: 3px;
+  -ms-border-radius: 3px;
+  -o-border-radius: 3px;
+  border-radius: 3px;
+  background: #FAFAFA url("data:image/svg+xml;base64, PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZlcnNpb249IjEuMSIgeD0iMHB4IiB5PSIwcHgiIHdpZHRoPSI2cHgiIGhlaWdodD0iM3B4IiB2aWV3Qm94PSIwIDAgNiAzIiBlbmFibGUtYmFja2dyb3VuZD0ibmV3IDAgMCA2IDMiIHhtbDpzcGFjZT0icHJlc2VydmUiPjxwb2x5Z29uIHBvaW50cz0iNS45OTIsMCAyLjk5MiwzIC0wLjAwOCwwICIvPjwvc3ZnPg==") no-repeat;
+  background-position-x: 97%;
+  background-position-y: center;
+  border: 1px solid #CCCCCC;
+  font-size: 14px;
+  color: $color--medium-gray;
+  -webkit-appearance: none !important; // sass-lint:disable-line no-important
+
+  // Set font-size of select list on IOS and Android.
+  // Font-size must be 16px or greater to prevent automatic zoom.
+  // Because Chosen does not work on IOS and Android, we have to resort to
+  // this media query to target devices whose primary pointing system does not support hover
+  // in order to style the default select list which will only be visible on IOS and Android.
+  @media (hover:none), (hover:on-demand) {
+    font-size: 16px;
+  }
+}
+select:hover, select:focus {
+  background: #F2F2F2 url("data:image/svg+xml;base64, PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZlcnNpb249IjEuMSIgeD0iMHB4IiB5PSIwcHgiIHdpZHRoPSI2cHgiIGhlaWdodD0iM3B4IiB2aWV3Qm94PSIwIDAgNiAzIiBlbmFibGUtYmFja2dyb3VuZD0ibmV3IDAgMCA2IDMiIHhtbDpzcGFjZT0icHJlc2VydmUiPjxwb2x5Z29uIHBvaW50cz0iNS45OTIsMCAyLjk5MiwzIC0wLjAwOCwwICIvPjwvc3ZnPg==") no-repeat;
+  background-position-x: 97%;
+  background-position-y: center;
+  border-color: #999999;
+}
+
+select::-ms-expand {
+  display: none;
+}
+
+@-moz-document url-prefix() {
+  select {
+    background: #FAFAFA;
+  }
+
+  select:hover, select:focus {
+    background: #F2F2F2;
+  }
+}
+
+// Text type inputs
+
+input[type="text"],
+input[type="password"],
+input[type="date"],
+input[type="datetime"],
+input[type="datetime-local"],
+input[type="month"],
+input[type="week"],
+input[type="email"],
+input[type="number"],
+input[type="search"],
+input[type="tel"],
+input[type="time"],
+input[type="url"],
+textarea {
+  -webkit-transition: box-shadow 0.45s, border-color 0.45s ease-in-out;
+  -moz-transition: box-shadow 0.45s, border-color 0.45s ease-in-out;
+  -o-transition: box-shadow 0.45s, border-color 0.45s ease-in-out;
+  transition: box-shadow 0.45s, border-color 0.45s ease-in-out;
+  -webkit-border-radius: 3px;
+  -moz-border-radius: 3px;
+  -ms-border-radius: 3px;
+  -o-border-radius: 3px;
+  border-radius: 3px;
+  -webkit-box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.1);
+  -moz-box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.1);
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.1);
+  background-color: #FAFAFA;
+  border: 1px solid #CCCCCC;
+  color: $color--medium-gray;
+  display: block;
+  font-size: 14px;
+  height: $form-field-height;
+  margin: 0 0 15px 0;
+  padding: 0.5rem;
+  width: 100%;
+  padding: 0.25rem;
+  -webkit-appearance: none;
+
+  // Match font-size of select list on IOS and Android.
+  // Because Chosen does not work on IOS and Android, we have to resort to
+  // this media query to target devices whose primary pointing system does not support hover.
+  @media (hover:none), (hover:on-demand) {
+    padding: .2em .5em;
+    font-size: 16px;
+  }
+}
+input[type="text"]:focus,
+input[type="password"]:focus,
+input[type="date"]:focus,
+input[type="datetime"]:focus,
+input[type="datetime-local"]:focus,
+input[type="month"]:focus,
+input[type="week"]:focus,
+input[type="email"]:focus,
+input[type="number"]:focus,
+input[type="search"]:focus,
+input[type="tel"]:focus,
+input[type="time"]:focus,
+input[type="url"]:focus,
+textarea:focus {
+  -webkit-box-shadow: 0 0 5px #999999;
+  -moz-box-shadow: 0 0 5px #999999;
+  box-shadow: 0 0 5px #999999;
+  border-color: #999999;
+}
+input[type="text"]:focus,
+input[type="password"]:focus,
+input[type="date"]:focus,
+input[type="datetime"]:focus,
+input[type="datetime-local"]:focus,
+input[type="month"]:focus,
+input[type="week"]:focus,
+input[type="email"]:focus,
+input[type="number"]:focus,
+input[type="search"]:focus,
+input[type="tel"]:focus,
+input[type="time"]:focus,
+input[type="url"]:focus,
+textarea:focus {
+  background: whitesmoke;
+  border-color: #999999;
+  outline: none;
+}
+input[type="text"][disabled],
+input[type="password"][disabled],
+input[type="date"][disabled],
+input[type="datetime"][disabled],
+input[type="datetime-local"][disabled],
+input[type="month"][disabled],
+input[type="week"][disabled],
+input[type="email"][disabled],
+input[type="number"][disabled],
+input[type="search"][disabled],
+input[type="tel"][disabled],
+input[type="time"][disabled],
+input[type="url"][disabled],
+textarea[disabled] {
+  background-color: #F7F7F7;
+}
+input[type="text"].error,
+input[type="password"].error,
+input[type="date"].error,
+input[type="datetime"].error,
+input[type="datetime-local"].error,
+input[type="month"].error,
+input[type="week"].error,
+input[type="email"].error,
+input[type="number"].error,
+input[type="search"].error,
+input[type="tel"].error,
+input[type="time"].error,
+input[type="url"].error,
+textarea.error {
+  background-color: #F9ECED;
+  border-color: #B5171A;
+}
+input[type="text"].error:focus,
+input[type="password"].error:focus,
+input[type="date"].error:focus,
+input[type="datetime"].error:focus,
+input[type="datetime-local"].error:focus,
+input[type="month"].error:focus,
+input[type="week"].error:focus,
+input[type="email"].error:focus,
+input[type="number"].error:focus,
+input[type="search"].error:focus,
+input[type="tel"].error:focus,
+input[type="time"].error:focus,
+input[type="url"].error:focus,
+textarea.error:focus {
+  background: whitesmoke;
+  border-color: #999999;
+}
+
+.field-prefix + input[type="text"] {
+  display: inline;
+  width: auto;
+}
+
+input[type="file"],
+input[type="checkbox"],
+input[type="radio"],
+select {
+  margin: 0 0 1rem 0;
+}
+
+input[type="checkbox"] + label,
+input[type="radio"] + label {
+  display: inline-block;
+  margin-left: 0.5rem;
+  margin-right: 1rem;
+  margin-bottom: 0;
+  vertical-align: baseline;
+  font-weight: normal;
+}
+
+input[type="file"] {
+  width: 100%;
+}
+
+
+// Chosen
+
+.chosen-container {
+  width: 100% !important; // sass-lint:disable-line no-important
+  margin-bottom: 15px;
+}
+
+.chosen-container .chosen-choices {
+  -webkit-transition: box-shadow 0.45s, border-color 0.45s ease-in-out;
+  -moz-transition: box-shadow 0.45s, border-color 0.45s ease-in-out;
+  -o-transition: box-shadow 0.45s, border-color 0.45s ease-in-out;
+  transition: box-shadow 0.45s, border-color 0.45s ease-in-out;
+  -webkit-border-radius: 3px;
+  -moz-border-radius: 3px;
+  -ms-border-radius: 3px;
+  -o-border-radius: 3px;
+  border-radius: 3px;
+  -webkit-box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.1);
+  -moz-box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.1);
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.1);
+  background-color: #FAFAFA;
+  border: 1px solid #CCCCCC;
+  color: $color--medium-gray;
+  display: block;
+  font-size: 0.875rem;
+  min-height: $form-field-height;
+  margin: 0 0 1rem 0;
+  padding: 0.5rem;
+  width: 100%;
+  padding: 0;
+  margin: 0;
+}
+.chosen-container .chosen-choices:focus {
+  -webkit-box-shadow: 0 0 5px #999999;
+  -moz-box-shadow: 0 0 5px #999999;
+  box-shadow: 0 0 5px #999999;
+  border-color: #999999;
+}
+.chosen-container .chosen-choices:focus {
+  background: whitesmoke;
+  border-color: #999999;
+  outline: none;
+}
+.chosen-container .chosen-choices[disabled] {
+  background-color: #F7F7F7;
+}
+
+.chosen-container-multi .chosen-choices li.search-choice {
+  margin: 3px 0 0 5px;
+}
+
+.chosen-container-multi .chosen-choices li.search-field input[type="text"] {
+  font-family: inherit;
+  color: $color--medium-gray;
+  padding: 0.25rem;
+  margin: 0;
+  height: $form-field-height - 2px;
+
+  &.default {
+    color: #868585;
+  }
+}
+
+.chosen-container-single .chosen-single {
+  height: 25px;
+}

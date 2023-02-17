@@ -1,0 +1,30 @@
+/**
+ * @file
+ * Bedrock Variolite panels layout Admin CSS.
+ */
+
+.variolite-sidebar {
+  float: left;
+  margin-right: 1%;
+  width: 19%;
+}
+
+.variolite-content-container {
+  float: right;
+  width: 80%;
+}
+
+.variolite-content-header {
+  margin-bottom: 1%;
+}
+
+.variolite-content-main-column {
+  float: left;
+  width: 80%;
+}
+
+.variolite-content-secondary-column {
+  float: right;
+  margin-left: 1%;
+  width: 19%;
+}

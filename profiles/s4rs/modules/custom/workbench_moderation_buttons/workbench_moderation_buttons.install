@@ -1,0 +1,16 @@
+<?php
+/**
+ * @file
+ * Workbench Moderation Buttons installation file.
+ */
+
+/**
+ * Implements hook_install().
+ */
+function workbench_moderation_buttons_install() {
+  db_update('system')
+    // Since workbench moderation is at 5.
+    ->fields(array('weight' => 6))
+    ->condition('name', 'workbench_moderation_buttons')
+    ->execute();
+}

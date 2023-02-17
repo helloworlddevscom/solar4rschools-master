@@ -1,0 +1,114 @@
+diff --git a/contrib/search_api_facetapi/search_api_facetapi.module b/contrib/search_api_facetapi/search_api_facetapi.module
+index 3696eae5..eaf25358 100644
+--- a/contrib/search_api_facetapi/search_api_facetapi.module
++++ b/contrib/search_api_facetapi/search_api_facetapi.module
+@@ -507,6 +507,62 @@ function search_api_facetapi_search_api_admin_index_fields_submit($form, &$form_
+   cache_clear_all($cid, 'cache', TRUE);
+ }
+ 
++/**
++ * Implements hook_form_FORM_ID_alter() for views_exposed_form().
++ *
++ * Custom integration for facets. When a Views exposed filter is modified on a
++ * search results page, any facets which have been already selected will be
++ * removed. This (optionally) adds hidden fields for each facet so their values
++ * are retained.
++ */
++function search_api_facetapi_form_views_exposed_form_alter(array &$form, array &$form_state) {
++  if (empty($form_state['view'])) {
++    return;
++  }
++  $view = $form_state['view'];
++
++  // Check if this is a Search API-based view and if the "Preserve facets"
++  // option is enabled. ("search_api_multi" would be the exact base table name,
++  // not just a prefix, but since it's just 16 characters long, we can still use
++  // this check to make the condition less complex.)
++  $base_table_prefix = substr($view->base_table, 0, 17);
++  if (in_array($base_table_prefix, array('search_api_index_', 'search_api_multi'))
++      && _search_api_preserve_views_facets($view)) {
++    // Get query parameters.
++    $query_parameters = drupal_get_query_parameters();
++
++    // Check if any facet query parameters are provided.
++    if (!empty($query_parameters['f'])) {
++      // Iterate through facet query parameters.
++      foreach ($query_parameters['f'] as $key => $value) {
++        // Add hidden form field for facet parameter.
++        $form['f[' . $key . ']'] = array(
++          '#type' => 'hidden',
++          '#value' => $value,
++          '#weight' => -1,
++        );
++      }
++    }
++  }
++}
++
++/**
++ * Checks whether "Preserve facets" option is enabled on the given view.
++ *
++ * If the view display is overridden, use its configuration. Otherwise, use the
++ * default configuration.
++ *
++ * @param view $view
++ *   The search view.
++ *
++* @return bool
++*   TRUE if "Preserve facets" is enabled, FALSE otherwise.
++*/
++function _search_api_preserve_views_facets(view $view) {
++  $query_options = $view->display_handler->get_option('query');
++  return !empty($query_options['options']['preserve_facet_query_args']);
++}
++
+ /**
+  * Computes the granularity of a date facet filter.
+  *
+diff --git a/contrib/search_api_views/README.txt b/contrib/search_api_views/README.txt
+index 50cfce1c..61c9cc1c 100644
+--- a/contrib/search_api_views/README.txt
++++ b/contrib/search_api_views/README.txt
+@@ -137,6 +137,12 @@ Fulltext search" filter or contextual filter – using a normal filter on a
+ fulltext field won't parse the search keys, which means multiple words will only
+ be found when they appear as that exact phrase.
+ 
++- Preserve facets while using filters
++This is another option under "Advanced" > "Query settings", only available when
++the Search Facets module is installed. When enabled, facet filters are persisted
++when submitting an exposed filters form. When disabled (the default), exposed
++filters will override and reset the selected facet filters.
++
+ FAQ: Why „*Indexed* Node“?
+ --------------------------
+ The group name used for the search result itself (in fields, filters, etc.) is
+diff --git a/contrib/search_api_views/includes/query.inc b/contrib/search_api_views/includes/query.inc
+index ae58b9a7..6fb7ea47 100644
+--- a/contrib/search_api_views/includes/query.inc
++++ b/contrib/search_api_views/includes/query.inc
+@@ -197,6 +197,10 @@ public function option_definition() {
+       'parse_mode' => array(
+         'default' => 'terms',
+       ),
++      'preserve_facet_query_args' => array(
++        'default' => FALSE,
++        'bool' => TRUE,
++      ),
+     );
+   }
+ 
+@@ -243,6 +247,14 @@ public function options_form(&$form, &$form_state) {
+         );
+       }
+     }
++    if (module_exists('facetapi')) {
++      $form['preserve_facet_query_args'] = array(
++        '#type' => 'checkbox',
++        '#title' => t('Preserve facets while using filters'),
++        '#description' => t('By default, changing an exposed filter would reset all selected facets. This option allows you to prevent this behavior.'),
++        '#default_value' => $this->options['preserve_facet_query_args'],
++      );
++    }
+   }
+ 
+   /**

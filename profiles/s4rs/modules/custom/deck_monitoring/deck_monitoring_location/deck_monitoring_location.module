@@ -1,0 +1,165 @@
+<?php
+/**
+ * @file
+ * Provides DECK Monitoring Location content type.
+ */
+
+include_once 'deck_monitoring_location.features.inc';
+
+/**
+ * Implements hook_form().
+ */
+function deck_monitoring_location_form(&$node) {
+  $type = node_type_get_type($node);
+
+  if ($type->has_title) {
+    $form['title'] = array(
+      '#type' => 'textfield',
+      '#title' => check_plain($type->title_label),
+      '#required' => TRUE,
+      '#default_value' => $node->title,
+      '#weight' => -5,
+    );
+  }
+  if ($type->has_body) {
+    $form['body_field'] = node_body_field(
+      $node,
+      $type->body_label,
+      $type->min_word_count
+    );
+  }
+
+  // Custom fields.
+  $info = $node->deck_monitoring;
+  $form['deck_monitoring'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('DECK Monitoring Location properties'),
+    '#description' => t('This fieldset shows the information returned by the DECK API.'),
+  );
+  $form['deck_monitoring']['location_id'] = array(
+    '#type' => 'item',
+    '#size' => 50,
+    '#maxlength' => 64,
+    '#title' => t('Location ID'),
+    '#description' => t('DECK Monitoring Location ID.'),
+    '#value' => isset($info->location_id) ? $info->location_id : '',
+    '#disabled' => TRUE,
+  );
+  $form['deck_monitoring']['lat'] = array(
+    '#type' => 'item',
+    '#size' => 50,
+    '#maxlength' => 64,
+    '#title' => t('Latitude'),
+    '#description' => t('Latitude of the Location.'),
+    '#value' => isset($info->lat) ? $info->lat : '',
+    '#disabled' => TRUE,
+  );
+  $form['deck_monitoring']['lon'] = array(
+    '#type' => 'item',
+    '#size' => 50,
+    '#maxlength' => 64,
+    '#title' => t('Longitude'),
+    '#description' => t('Longitude of the Location.'),
+    '#value' => isset($info->lon) ? $info->lon : '',
+    '#disabled' => TRUE,
+  );
+  $form['deck_monitoring']['timezone'] = array(
+    '#type' => 'item',
+    '#size' => 50,
+    '#maxlength' => 255,
+    '#title' => t('Timezone'),
+    '#description' => t('Timezone of the Location.'),
+    '#value' => isset($info->timezone) ? $info->timezone : '',
+    '#disabled' => TRUE,
+  );
+  $form['deck_monitoring']['system_size'] = array(
+    '#type' => 'item',
+    '#size' => 10,
+    '#maxlength' => 20,
+    '#title' => t('System Size'),
+    '#description' => t('System Size in kW DC.'),
+    '#value' => isset($info->system_size) ? $info->system_size : '',
+    '#disabled' => TRUE,
+  );
+  return $form;
+}
+
+/**
+ * Implements hook_permission().
+ */
+function deck_monitoring_location_permission() {
+  return array(
+    'create deck_monitoring_location content' => array(
+      'title' => t('create deck_monitoring_location content'),
+      'description' => t('Create new DECK Monitoring Location nodes'),
+    ),
+    'edit any deck_monitoring_location content' => array(
+      'title' => t('edit any deck_monitoring_location content'),
+      'description' => t('Edit any DECK Monitoring Location nodes'),
+    ),
+    'edit own deck_monitoring_location content' => array(
+      'title' => t('edit own deck_monitoring_location content'),
+      'description' => t('Edit own DECK Monitoring Location nodes'),
+    ),
+    'delete any deck_monitoring_location content' => array(
+      'title' => t('delete any deck_monitoring_location content'),
+      'description' => t('Delete any Deck Monitoring Location nodes'),
+    ),
+    'delete own deck_monitoring_location content' => array(
+      'title' => t('delete own deck_monitoring_location content'),
+      'description' => t('Delete own Deck Monitoring Location nodes'),
+    ),
+  );
+}
+
+/**
+ * Implements hook_node_access().
+ */
+function deck_monitoring_location_node_access($node, $op, $account) {
+  return node_content_access($op, $node, $account);
+}
+
+/**
+ * Implements hook_insert().
+ */
+function deck_monitoring_location_insert($node) {
+  db_insert('deck_monitoring_location')
+  ->fields(array(
+    'location_id' => $node->deck_monitoring->location_id,
+    'vid' => $node->vid,
+    'nid' => $node->nid,
+    'lat' => $node->deck_monitoring->lat,
+    'lon' => $node->deck_monitoring->lon,
+    'timezone' => $node->deck_monitoring->timezone,
+    'system_size' => $node->deck_monitoring->system_size
+  ))
+  ->execute();
+}
+
+/**
+ * Implements hook_delete().
+ */
+function deck_monitoring_location_delete($node) {
+  db_delete('deck_monitoring_location')
+  ->condition('nid', $node->nid)
+  ->execute();
+}
+
+/**
+ * Implements hook_node_revision_delete().
+ */
+function deck_monitoring_location_node_revision_delete($node) {
+  db_delete('deck_monitoring_location')
+  ->condition('vid', $node->vid)
+  ->execute();
+}
+
+/**
+ * Implements hook_load().
+ */
+function deck_monitoring_location_load($nodes) {
+  foreach ($nodes as $nid => &$node) {
+    $result = db_query('SELECT location_id, lat, lon, timezone, system_size FROM {deck_monitoring_location} WHERE vid = :vid', array(':vid' => $node->vid));
+    $node->deck_monitoring = db_fetch_object($result);
+  }
+}

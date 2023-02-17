@@ -1,0 +1,15 @@
+/**
+ * @file
+ * Bedrock Pumice panels layout Admin CSS.
+ */
+
+.pumice-column {
+  float: left;
+  margin-right: 1%;
+  width: 49%;
+}
+
+.pumice-column-right {
+  margin-right: 0;
+  width: 50%;
+}

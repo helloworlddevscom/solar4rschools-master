@@ -1,0 +1,18 @@
+name = Bedrock
+description = Custom layouts for panels
+package = Frontend
+core = 7.x
+dependencies[] = blockify
+dependencies[] = fences
+dependencies[] = html5_tools
+dependencies[] = jquery_update
+dependencies[] = magic
+dependencies[] = modernizr
+dependencies[] = panels
+
+; Information added by Drupal.org packaging script on 2014-03-24
+version = "7.x-1.0-alpha4"
+core = "7.x"
+project = "bedrock"
+datestamp = "1395697459"
+

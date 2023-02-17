@@ -1,0 +1,657 @@
+////////////////////////////////////////////////////////////////////////////////
+// Style Guide Partials
+//
+// Your Style Guide
+// Build sub folders and partials in this folder,
+// with everything being imported, in cascading order, into this file.
+//
+// All Style Guide selectors should go in here, regardless of layout
+// or design (but separating the two in here is a good idea).
+////////////////////////////////////////////////////////////////////////////////
+
+
+//////////////////////////////
+// CSS Resets
+//
+// Choose your CSS Reset method:
+//  If you'd like a hard reset, uncomment `compass/reset`.
+//  If you'd prefer a soft reset, uncomment `normalize`
+//////////////////////////////
+// @import 'compass/reset';
+@import 'normalize';
+
+////////////////////////
+// Alphecca Style Import
+////////////////////////
+@import '../vendor/alphecca/sass/alphecca-style';
+
+////////////////////////
+// Other imports
+////////////////////////
+@import 'compass/typography/text/replacement';
+@import 'compass/css3/border-radius';
+@import 'compass/css3/box-shadow';
+
+// ** Base **//
+html {
+  min-height: 100%;
+}
+
+body {
+  background: $body-bg image-url('bg-body.jpg') no-repeat scroll center bottom;
+  background-size: cover;
+  color: $body-font-color;
+  font-family: $Helvetica;
+  min-height: 100%;
+}
+
+// * Regions * //
+.kiosk-layout-content-header {
+  background: transparent image-url('header-bef.png') no-repeat;
+  height: $kiosk-header-height;
+  margin: 0 $kiosk-base-margin;
+  padding-top: 43px;
+  position: relative;
+}
+
+.kiosk-layout-content-container {
+  background: $kiosk-white;
+  padding: 12px;
+}
+
+.kiosk-layout-column-container {
+  background: $kiosk-content-bg;
+  padding: 12px 18px;
+}
+
+.kiosk-layout-content-suffix {
+  background: #4BC2D5 image-url('content-shadow.png') no-repeat scroll 0 -47px;
+  margin: 0 $kiosk-base-margin;
+  min-height: 36px;
+}
+
+.kiosk-layout-content-footer {
+  color: #666;
+  font-size: 13px;
+  margin: 0 $kiosk-base-margin $kiosk-base-margin;
+
+  .pane-node-field-kiosk-footer {
+    float: left;
+    width: 75%;
+  }
+
+  .pane-this-generation-site-s-projects-panel-pane-1 {
+    float: right;
+    text-align: right;
+    width: 25%;
+
+    ul, li {
+      margin: 0;
+      padding: 0;
+      list-style: none outside none;
+      display: inline;
+
+      a:after {
+        content: ",";
+      }
+
+    }
+
+    li.views-row-last {
+      a:after {
+        content: "";
+      }
+    }
+  }
+}
+
+// * Header * //
+.pane-node-title {
+  margin-left: 272px;
+
+  h1 {
+    color: $kiosk-white;
+    font-family: $Helvetica;
+    font-size: 1.1em;
+    line-height: 1;
+    margin: 0;
+    text-transform: uppercase;
+  }
+}
+
+.pane-node-field-kiosk-subtitle {
+  margin-left: 272px;
+
+  h2 {
+    color: $kiosk-white;
+    font-family: $Helvetica;
+    font-size: 32px;
+    font-weight: bold;
+    margin: 0;
+  }
+}
+
+.pane-node-field-kiosk-logo {
+  padding: 0 0 8px;
+  position: absolute;
+  top: 0;
+  right: 25px;
+
+  .pane-content {
+    @include box-shadow(0 0 1px #666);
+    background: $kiosk-white;
+    padding: 12px 10px 6px;
+  }
+}
+
+// * Menu * //
+.pane-page-tabs {
+  height: $kiosk-tab-height;
+  position: absolute;
+  bottom: 0;
+  z-index: 1;
+
+  ul.tabs {
+    height: $kiosk-tab-height;
+    margin: 0;
+  }
+}
+
+ul.tabs li {
+  &:before {
+    content: '';
+    margin: 0;
+  }
+
+  a {
+    background: transparent;
+    @include replace-text('navigation-sprite.png');
+    border: 0;
+    display: block;
+    height: $kiosk-tab-height;
+    margin: 0;
+
+    &.active, &.active:hover, &.active:focus {
+      background: transparent;
+      @include replace-text('navigation-sprite.png');
+      border: 0;
+    }
+
+    &:hover, &:focus {
+      background-color: transparent;
+    }
+  }
+
+  .kiosk-menu-tab-view {
+    width: $kiosk-tab-width-view;
+    background-position: (-$kiosk-tab-sprite-view) 0;
+
+    &.active, &.active:hover, &.active:focus {
+      background-position: (-$kiosk-tab-sprite-view) (-$kiosk-tab-sprite-height);
+    }
+  }
+
+  .kiosk-menu-tab-how-it-works {
+    width: $kiosk-tab-width-how-it-works;
+    background-position: (-$kiosk-tab-sprite-how-it-works) 0;
+
+    &.active, &.active:hover, &.active:focus {
+      background-position: (-$kiosk-tab-sprite-how-it-works) (-$kiosk-tab-sprite-height);
+    }
+  }
+
+  .kiosk-menu-tab-about-project {
+    width: $kiosk-tab-width-about-project;
+    background-position: (-$kiosk-tab-sprite-about-project) 0;
+
+    &.active, &.active:hover, &.active:focus {
+      background-position: (-$kiosk-tab-sprite-about-project) (-$kiosk-tab-sprite-height);
+    }
+  }
+
+  .kiosk-menu-tab-about-partners {
+    width: $kiosk-tab-width-about-partners;
+    background-position: (-$kiosk-tab-sprite-about-partners) 0;
+
+    &.active, &.active:hover, &.active:focus {
+      background-position: (-$kiosk-tab-sprite-about-partners) (-$kiosk-tab-sprite-height);
+    }
+  }
+
+  .kiosk-menu-tab-green-tech {
+    width: $kiosk-tab-width-green-tech;
+    background-position: (-$kiosk-tab-sprite-green-tech) 0;
+
+    &.active, &.active:hover, &.active:focus {
+      background-position: (-$kiosk-tab-sprite-green-tech) (-$kiosk-tab-sprite-height);
+    }
+  }
+
+  .kiosk-menu-tab-renewable-benefits {
+    width: $kiosk-tab-width-renewable-benefits;
+    background-position: (-$kiosk-tab-sprite-renewable-benefits) 0;
+
+    &.active, &.active:hover, &.active:focus {
+      background-position: (-$kiosk-tab-sprite-renewable-benefits) (-$kiosk-tab-sprite-height);
+    }
+  }
+
+  .kiosk-menu-tab-call-to-action {
+    width: $kiosk-tab-width-call-to-action;
+    background-position: (-$kiosk-tab-sprite-call-to-action) 0;
+
+    &.active, &.active:hover, &.active:focus {
+      background-position: (-$kiosk-tab-sprite-call-to-action) (-$kiosk-tab-sprite-height);
+    }
+  }
+
+  .kiosk-menu-tab-edit {
+    background: transparent;
+    height: auto;
+    text-indent: 0;
+  }
+}
+
+// * Content * //
+.kiosk-layout-main-content-container {
+  background: $kiosk-content-bg image-url('content-background.png') repeat-x;
+  padding: $kiosk-base-margin;
+
+  h2 {
+    color: $kiosk-header-blue;
+    font-family: $Helvetica;
+    font-weight: bold;
+  }
+
+  hr {
+    background: transparent image-url('hr.png') repeat-x;
+    border: 0;
+    height: 1px;
+  }
+}
+
+// * Live Data * //
+.page-node.node-type-kiosk {
+  .kiosk-layout-main-content-container {
+    position: relative;
+  }
+
+  .pane-site-summary {
+    padding: 20px 20px 6px;
+
+    h2 {
+      color: $kiosk-white;
+      font-family: $Helvetica;
+      font-size: 1.3em;
+      font-weight: bold;
+      line-height: 1.1;
+      margin: 0;
+    }
+
+    h3 {
+      color: $kiosk-white;
+      font-size: 19px;
+      font-weight: bold;
+      line-height: 1.1;
+      margin: 0 0 8px;
+    }
+
+    hr {
+      background: image-url('hr-light.png');
+      border: none;
+      height: 1px;
+      margin: 8px 0;
+    }
+  }
+
+  #generation-stats-site-equivalents {
+    .date {
+      color: $kiosk-equivalency-grey;
+      font-style: italic;
+      font-size: 0.8125em;
+    }
+
+    h1 {
+      color: $kiosk-header-blue;
+      font-size: 1.3em;
+    }
+
+    dt {
+      clear: left;
+      color: $kiosk-equivalency-grey;
+      float: left;
+      font-size: 12px;
+      font-weight: normal;
+      line-height: 27px;
+      margin-top: 2px;
+      text-transform: uppercase;
+    }
+
+    dd {
+      color: $kiosk-equivalency-grey;
+      float: left;
+      font-size: 20px;
+      font-weight: bold;
+      line-height: 27px;
+      margin-left: 0.5em;
+      margin-bottom: 0;
+    }
+  }
+
+  .pane-weather {
+    background: image-url('weather-background.png') no-repeat scroll;
+    color: $kiosk-white;
+    margin-left: 689px;
+    padding: 8px 12px 0;
+    position: absolute;
+    top: $kiosk-base-margin;
+    right: $kiosk-base-margin;
+    width: 331px;
+    height: 105px;
+
+    h2 {
+      color: $kiosk-white;
+      float: left;
+      font-size: 1.1em;
+      font-weight: normal;
+      line-height: 1em;
+      margin: 0;
+    }
+
+    .solar-weather-current-conditions-image {
+      float: right;
+    }
+
+    .solar-weather-current-temperature {
+      clear: left;
+      font-size: 21px;
+      font-weight: bold;
+    }
+
+    .solar-weather-current-condition,
+    .solar-weather-current-wind-direction,
+    .solar-weather-current-wind-speed {
+      font-size: 12px;
+      line-height: 1.33;
+    }
+
+    .solar-weather-current-wind-direction,
+    .solar-weather-current-wind-speed {
+      text-transform: uppercase;
+    }
+  }
+
+  .pane-node-field-system-specs,
+  .pane-generation-site {
+    background: transparent image-url('weather-background.png') no-repeat scroll;
+    background-position: 0px -105px;
+    height: 159px;
+    position: absolute;
+    right: $kiosk-base-margin;
+    top: (105px + $kiosk-base-margin);
+    width: 331px;
+    padding: 17px 12px 0;
+
+    font-size: 13px;
+    line-height: 1.25;
+
+    h2 {
+      font-size: 16px;
+      line-height: 1.2;
+      margin: 0;
+    }
+
+    ul {
+      margin: 0;
+      padding: 0 0 0.25em 1em;
+    }
+  }
+  .pane-generation-site .entity h2 {
+    display: none;
+  }
+  .generation-charts-period-selector {
+    height: 51px;
+    list-style: none outside none;
+    margin: ($kiosk-base-margin) (-$kiosk-base-margin) (-$kiosk-base-margin);
+    /* margin: 18px -18px -12px; */
+    padding: 0px;
+    position: relative;
+    top: $kiosk-base-margin;
+
+    li, a {
+      border: medium none;
+      float: left;
+      height: 51px;
+      line-height: 51px;
+      margin: 0px;
+      padding: 0px;
+      width: 211px;
+    }
+
+    a {
+      background: image-url('live-data-chart-menu.png') no-repeat scroll;
+      color: $kiosk-white;
+      font-weight: bold;
+      font-size: 19px;
+      text-align: center;
+      text-decoration: none;
+      text-shadow: 0px 1px 2px #000;
+    }
+
+    .active a {
+      background: image-url('live-data-chart-menu-active.png');
+      width: 212px;
+    }
+  }
+
+  .generation-stats-refreshable {
+    .carbon-equivalent-total {
+      float: left;
+
+      .carbon-equivalent-digit {
+        float: left;
+
+        span {
+          background: image-url('equivalent-carbon-digit-bg.png') no-repeat;
+          color: $kiosk-equivalency-grey;
+          font-size: 48px;
+          font-weight: bold;
+          float: left;
+          line-height: 62px;
+          padding-top: 2px;
+          text-align: center;
+          height: 68px;
+          width: 42px;
+        }
+      }
+
+      .legend {
+        @include replace-text('equivalent-carbon-digit-bg.png', right, top);
+        float: left;
+        width: 86px;
+        height: 68px;
+      }
+    }
+
+    .carbon-equivalent-equivalents {
+      float: left;
+      list-style-type: none;
+      margin: 0 0 0 32px;
+      padding-left: 16px;
+
+      li {
+        background: image-url('equivalent-carbon-icons.png') no-repeat left top;
+        color: $kiosk-white;
+        float: left;
+        font-size: 11px;
+        line-height: 1.2;
+        padding-top: 18px;
+        padding-left: 88px;
+        text-transform: uppercase;
+        height: 84px;
+        width: 312px;
+
+        &.carbon-equivalent-type-home {
+          margin-right: 28px;
+        }
+
+        &.carbon-equivalent-type-tv {
+          background-position: 0 -84px;
+          width: 288px;
+        }
+
+        span {
+          display: block;
+          font-size: 18px;
+          font-weight: bold;
+          text-transform: none;
+        }
+      }
+    }
+  }
+}
+
+// * How It Works * //
+.pane-node-how-it-works-default-body {
+  padding: 0 71px;
+}
+
+// * About Project * //
+.pane-node-field-kiosk-about-project-body p {
+  float: left;
+  width: 50%;
+}
+
+.pane-node-field-kiosk-about-project-image {
+  float: right;
+
+  img {
+    border: $kiosk-base-margin solid $kiosk-white;
+  }
+}
+
+// * About Partners * //
+.pane-node-field-kiosk-about-partners-body {
+  img {
+    float: left;
+  }
+
+  p {
+    margin-left: 240px;
+  }
+}
+.pane-node-field-kiosk-about-partners-thx {
+  min-height: 176px;
+  padding: 32px 42px 0;
+
+  img {
+    float: left;
+  }
+
+  p {
+    color: $kiosk-white;
+    font-size: 86%;
+    line-height: 1.2;
+    margin: 0 0 .2em 208px;
+  }
+}
+
+// * Green Technology * //
+.green-tech-tab-block {
+  &.ui-corner-all, .ui-corner-all {
+    @include border-radius(0);
+  }
+
+  &.ui-widget-content {
+    background: none;
+    border: 0;
+    color: inherit;
+  }
+
+  .ui-widget-header {
+    background: transparent;
+    border: 0;
+    color: inherit;
+  }
+
+  &.ui-tabs {
+    padding: 0;
+
+    .ui-tabs-panel, .ui-tabs-active {
+      background: transparent;
+      padding: 0;
+    }
+
+    .ui-tabs-nav li.green-tech-tab {
+      border: 0;
+      margin-right: $kiosk-base-margin;
+      margin-bottom: ($kiosk-base-margin / 2);
+      padding: 0;
+
+      a {
+        background: $kiosk-green-tech-tab-bg;
+        border: 1px solid $kiosk-white;
+        color: $kiosk-green-tech-tab-fg;
+        font-family: $Helvetica;
+        font-size: 16px;
+        font-weight: bold;
+        height: $kiosk-green-tech-tab-height;
+        padding: 4px 22px;
+        @include border-radius($kiosk-green-tech-tab-height / 2);
+        @include box-shadow(2px 3px 3px #000000);
+      }
+    }
+
+    .ui-tabs-nav li.green-tech-tab.ui-state-active a {
+      background: $kiosk-green-tech-tab-active-bg;
+    }
+  }
+}
+
+// * Renewable Benefits * //
+.kiosk-renewable-energy {
+  img {
+    border: $kiosk-base-margin solid $kiosk-white;
+    float: right;
+  }
+
+  ol {
+    list-style-type: none;
+    padding-left: 0;
+    margin-right: 370px;
+
+    li {
+      padding-left: 76px;
+      min-height: 63px;
+
+      h4 {
+        color: black;
+        font-size: 1em;
+        font-weight: bold;
+        line-height: 1.25;
+        margin-bottom: 0;
+        padding: 0;
+      }
+
+      p {
+        line-height: 1.1;
+        margin-top: 0;
+      }
+    }
+
+    @for $i from 1 through 5 {
+      li:nth-child(#{$i}) {
+        background: url('/sites/all/themes/kiosk/images/big-#{$i}.png') no-repeat 0 0;
+      }
+    }
+  }
+}
+
+
+// * Call to Action * //
+.pane-node-field-kiosk-call-to-action-body {
+  img {
+    float: right;
+    margin-left: $kiosk-base-margin;
+  }
+}

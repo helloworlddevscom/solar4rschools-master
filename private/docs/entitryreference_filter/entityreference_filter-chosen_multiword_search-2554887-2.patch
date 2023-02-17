@@ -1,0 +1,30 @@
+From db7e06fe996b0cc701fbbb7e9f161573250c7e82 Mon Sep 17 00:00:00 2001
+From: Jonathan Jordan <jojonaloha@1579186.no-reply.drupal.org>
+Date: Thu, 20 Aug 2015 11:05:59 -0700
+Subject: [PATCH] Issue #2554887: Chosen multi-word search not working for
+ reference filters
+
+---
+ views/entityreference_filter_view_result.inc | 6 +++++-
+ 1 file changed, 5 insertions(+), 1 deletion(-)
+
+diff --git a/views/entityreference_filter_view_result.inc b/views/entityreference_filter_view_result.inc
+index 7c2fa63..e98d9f0 100644
+--- a/views/entityreference_filter_view_result.inc
++++ b/views/entityreference_filter_view_result.inc
+@@ -290,7 +290,11 @@ class entityreference_filter_view_result extends views_handler_filter_in_operato
+     }
+ 
+     $result = $view->execute_display($display_name, $args);
+-
++    if (is_array($result)) {
++      foreach ($result as $key => $val) {
++        $result[$key] = trim($val);
++      }
++    }
+     return $result ? $result : array();
+   }
+ 
+-- 
+2.3.2 (Apple Git-55)
+

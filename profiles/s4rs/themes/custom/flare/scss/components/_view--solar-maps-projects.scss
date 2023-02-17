@@ -1,0 +1,13 @@
+/**
+ * Solar Map Projects view.
+ */
+
+.view-solar-maps-projects {
+
+  // Map Companion List display
+  &.view-display-id-projects_pane_map_companion_list {
+    > .view-content {
+      @include view-list;
+    }
+  }
+}

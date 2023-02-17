@@ -1,0 +1,132 @@
+////////////////////////
+// Bedrock Variolite Layout Partial
+//
+// Layout specific to the Bedrock Variolite panel layout.
+//
+// Copy this file to your theme's Sass partial structure
+// and include in your SMACSS based layout file.
+//
+// Required Variables
+// - $small, $medium, $large, $xlarge (global breakpoints)
+// - $grids, set at global breakpoints
+// - $gutters, set at global breakpoints
+////////////////////////
+
+/*
+ * Variolite Layout
+ */
+.variolite {
+  //@include background-grid;
+
+  .variolite-sidebar {
+    @include grid-span(3, 1);
+
+    @include breakpoint($small) {
+      @include grid-span(6, 1);
+    }
+
+    @include breakpoint($medium) {
+      @include grid-span(4, 1);
+    }
+
+    @include breakpoint($large) {
+      @include grid-span(6, 1);
+    }
+
+    @include breakpoint($xlarge) {
+      @include grid-span(6, 1);
+    }
+  }
+
+  .variolite-content-container {
+    @include grid-span(3, 1);
+
+    @include breakpoint($small) {
+      @include grid-span(6, 1);
+    }
+
+    @include breakpoint($medium) {
+      @include grid-span(14, 5);
+    }
+
+    @include breakpoint($large) {
+      @include grid-span(24, 7);
+    }
+
+    @include breakpoint($xlarge) {
+      @include grid-span(24, 7);
+    }
+
+    .variolite-content-header {
+      margin-bottom: 1em;
+    }
+
+    .with-secondary-column {
+      .variolite-content-main-column {
+        @include grid-span(3, 1);
+
+        @include breakpoint($small) {
+          @include grid-span(6, 1);
+        }
+      }
+
+      .variolite-content-secondary-column {
+        @include grid-span(3, 1);
+
+        @include breakpoint($small) {
+          @include grid-span(6, 1);
+        }
+
+        .panel-pane {
+          margin-bottom: 1em;
+
+          &:last-child {
+            margin-bottom: 0;
+          }
+        }
+      }
+
+      @include breakpoint($medium) {
+        @include layout(14) {
+          //@include background-grid;
+
+          .variolite-content-main-column {
+            @include grid-span(14, 1);
+          }
+
+          .variolite-content-secondary-column {
+            @include grid-span(14, 1);
+          }
+        }
+      }
+
+      @include breakpoint($large) {
+        @include layout(24) {
+          //@include background-grid;
+
+          .variolite-content-main-column {
+            @include grid-span(18, 1);
+          }
+
+          .variolite-content-secondary-column {
+            @include grid-span(6, 19);
+          }
+        }
+      }
+
+      @include breakpoint($xlarge) {
+        @include layout(24) {
+          //@include background-grid;
+
+          .variolite-content-main-column {
+            @include grid-span(18, 1);
+          }
+
+          .variolite-content-secondary-column {
+            @include grid-span(6, 19);
+          }
+        }
+      }
+    }
+  }
+}

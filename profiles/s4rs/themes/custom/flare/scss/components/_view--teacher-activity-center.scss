@@ -1,0 +1,9 @@
+/**
+ * Teacher Activity Center view.
+ */
+
+.view-id-teacher_activity_center {
+  > .view-content {
+    @include view-list;
+  }
+}

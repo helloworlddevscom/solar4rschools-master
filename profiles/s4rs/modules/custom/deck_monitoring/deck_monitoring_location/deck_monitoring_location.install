@@ -1,0 +1,98 @@
+<?php
+/**
+ * @file
+ * Install deck_monitoring_location table for storing location metadata.
+ */
+
+/**
+ * Implements hook_schema().
+ */
+function deck_monitoring_location_schema() {
+  $schema['deck_monitoring_location'] = array(
+    'fields' => array(
+      'location_id' => array(
+        'description' => 'DECK Monitoring Location id',
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      'vid' => array(
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      'nid' => array(
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      'lat' => array(
+        'type' => 'varchar',
+        'length' => 64,
+        'not null' => TRUE,
+        'default' => '',
+      ),
+      'lon' => array(
+        'type' => 'varchar',
+        'length' => 64,
+        'not null' => TRUE,
+        'default' => '',
+      ),
+      'timezone' => array(
+        'type' => 'varchar',
+        'length' => 64,
+        'not null' => TRUE,
+        'default' => '',
+      ),
+      'system_size' => array(
+        'description' => 'System Size in kW DC',
+        'type' => 'float',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+    ),
+    'primary key' => array('location_id'),
+    'unique keys' => array(
+      'vid' => array('vid'),
+    ),
+  );
+
+  $schema['deck_monitoring_location_device'] = array(
+    'fields' => array(
+      'device_id' => array(
+        'description' => 'DECK Monitoring Device ID',
+        'type' => 'int',
+        'not null' => TRUE,
+        'unsigned' => TRUE,
+      ),
+      'location_id' => array(
+        'description' => 'DECK Monitoring location ID to which this device belongs.',
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'name' => array(
+        'type' => 'varchar',
+        'length' => 256,
+        'default' => '',
+        'not null' => TRUE,
+        'description' => 'Device name',
+      ),
+      'data_key_id' => array(
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+    ),
+    'primary key' => array('device_id'),
+    'indexes' => array(
+      'device_id' => array('device_id'),
+    ),
+  );
+
+  return $schema;
+}

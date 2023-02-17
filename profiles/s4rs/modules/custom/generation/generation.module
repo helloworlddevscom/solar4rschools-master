@@ -1,0 +1,722 @@
+<?php
+/**
+ * @file
+ * Generation API module: Provides a consistent interface to multiple energy
+ * generation data collection backends.
+ */
+
+/**
+ * Implements hook_menu().
+ */
+function generation_menu() {
+  $common = array(
+    'access arguments' => array('administer generation api'),
+    'file' => 'generation.admin.inc',
+  );
+
+  return array(
+    'admin/config/generation' => array(
+      'title' => 'Generation API',
+      'description' => 'Configure energy generation API.',
+      'page callback' => 'generation_admin_page',
+    ) + $common,
+    // Create menu item for accessing active kiosks clicks/usage log table.
+    'admin/config/generation/kiosks-log-table-active' => array(
+      'title' => 'Active Kiosks Log Table',
+      'description' => 'Table listing clicks per period tab for each kiosk chart.',
+      'page callback' => 'generation_charts_log_table_active_page',
+      'type' => MENU_LOCAL_TASK,
+    ) + $common,
+    // Create menu item for accessing inactive kiosks clicks/usage log table.
+    'admin/config/generation/kiosks-log-table-inactive' => array(
+        'title' => 'Inactive Kiosks Log Table',
+        'description' => 'Table listing inactive kiosks based on having no chart clicks.',
+        'page callback' => 'generation_charts_log_table_inactive_page',
+        'type' => MENU_LOCAL_TASK,
+      ) + $common,
+    'admin/config/generation/variables' => array(
+      'title' => 'Variables',
+      'description' => 'Configure generation provider data variables.',
+      'page callback' => 'generation_variable_list_page',
+      'weight' => -1,
+    ) + $common,
+    'admin/config/generation/variables/%generation_variable' => array(
+      'title callback' => 'generation_variable_title',
+      'title arguments' => array(4),
+      'description' => 'View all aliases of a specific variable.',
+      'page callback' => 'generation_variable_detail_page',
+      'page arguments' => array(4),
+      'type' => MENU_CALLBACK,
+    ) + $common,
+    'admin/config/generation/variable-presets' => array(
+      'title' => 'Variable presets',
+      'description' => 'Configure preset aliases of energy generation variables.',
+      'page callback' => 'generation_variable_preset_list_page',
+      'type' => MENU_LOCAL_TASK,
+    ) + $common,
+    'admin/config/generation/variable-presets/list' => array(
+      'title' => 'List',
+      'type' => MENU_DEFAULT_LOCAL_TASK,
+      'weight' => -10,
+    ) + $common,
+    'admin/config/generation/variable-presets/add' => array(
+      'title' => 'Add preset',
+      'page callback' => 'generation_variable_preset_add_form_page',
+      'type' => MENU_LOCAL_TASK,
+    ) + $common,
+    'admin/config/generation/variable-presets/%generation_variable_preset' => array(
+      'title callback' => 'generation_variable_preset_title',
+      'title arguments' => array(4),
+      'page callback' => 'generation_variable_preset_edit_form_page',
+      'page arguments' => array(4),
+      'type' => MENU_CALLBACK,
+    ) + $common,
+    'admin/config/generation/variable-presets/%generation_variable_preset/edit' => array(
+      'title' => 'Edit',
+      'type' => MENU_DEFAULT_LOCAL_TASK,
+      'weight' => -10,
+    ) + $common,
+    'admin/config/generation/variable-presets/%generation_variable_preset/delete' => array(
+      'title' => 'Delete',
+      'page callback' => 'drupal_get_form',
+      'page arguments' => array('generation_variable_preset_delete_form', 4),
+      'type' => MENU_LOCAL_TASK,
+    ) + $common,
+    'admin/config/generation/providers' => array(
+      'title' => 'Providers',
+      'description' => 'Access data provider-specific configuration pages.',
+      'page callback' => 'generation_provider_list_page',
+    ) + $common,
+    'generation-instant-summary/%generation_site' => array(
+      'title' => 'Instant summary JSON call',
+      'page callback' => 'generation_instant_summary_page',
+      'page arguments' => array(1),
+      'access arguments' => array('access content'),
+      'type' => MENU_CALLBACK,
+      'file' => 'generation.pages.inc',
+    ),
+  );
+}
+
+/**
+ * Menu system title callback.
+ */
+function generation_variable_title($variable) {
+  return $variable->name;
+}
+
+/**
+ * Menu system title callback.
+ */
+function generation_variable_preset_title($preset) {
+  return $preset->alias;
+}
+
+/**
+ * Helper to fetch all query results into an array indexed by primary key.
+ */
+function _generation_fetch_all_keyed($result, $key) {
+  $records = array();
+  foreach ($result as $item) {
+    $records[$item->$key] = $item;
+  }
+  return $records;
+}
+
+/**
+ * Menu loader callback: Loads a site by numeric id.
+ */
+function generation_site_load($site_id) {
+  if (!is_numeric($site_id)) {
+    return NULL;
+  }
+  return entity_load_single('generation_site', $site_id);
+}
+
+/**
+ * Menu loader callback: Loads a variable by numeric id.
+ */
+function generation_variable_load($variable_id) {
+  if (!is_numeric($variable_id)) {
+    return NULL;
+  }
+  return db_select('generation_variables', 'gv')
+    ->fields('gv')
+    ->condition('variable_id', $variable_id)
+    ->execute()
+    ->fetchObject();
+}
+
+/**
+ * Saves a variable.
+ */
+function generation_variable_save($variable) {
+  $keys = isset($variable->variable_id) ? 'variable_id' : array();
+  return drupal_write_record('generation_variables', $variable, $keys);
+}
+
+/**
+ * Menu loader callback: Loads a variable preset by numeric id.
+ */
+function generation_variable_preset_load($preset_id) {
+  if (!is_numeric($preset_id)) {
+    return NULL;
+  }
+  return db_select('generation_variable_presets', 'gvp')
+    ->fields('gvp')
+    ->condition('preset_id', $preset_id)
+    ->execute()
+    ->fetchObject();
+}
+
+/**
+ * Loads multiple variable presets.
+ */
+function generation_variable_preset_load_multiple(array $preset_ids) {
+  $result = db_select('generation_variable_presets', 'gvp')
+    ->fields('gvp')
+    ->condition('preset_id', $preset_ids)
+    ->execute();
+  return _generation_fetch_all_keyed($result, 'preset_id');
+}
+
+/**
+ * Saves (creates or updates) a variable preset.
+ */
+function generation_variable_preset_save($preset) {
+  if (isset($preset->preset_id)) {
+    drupal_write_record('generation_variable_presets', $preset, array('preset_id'));
+    drupal_set_message(t('Variable preset saved.'));
+  }
+  else {
+    drupal_write_record('generation_variable_presets', $preset);
+    drupal_set_message(t('Variable preset created.'));
+  }
+}
+
+/**
+ * Constructs and returns a new variable preset object.
+ */
+function generation_variable_preset_new() {
+  return (object) array(
+    'preset_id' => NULL,
+    'variable_id' => NULL,
+    'alias' => '',
+    'function' => '',
+    'chart_type' => 'line',
+    'device_id' => NULL,
+    'module' => NULL,
+    'units' => '',
+  );
+}
+
+/**
+ * Implements hook_permission().
+ */
+function generation_permission() {
+  return array(
+    'administer generation api' => array(
+      'title' => t('administer generation api'),
+      'description' => t('Administer Generation API'),
+    ),
+  );
+}
+
+/**
+ * Implements hook_flush_caches().
+ */
+function generation_flush_caches() {
+  return array(
+    'cache_generation_bin',
+  );
+}
+
+/**
+ * Implements hook_cron().
+ */
+function generation_cron() {
+  $tables = array(
+    'generation_summary_instant' => 'collected',
+    'generation_summary_window' => 'collected',
+  );
+
+  $cache_limit = variable_get('generation_cache_row_limit', 1000);
+  foreach ($tables as $table => $created) {
+    $count = db_select($table)->countQuery()->execute()->fetchField();
+
+    // Clear oldest cache items once we're over the limit.
+    if ($count && $count > $cache_limit) {
+      $obsolete = $count - $cache_limit;
+      $ids = db_select($table, 'tb')
+        ->fields('tb', ['site_id'])
+        ->orderBy($created)
+        ->range(0, $obsolete)
+        ->execute()
+        ->fetchAllAssoc('site_id');
+
+      foreach ($ids as $id) {
+        db_delete($table)
+          ->condition('site_id', $id->site_id)
+          ->execute();
+      }
+    }
+  }
+
+  $last_time = variable_get('generation_last_site_update', 0);
+  $difference = REQUEST_TIME - $last_time;
+  if ($difference > variable_get('generation_site_update_interval', 60 * 60 * 12)) {
+    // Ask all generation providers to create new sites for new sites added
+    // recently added to their data providers.
+    $provider = generation_get_global_provider();
+    $provider->updateSites();
+    variable_set('generation_last_site_update', REQUEST_TIME);
+  }
+}
+
+/**
+ * Implements hook_cron_queue_info().
+ *
+ * Updates sites in batches instead of all at once.
+ */
+function generation_cron_queue_info() {
+  $queues['generation_site_update'] = array(
+    'worker callback' => 'generation_site_update_process',
+  );
+  return $queues;
+}
+
+/**
+ * Queue worker callback to update individual sites in batches.
+ *
+ * The variable $location is an array in the format:
+ *   ObjectName => Location
+ * where ObjectName is the name of the generation site provider class, and the
+ * location is whatever is expected by the provider's updateSite() method.
+ *
+ * @param array $location
+ *   Array in the format ObjectName => Location
+ */
+function generation_site_update_process($location) {
+  $provider_class = key($location);
+  if (class_exists($provider_class)) {
+    $provider = new $provider_class();
+    $provider->updateSite($location[$provider_class]);
+  }
+}
+
+/**
+ * Implements hook_entity_load().
+ */
+function generation_entity_load($entities, $entity_type) {
+  if ($entity_type === 'generation_site') {
+    foreach ($entities as $entity) {
+      $entity->provider_info = generation_get_provider_info($entity);
+    }
+  }
+}
+
+/**
+ * Implements hook_theme().
+ */
+function generation_theme() {
+  return array(
+    'generation_device_presets' => array(
+      'render element' => 'form',
+      'file' => 'generation.admin.inc',
+    ),
+  );
+}
+
+/**
+ * Implements hook_views_api().
+ */
+function generation_views_api() {
+  return array(
+    'api' => 2.0,
+    'path' => drupal_get_path('module', 'generation') . '/views',
+  );
+}
+
+/**
+ * Decodes an array of preset_ids encoded by generation_urlencode_preset_ids().
+ */
+function generation_urldecode_preset_ids($preset_ids_encoded) {
+  // Extract preset IDs, coerce all them all to int since we're likely dealing
+  // with a query string parameter.
+  $preset_ids = array_map('rawurldecode', explode('.', $preset_ids_encoded));
+  return array_map('intval', $preset_ids);
+}
+
+/**
+ * Encodes an array of preset_ids to one string that can be used in a URL.
+ */
+function generation_urlencode_preset_ids($preset_ids) {
+  return implode('.', array_map('drupal_encode_path', $preset_ids));
+}
+
+/**
+ * Returns an array of all the modules that are generation providers.
+ */
+function generation_get_provider_info_all($reset = FALSE) {
+  static $providers = NULL;
+
+  if ($reset) {
+    $providers = NULL;
+  }
+
+  if (is_null($providers)) {
+    $providers = module_invoke_all('generation_providers');
+    foreach ($providers as $module => &$info) {
+      if (isset($info['file'])) {
+        $info['include file'] = drupal_get_path('module', $module) . '/' . $info['file'];
+      }
+      $info['module'] = $module;
+    }
+  }
+  return $providers;
+}
+
+/**
+ * Fetches info for the provider corresponding to a generation site.
+ *
+ * @param object $site
+ *   The generation site entity.
+ *
+ * @return array|FALSE
+ *   The provider module's hook_generation_providers() information, or FALSE if
+ *   the site type has no provider registered.
+ */
+function generation_get_provider_info($site) {
+  // Look through our provider modules to find one that supports this site type.
+  $providers = generation_get_provider_info_all();
+  foreach ($providers as $module => $info) {
+    if (in_array($site->type, $info['site types'])) {
+      return $info;
+    }
+  }
+  watchdog('generation', 'Cannot find provider for site @nid of type @type', array('@nid' => $site->id, '@type' => $site->type));
+  return FALSE;
+}
+
+/**
+ * Returns a GenerationProvider-derived object for the given site.
+ *
+ * @param object|NULL $site
+ *   The site, or NULL for global.
+ *
+ * @return GenerationProvider|FALSE
+ *   Object or error.
+ */
+function generation_get_provider($site) {
+  if ($site) {
+    assert(isset($site->provider_info));
+    assert(is_array($site->provider_info));
+    return generation_get_provider_from_info($site->provider_info);
+  }
+  return generation_get_global_provider();
+}
+
+/**
+ * Returns the GenerationGlobalProvider object.
+ *
+ * @return GenerationGlobalProvider|FALSE
+ *   Object or error.
+ */
+function generation_get_global_provider() {
+  static $provider;
+  if (!isset($provider)) {
+    $provider = new GenerationGlobalProvider();
+  }
+  return $provider;
+}
+
+/**
+ * Returns an array of GenerationProvider objects; one for each provider.
+ *
+ * @return array|FALSE
+ *   Object or error.
+ */
+function generation_get_providers() {
+  $providers = array();
+  foreach (generation_get_provider_info_all() as $info) {
+    $providers[$info['module']] = generation_get_provider_from_info($info);
+  }
+  return $providers;
+}
+
+/**
+ * Constructs a GenerationProvider object for the given provider.
+ *
+ * @param array $provider_info
+ *   Provider info as returned from generation_get_provider_info() or
+ *   generation_get_provider_info_all().
+ *
+ * @return object|FALSE
+ *   Object or error.
+ */
+function generation_get_provider_from_info($provider_info) {
+  assert(is_array($provider_info));
+
+  static $cache = array();
+
+  // Have we cached an object for this provider?
+  $provider_module = $provider_info['module'];
+  if (isset($cache[$provider_module])) {
+    return $cache[$provider_module];
+  }
+
+  // @todo: Remove this? D7 has autoloading.
+  if (isset($provider_info['include file'])) {
+    if (is_file($provider_info['include file'])) {
+      require_once DRUPAL_ROOT . '/' . $provider_info['include file'];
+    }
+    else {
+      watchdog('generation', 'Missing include file @filename', array('@filename' => $provider['include file']));
+      return FALSE;
+    }
+  }
+
+  // Construct and cache the provider object.
+  $cache[$provider_module] = new $provider_info['provider class']($provider_info);
+
+  return $cache[$provider_module];
+}
+
+/**
+ * Returns an array of site types that use a generation provider.
+ *
+ * @return array
+ *   Array of strings that are content type machine names.
+ */
+function generation_get_site_types() {
+  $providers = generation_get_provider_info_all();
+  $site_types = array();
+  foreach ($providers as $module => $info) {
+    $site_types = array_merge($site_types, $info['site types']);
+  }
+  return $site_types;
+}
+
+/**
+ * Returns an array of all site titles, keyed by site id.
+ */
+function generation_get_sites_with_data() {
+  $query = new EntityFieldQuery();
+
+  $results = $query->entityCondition('entity_type', 'generation_site')
+    ->propertyCondition('status', 1)
+    ->propertyOrderBy('title')
+    ->execute();
+
+  $entities = entity_load('generation_site', array_keys($results['generation_site']));
+  $sites = array();
+  foreach ($entities as $site) {
+    if (count($site->explore_data_presets) === 0) { continue; }
+    $sites[$site->id] = $site->title;
+  }
+  return $sites;
+}
+
+/**
+ * Returns a list of valid timezones.
+ */
+function generation_get_valid_timezones() {
+  // We include BC (backward-compatible) timezones because Power-One uses them.
+  $timezones = DateTimeZone::listIdentifiers(DateTimeZone::ALL_WITH_BC);
+  foreach ($timezones as $key => $tz) {
+    if (!preg_match('#(America|Canada|US)/#', $tz)) {
+      unset($timezones[$key]);
+    }
+  }
+  $timezones = array_combine($timezones, $timezones);
+  drupal_alter('generation_valid_timezones', $timezones);
+  return $timezones;
+}
+
+/**
+ * Returns a new DateTime object with the local timezone set.
+ */
+function generation_new_datetime_local($time) {
+  // This function should be passed a valid timestamp and should not be used
+  // to construct GenerationLifetimeStartDateTime objects.
+  assert($time !== 0 && $time !== '0');
+
+  // We use the site's timezone because we want any dates and times formatted
+  // from these objects to display in that timezone. This does not affect the
+  // output of ->format('U'), however, since UNIX timestamps are by definition
+  // in GMT/UTC.
+  $timezone = generation_get_drupal_timezone();
+
+  return generation_new_datetime($time, $timezone);
+}
+
+/**
+ * Builds a new DateTime for the given time and timezone object.
+ */
+function generation_new_datetime($time, $timezone) {
+  // This function should be passed a valid timestamp and should not be used
+  // to construct GenerationLifetimeStartDateTime objects.
+  assert($time !== 0);
+
+  // UNIX timestamp? Indicate so by stringizing and adding a leading @.
+  if (is_numeric($time)) {
+    $time = '@' . (string) $time;
+
+    // DateTime's $timezone constructor parameter is ignored when giving a UNIX
+    // timestamp. So we set the timezone *after* construction here.
+    $datetime = new DateTime($time);
+    $datetime->setTimezone($timezone);
+  }
+  else {
+    // When relative patterns like 'today' are used, the timezone parameter
+    // must be given to the constructor, or else it won't affect the inter-
+    // pretation of the pattern.
+    $datetime = new DateTime($time, $timezone);
+  }
+
+  return $datetime;
+}
+
+/**
+ * Returns a new DateTime for given time--in site's timezone if possible.
+ */
+function generation_new_datetime_site($site, $time) {
+  assert(is_object($site));
+
+  $timezone = generation_get_site_timezone($site);
+  return generation_new_datetime($time, $timezone);
+}
+
+/**
+ * Returns a DateTimeZone object for the site's default timezone.
+ */
+function generation_get_drupal_timezone() {
+  // Statically cache the object; it appears all DateTimeZone methods are
+  // const, so the object should be immutable, and this should be safe.
+  static $timezone;
+
+  if (!isset($timezone)) {
+    $timezone = variable_get('date_default_timezone_name', 'America/Los_Angeles');
+    $timezone = new DateTimeZone($timezone);
+  }
+
+  return $timezone;
+}
+
+/**
+ * Gets the site's timezone, or if none, the Drupal timezone.
+ */
+function generation_get_site_timezone($site) {
+  // We assume caller passes an actual site.
+  assert(is_object($site));
+
+  $timezone = NULL;
+  if ($site && !empty($site->field_school_timezone[0]['value'])) {
+    try {
+      $timezone = new DateTimeZone($site->field_school_timezone[0]['value']);
+    }
+    // We handle this failure below.
+    catch (Exception $e) {
+    }
+  }
+
+  if (!$timezone) {
+    $timezone = generation_get_drupal_timezone();
+  }
+
+  return $timezone;
+}
+
+/**
+ * Wrapper for number_format() with a non-zero default for 'decimals'.
+ */
+function generation_number_format($number, $decimals = 1) {
+  return number_format($number, $decimals);
+}
+
+/**
+ * Determine a given preset is overridden.
+ */
+function _generation_is_preset_overridden($override) {
+  return !empty($override->alias) || !empty($override->description) || !empty($override->units);
+}
+
+/**
+ * Fetch an override for a given preset and site.
+ *
+ * @param object $site
+ *   Fully-loaded site.
+ * @param string $preset_id
+ *   Preset ID.
+ *
+ * @return mixed
+ *   An override object or FALSE.
+ */
+function generation_get_site_preset_override($site, $preset_id) {
+  return db_select('generation_preset_override', 'gpo')
+    ->fields('gpo')
+    ->condition('site_id', $site->id)
+    ->condition('preset_id', $preset_id)
+    ->execute()
+    ->fetchObject();
+}
+
+
+/**
+ * Deletes a variable preset.
+ */
+function generation_variable_preset_delete($preset) {
+  $id = $preset->preset_id;
+  $alias = $preset->alias;
+
+  // Allow other modules to react to the event as needed.
+  module_invoke_all('generation_variable_preset_delete', $preset);
+
+  db_delete('generation_variable_presets')
+    ->condition('preset_id', $id)
+    ->execute();
+
+  watchdog('generation', 'Deleted generation preset !id (%alias)', array('!id' => $id, '%alias' => $alias));
+  drupal_set_message(t('Preset !id (%alias) has been deleted.', array('!id' => $id, '%alias' => $alias)));
+}
+
+/**
+ * Loads the related project for a data collection site.
+ *
+ * @param int $site_id
+ *   The site id.
+ *
+ * @return int
+ *   Returns the nodeid.
+ */
+function _generation_get_project_from_generation_site($site_id) {
+  $node = FALSE;
+
+  $query = new EntityFieldQuery();
+  $query->entityCondition('entity_type', 'node')
+    ->entityCondition('bundle', 'project')
+    ->fieldCondition('field_data_collection_site', 'target_id', $site_id, '=')
+    ->range(0, 1);
+  $result = $query->execute();
+
+  return current($result['node'])->nid;
+}
+
+/**
+ * Implements hook_ctools_plugin_directory().
+ */
+function generation_ctools_plugin_directory($owner, $plugin_type) {
+  if ($owner == 'eck' && $plugin_type == 'property_behavior') {
+    return 'plugins/' . $plugin_type;
+  }
+}
+
+/**
+ * Implements hook_entity_ENTITY_TYPE_overview_query_alter().
+ *
+ * @param  EntityFieldQuery $query
+ */
+function generation_entity_generation_site_overview_query_alter(&$query) {
+  // Order sites by the title, makes it easier to paginate
+  $query->propertyOrderBy('title');
+}

@@ -1,0 +1,15 @@
+/**
+ * @file
+ * Bedrock Flint panels layout Admin CSS.
+ */
+
+.flint-sidebar {
+  float: left;
+  margin-right: 1%;
+  width: 19%;
+}
+
+.flint-content-main {
+  float: right;
+  width: 80%;
+}

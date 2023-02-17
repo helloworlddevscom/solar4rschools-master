@@ -1,0 +1,106 @@
+////////////////////////
+// Bedrock Quartz Layout Partial
+//
+// Layout specific to the Bedrock Quartz panel layout.
+//
+// Copy this file to your theme's Sass partial structure
+// and include in your SMACSS based layout file.
+//
+// Required Variables
+// - $small, $medium, $large, $xlarge (global breakpoints)
+// - $grids, set at global breakpoints
+// - $gutters, set at global breakpoints
+// Optional Variables
+// - $quartz-grid-height
+////////////////////////
+
+@mixin quartz-grid-height {
+  $quartz-grid-height: false !default;
+
+  @if $quartz-grid-height {
+    max-height: $quartz-grid-height;
+    min-height: $quartz-grid-height;
+  }
+}
+
+/*
+ * Quartz Layout
+ */
+.quartz {
+  //@include background-grid;
+
+  .quartz-content-header {
+    margin-bottom: 1em;
+
+    .panel-pane {
+      margin-bottom: 1em;
+      @include quartz-grid-height;
+
+      &:last-child {
+        margin-bottom: 0;
+      }
+    }
+  }
+
+  .quartz-content-header-container {
+    .quartz-content-header-left {
+      @include grid-span(3, 1);
+
+      @include breakpoint($small) {
+        @include grid-span(6, 1);
+      }
+
+      @include breakpoint($medium) {
+        @include grid-span(12, 1);
+      }
+
+      @include breakpoint($large) {
+        @include grid-span(20, 1);
+      }
+
+      @include breakpoint($xlarge) {
+        @include grid-span(20, 1);
+      }
+    }
+
+    .quartz-content-header-right {
+      @include grid-span(3, 1);
+
+      @include breakpoint($small) {
+        @include grid-span(6, 1);
+      }
+
+      @include breakpoint($medium) {
+        @include grid-span(6, 13);
+      }
+
+      @include breakpoint($large) {
+        @include grid-span(10, 21);
+      }
+
+      @include breakpoint($xlarge) {
+        @include grid-span(10, 21);
+      }
+    }
+  }
+
+  .quartz-content-main {
+    @include grid-span(3, 1);
+
+    @include breakpoint($small) {
+      @include grid-span(6, 1);
+    }
+
+    @include breakpoint($medium) {
+      @include grid-span(18, 1);
+    }
+
+    @include breakpoint($large) {
+      @include grid-span(30, 1);
+    }
+
+    @include breakpoint($xlarge) {
+      @include grid-span(30, 1);
+    }
+  }
+}

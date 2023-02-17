@@ -1,0 +1,26 @@
+/**
+ * @file
+ * Bedrock Rhyolite panels layout Admin CSS.
+ */
+
+.rhyolite-content-header {
+  margin-bottom: 1%;
+}
+
+.rhyolite-column {
+  float: left;
+  margin-right: 1%;
+}
+
+.rhyolite-content-main-column {
+  width: 49%;
+}
+
+.rhyolite-content-secondary-column {
+  width: 24%;
+}
+
+.rhyolite-content-tertiary-column {
+  margin-right: 0;
+  width: 25%;
+}

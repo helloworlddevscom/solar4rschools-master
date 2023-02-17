@@ -1,0 +1,5 @@
+name = Edit Protection
+description = Protect the user against navigating away from an edit form before saving their changes.
+core = 7.x
+
+

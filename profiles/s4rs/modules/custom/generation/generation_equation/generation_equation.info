@@ -1,0 +1,5 @@
+core = 7.x
+dependencies[] = generation
+description = "Provides a field that calculates equations"
+name = "Generation Equations"
+package = "Generation"

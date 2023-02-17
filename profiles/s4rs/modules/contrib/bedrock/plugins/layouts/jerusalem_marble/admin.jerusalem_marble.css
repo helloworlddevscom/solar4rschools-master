@@ -1,0 +1,19 @@
+/**
+ * @file
+ * Bedrock Jerusalem Marble panels layout Admin CSS.
+ */
+
+.jerusalem_marble-content-header {
+  margin-bottom: 1%;
+}
+
+.jerusalem_marble-column {
+  float: left;
+  margin-right: 1%;
+  width: 49%;
+}
+
+.jerusalem_marble-column-right {
+  margin-right: 0;
+  width: 25%;
+}

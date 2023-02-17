@@ -1,0 +1,14 @@
+name = Bedrock Views
+description = Provides a dropdown button Views row style.
+core = 7.x
+package = Views
+dependencies[] = views
+
+files[] = plugins/bedrock_views_plugin_row_hover.inc
+
+; Information added by Drupal.org packaging script on 2014-03-24
+version = "7.x-1.0-alpha4"
+core = "7.x"
+project = "bedrock"
+datestamp = "1395697459"
+

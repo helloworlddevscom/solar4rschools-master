@@ -1,0 +1,25 @@
+diff --git a/drupal/profiles/s4rs/libraries/animate_sprite/scripts/jquery.animateSprite.js b/drupal/profiles/s4rs/libraries/animate_sprite/scripts/jquery.animateSprite.js
+index bf946db..a00866f 100644
+--- a/drupal/profiles/s4rs/libraries/animate_sprite/scripts/jquery.animateSprite.js
++++ b/drupal/profiles/s4rs/libraries/animate_sprite/scripts/jquery.animateSprite.js
+@@ -138,7 +138,12 @@
+         return this.each(function () {
+             var $this = $(this),
+                 data  = $this.data('animateSprite');
+-            clearInterval(data.interval);
++
++            // Safety check before accessing data.interval
++            // to avoid exception which halts further script execution
++            if (data && data.interval) {
++                clearInterval(data.interval);
++            }
+         });
+     };
+ 
+@@ -207,4 +212,4 @@
+ 
+     };
+ 
+-})(jQuery, window);
+\ No newline at end of file
++})(jQuery, window);

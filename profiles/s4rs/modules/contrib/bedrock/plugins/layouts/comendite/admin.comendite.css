@@ -1,0 +1,21 @@
+/**
+ * @file
+ * Bedrock Comendite panels layout Admin CSS.
+ */
+
+.comendite-content-header {
+  margin-bottom: 1%;
+}
+
+.comendite-column {
+  float: left;
+}
+
+.comendite-content-main-column {
+  margin-right: 1%;
+  width: 74%;
+}
+
+.comendite-content-secondary-column {
+  width: 25%;
+}

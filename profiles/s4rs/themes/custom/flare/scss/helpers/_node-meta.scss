@@ -1,0 +1,65 @@
+/**
+ * Shared styling for node fields divided by gray lines.
+ */
+
+
+@mixin node-meta {
+
+  .field-wrapper {
+    display: block;
+    width: 100%;
+    border-top: 1px solid $color--light-gray;
+    padding: 5px 0;
+
+    .field-label {
+      display: inline;
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+
+    .field {
+      display: inline;
+    }
+
+    .field.inline {
+      display: inline;
+    }
+
+    .field a {
+      font-weight: normal;
+    }
+
+    .field div {
+      display: inline-block;
+    }
+  }
+
+  .field-group-div .field-wrapper {
+    width: 50%;
+    display: inline-block;
+    vertical-align: top;
+    margin-right: -4px;
+  }
+
+  .field-wrapper.body {
+    .field-label {
+      display: block;
+    }
+
+    .field.field-name-body {
+      display: block;
+
+      a.read-more-link,
+      a.more-link {
+        font-weight: 800;
+      }
+    }
+  }
+
+  ul.links {
+    list-style: none;
+    margin: 0 0 10px;
+    padding: 0;
+    float: right;
+  }
+}

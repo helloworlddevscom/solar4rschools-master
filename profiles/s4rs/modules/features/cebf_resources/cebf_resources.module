@@ -1,0 +1,139 @@
+<?php
+/**
+ * @file
+ * Code for the CEBF Resource Library feature.
+ */
+
+include_once 'cebf_resources.features.inc';
+
+/**
+ * Implements hook_menu().
+ */
+function cebf_resources_menu() {
+  // Route for broken link reporting. See: Drupal.behaviors.resourceLibraryReportBrokenLink().
+  $items['ajax/resource-library/report-broken/%'] = array(
+    'page callback' => '_cebf_resources_report_broken',
+    'page arguments' => array(3),
+    'type' => MENU_CALLBACK,
+    'access arguments' => array('access content'),
+    'delivery callback' => '_cebf_resources_report_broken_confirm'
+  );
+  $items['create/resource'] = array(
+    'title' => 'Create Resource',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('form_create_resource'),
+    // 'access callback' => TRUE,
+    'access arguments' => array('create new resource'),
+    'description' => 'Create Resource',
+    'type' => MENU_DEFAULT_LOCAL_TASK,
+    'file' => 'create_resource.inc',
+  );
+
+  return $items;
+}
+
+
+/**
+ * Sends email to CEBF to alert them of broken Resource Library link.
+ */
+function _cebf_resources_report_broken($nid) {
+  global $base_url;
+  $message = 'A broken link has been reported at: ' . $base_url . '/node/' . $nid;
+  $params = array(
+    'subject' => t('CEBF Resource Library: A broken link has been reported.'),
+    'body' => check_markup(t($message), 'plain_text'),
+  );
+
+  drupal_mail('cebf_resources', 'broken_link', variable_get('site_mail', 'cebrightfutures@b-e-f.org'), language_default(), $params);
+
+  return;
+}
+
+
+/**
+ * Respond to AJAX with confirmation message HTML.
+ */
+function _cebf_resources_report_broken_confirm() {
+  drupal_set_message(t("Thanks for reporting a broken link. We'll fix it ASAP."), 'status');
+
+  // Render message using our theme.
+  $statuses = theme('status_messages');
+
+  $commands = [[
+    'command' => 'returnContent',
+    'html' => $statuses,
+  ]];
+
+  print ajax_render($commands);
+
+  ajax_footer();
+}
+
+
+/**
+ * Implements hook_mail().
+ */
+function cebf_resources_mail($key, &$message, $params) {
+  switch ($key) {
+    case 'broken_link':
+      $message['subject'] = $params['subject'];
+      $message['body'][] = $params['body'];
+      break;
+  }
+}
+
+
+/**
+ * Implements hook_entity_info_alter().
+ */
+function cebf_resources_entity_info_alter(&$entity_info) {
+  $entity_info['node']['view modes']['resource_library'] = array(
+    'label' => t('Resource Library'),
+    'custom settings' => FALSE,
+  );
+}
+
+/**
+ * Implements hook_preprocess_TEMPLATE().
+ */
+function cebf_resources_preprocess_field(&$vars) {
+  $field = $vars['element'];
+  $field_name = $field['#field_name'];
+  $content_type = $vars['element']['#bundle'];
+  $view_mode = $field['#view_mode'];
+
+  switch ($field_name) {
+    // For Resource Library taxonomy term reference fields,
+    // render link to view instead of default link to taxonomy term page.
+    case 'field_resource_type':
+    case 'field_resource_geography':
+    case 'field_activity_energy_content':
+    case 'field_activity_ngss_disciplinary':
+    case 'field_activity_education_science':
+    case 'field_activity_ngss_science':
+    case 'field_activity_other_subjects':
+      if ($content_type == 'resource') {
+        foreach ($vars['items'] as $key => $item) {
+          if (!empty($item['#href'])) {
+            $tid = $item['#options']['entity']->tid;
+            $vars['items'][$key]['#href'] = '/learn/resource-library?f[]=' . $field_name . ':' . $tid;
+          }
+        }
+      }
+
+      break;
+  }
+}
+
+/**
+ * Implements hook_permission().
+ *
+ */
+function cebf_resources_permission() {
+  return array(
+    'create new resource' => array(
+      'title' => t('Create Custom Resource Node'),
+      'description' => t('Allows user to create a resource with a referenced file'),
+    ),
+  );
+}

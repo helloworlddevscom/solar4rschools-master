@@ -1,0 +1,16 @@
+#########################
+## Config for sass-lint-auto-fix.
+##
+## This should be kept in sync with .sass-lint.yml.
+#########################
+
+files:
+  include: scss/**/*.s+(a|c)ss
+  ignore:
+
+resolvers:
+  property-sort-order: 0
+  no-important: 0
+  hex-notation: 1
+  indentation: 1
+

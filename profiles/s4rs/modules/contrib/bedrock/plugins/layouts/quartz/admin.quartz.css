@@ -1,0 +1,19 @@
+/**
+ * @file
+ * Bedrock Quartz panels layout Admin CSS.
+ */
+
+.quartz-content-header-container {
+  margin-bottom: 1%;
+}
+
+.quartz-content-header {
+  float: left;
+  margin-right: 1%;
+  width: 67%;
+}
+
+.quartz-content-header-right {
+  margin-right: 0;
+  width: 32%;
+}

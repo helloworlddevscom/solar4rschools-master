@@ -1,0 +1,40 @@
+////////////////////////
+// Bedrock Slate Layout Partial
+//
+// Layout specific to the Bedrock Slate panel layout.
+//
+// Copy this file to your theme's Sass partial structure
+// and include in your SMACSS based layout file.
+//
+// Required Variables
+// - $small, $medium, $large, $xlarge (global breakpoints)
+// - $grids, set at global breakpoints
+// - $gutters, set at global breakpoints
+////////////////////////
+
+/*
+ * Slate Layout
+ */
+.slate {
+  //@include background-grid;
+
+  .slate-main-content {
+    @include grid-span(3, 1);
+
+    @include breakpoint($small) {
+      @include grid-span(6, 1);
+    }
+
+    @include breakpoint($medium) {
+      @include grid-span(18, 1);
+    }
+
+    @include breakpoint($large) {
+      @include grid-span(30, 1);
+    }
+
+    @include breakpoint($xlarge) {
+      @include grid-span(30, 1);
+    }
+  }
+}

@@ -1,0 +1,305 @@
+<?php
+/**
+ * @file
+ * Installation for Generation API module.
+ */
+
+/**
+ * Implements hook_install().
+ */
+function generation_install() {
+  $entity_type = new EntityType();
+  $entity_type->name = 'generation_site';
+  $entity_type->label = 'Generation Site';
+  $entity_type->addProperty('title', 'Site name', 'text', 'title');
+  $entity_type->addProperty('created', 'Created', 'integer', 'created');
+  $entity_type->addProperty('provider', 'Provider', 'text');
+  $entity_type->addProperty('status', 'Published?', 'integer', 'status');
+  $entity_type->save();
+}
+
+/**
+ * Implements hook_uninstall().
+ */
+function generation_uninstall() {
+  $entity_type = EntityType::loadByName('generation_site');
+  $entity_type->delete();
+}
+
+/**
+ * Implements hook_schema().
+ */
+function generation_schema() {
+  $schema['generation_variables'] = array(
+    'description' => 'Data provider variables.',
+    'fields' => array(
+      'variable_id' => array(
+        'description' => 'Primary identifier for a variable.',
+        'type' => 'serial',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'module' => array(
+        'description' => 'Name of the module that provides the generation variable this preset uses.',
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'default' => '',
+      ),
+      'name' => array(
+        'description' => "Data provider's API name for the variable",
+        'type' => 'varchar',
+        'length' => 48,
+        'not null' => TRUE,
+        'default' => '',
+      ),
+      'type' => array(
+        'description' => 'Type of variable (Energy, Power, etc.) according to provider. Used only for displaying to administrative users.',
+        'type' => 'varchar',
+        'length' => 48,
+        'not null' => TRUE,
+        'default' => '',
+      ),
+    ),
+    'primary key' => array('variable_id'),
+    'indexes' => array(
+      'variable_id' => array('variable_id'),
+      'module' => array('module'),
+    ),
+    'unique keys' => array(
+      'variable' => array(
+        'module',
+        'name',
+      ),
+    ),
+  );
+
+  $schema['generation_variable_presets'] = array(
+    'description' => 'Data provider variable alias presets.',
+    'fields' => array(
+      'preset_id' => array(
+        'description' => 'Primary identifier for a variable preset.',
+        'type' => 'serial',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'variable_id' => array(
+        'description' => 'The variable ({generation_variables}.variable_id) for the preset.',
+        'type' => 'int',
+        'not null' => TRUE,
+      ),
+      'alias' => array(
+        'description' => 'Variable display name for this preset.',
+        'type' => 'varchar',
+        'length' => 96,
+        'not null' => TRUE,
+        'default' => '',
+      ),
+      'description' => array(
+        'description' => 'Description for this preset.',
+        'type' => 'text',
+        'size' => 'big',
+        'not null' => TRUE,
+      ),
+      'function' => array(
+        'description' => 'Data provider Bin Function to use for this preset, if supported.',
+        'type' => 'varchar',
+        'length' => 16,
+        'not null' => TRUE,
+        'default' => '',
+      ),
+      'chart_type' => array(
+        'description' => 'Type of chart to use when graphing the data for this preset.',
+        'type' => 'varchar',
+        'length' => 16,
+        'not null' => TRUE,
+        'default' => 'line',
+      ),
+      'units' => array(
+        'description' => 'Units to display for this preset.',
+        'type' => 'varchar',
+        'length' => 32,
+        'default' => '',
+      ),
+      'device_id' => array(
+        'description' => 'Optional device ID for per-device-level variable presets.',
+        'type' => 'varchar',
+        'length' => 64,
+        'not null' => FALSE,
+      ),
+      'module' => array(
+        'description' => 'Required if the device ID is passed.',
+        'type' => 'varchar',
+        'length' => 64,
+        'not null' => FALSE,
+      ),
+    ),
+    'primary key' => array('preset_id'),
+    'indexes' => array(
+      'preset_id' => array('preset_id'),
+    ),
+    'unique keys' => array(
+      'preset' => array(
+        'variable_id',
+        'function',
+        'chart_type',
+        'units',
+        'device_id',
+        'module',
+      ),
+    ),
+  );
+
+  // Create cache table for data provider bin queries -- each bin query can
+  // be very different, so we don't attempt to store these as structured data.
+  $schema['cache_generation_bin'] = drupal_get_schema_unprocessed('system', 'cache');
+  $schema['cache_generation_bin']['description'] = 'Cache table for Generation module to store results of data provider bin queries.';
+
+  $summary = array(
+    'fields' => array(
+      'site_id' => array(
+        'type' => 'int',
+        'description' => 'The Drupal entity ID of the generation site.',
+        'not null' => TRUE,
+      ),
+      'collected' => array(
+        'type' => 'int',
+        'description' => 'The UNIX timestamp for the point in time the data was collected.',
+        'not null' => TRUE,
+      ),
+      'site_count' => array(
+        'type' => 'int',
+        'description' => 'The number of generation sites this data describes; relevant when site_id = 0.',
+        'not null' => TRUE,
+        'default' => 1,
+      ),
+      'cell_temperature' => array(
+        'type' => 'float',
+        'size' => 'medium',
+      ),
+      'generation' => array(
+        'type' => 'float',
+        'size' => 'medium',
+      ),
+      'irradiance' => array(
+        'type' => 'float',
+        'size' => 'medium',
+      ),
+      'power' => array(
+        'type' => 'float',
+        'size' => 'medium',
+      ),
+      'temperature' => array(
+        'type' => 'float',
+        'size' => 'medium',
+      ),
+      'wind_direction' => array(
+        'type' => 'float',
+        'size' => 'medium',
+      ),
+      'wind_speed' => array(
+        'type' => 'float',
+        'size' => 'medium',
+      ),
+    ),
+    'primary key' => array('site_id'),
+    'indexes' => array(
+      'site_id' => array('site_id'),
+      'collected' => array('collected'),
+    ),
+  );
+
+  // Create tables to cache summary queries; these queries always have the
+  // same generation fields, so we might as well store them as structured data.
+  $schema['generation_summary_instant'] = $summary;
+  $schema['generation_summary_instant']['description'] = 'Generation module storage for instant summary query results.';
+
+  $schema['generation_summary_window'] = $summary;
+  $schema['generation_summary_window']['description'] = 'Generation module storage for window summary query results.';
+
+  $schema['generation_summary_window']['fields']['start'] = array(
+    'type' => 'int',
+    'description' => 'The UNIX timestamp for the beginning of the summary period.',
+    'not null' => TRUE,
+  );
+  $schema['generation_summary_window']['fields']['end'] = array(
+    'type' => 'int',
+    'description' => 'The UNIX timestamp for the end of the summary period.',
+    'not null' => TRUE,
+  );
+
+  $site_id_start_end = array('site_id', 'start', 'end');
+  $schema['generation_summary_window']['primary key'] = $site_id_start_end;
+  $schema['generation_summary_window']['indexes']['site_id_start_end'] = $site_id_start_end;
+
+  // Per-site overrides of presets.
+  $schema['generation_preset_override'] = array(
+    'description' => 'Allow per-site overrides of preset data.',
+    'fields' => array(
+      'site_id' => array(
+        'type' => 'int',
+        'description' => 'The Drupal entity ID of the generation site.',
+        'not null' => TRUE,
+      ),
+      'preset_id' => array(
+        'type' => 'int',
+        'description' => 'The variable preset to show on the site chart.',
+        'not null' => TRUE,
+      ),
+      'alias' => array(
+        'description' => 'Variable display name for this preset.',
+        'type' => 'varchar',
+        'length' => 96,
+        'not null' => TRUE,
+        'default' => '',
+      ),
+      'description' => array(
+        'description' => 'Description for this preset.',
+        'type' => 'text',
+        'size' => 'big',
+        'not null' => TRUE,
+      ),
+      'units' => array(
+        'description' => 'Units to display for this preset.',
+        'type' => 'varchar',
+        'length' => 32,
+        'default' => '',
+      ),
+    ),
+  );
+
+  return $schema;
+}
+
+/**
+ * Adds the Status setting to generation sites.
+ */
+function generation_update_7101() {
+  // Add the property.
+  $entity_type = EntityType::loadByName('generation_site');
+  $entity_type->addProperty('status', 'Published?', 'integer', 'status');
+  $entity_type->save();
+
+  // Apply a status of 'Published' to all existing generation sites.
+  db_query('UPDATE eck_generation_site SET status=1');
+}
+
+/**
+ * Add generation presets for Toutle Lake High School
+ */
+function generation_update_7102() {
+  db_insert('generation_charts_site_presets')
+    ->fields(array(
+      'site_id' => 121,
+      'period' => 'day',
+      'preset_id' => 33,
+    ))
+    ->execute();
+  db_insert('generation_charts_site_presets')
+    ->fields(array(
+      'site_id' => 121,
+      'period' => 'day',
+      'preset_id' => 34,
+    ))
+    ->execute();
+}

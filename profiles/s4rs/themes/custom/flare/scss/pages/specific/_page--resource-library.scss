@@ -1,0 +1,38 @@
+/**
+ * General styling for the Resource Library page.
+ */
+
+.page-learn-resource-library {
+
+  // Hide breadcrumbs because facet args in URL mess them up.
+  .breadcrumb {
+    display: none;
+  }
+
+  // Resource Library header block.
+  .pane-block-3 p {
+    font-size: 16px;
+    text-align: center;
+  }
+
+  // Override widths of Comendite Left Page Manager layout.
+  @include breakpoint($bp--medium) {
+    .comendite-left .comendite-left-content-column-container .comendite-left-content-secondary-column {
+      width: 40%;
+    }
+
+    .comendite-left .comendite-left-content-column-container .comendite-left-content-main-column {
+      width: 60%;
+    }
+  }
+
+  @include breakpoint($bp--large) {
+    .comendite-left .comendite-left-content-column-container .comendite-left-content-secondary-column {
+      width: 30%;
+    }
+
+    .comendite-left .comendite-left-content-column-container .comendite-left-content-main-column {
+      width: 70%;
+    }
+  }
+}

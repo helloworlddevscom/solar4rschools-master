@@ -1,0 +1,46 @@
+<?php
+/**
+ * @file
+ * Installation functions for deck_monitoring module.
+ */
+
+/**
+ * Implements hook_install().
+ */
+function deck_monitoring_install() {
+  // Create a new Generation Site bundle using ECK's API.
+  $bundle = new Bundle();
+  $bundle->name = 'deck';
+  $bundle->label = 'DECK Monitoring';
+  $bundle->entity_type = 'generation_site';
+  $bundle->save();
+
+  // Create an entity type for devices.
+  $device = new EntityType();
+  $device->name = 'deck_device';
+  $device->label = 'DECK Monitoring Device';
+  $device->addProperty('deck_name', 'Device name', 'text', 'title');
+  $device->addProperty('deck_did', 'Device ID', 'positive_integer');
+  $device->addProperty('deck_lid', 'Location ID', 'positive_integer');
+  $device->addProperty('deck_dkid', 'Data key ID', 'positive_integer');
+  $device->save();
+
+  $bundle = new Bundle();
+  $bundle->name = 'device';
+  $bundle->label = 'Device';
+  $bundle->entity_type = 'deck_device';
+  $bundle->save();
+}
+
+/**
+ * Implements hook_uninstall().
+ */
+function deck_monitoring_uninstall() {
+  if ($device = EntityType::loadByName('deck_device')) {
+    $device->delete();
+  }
+
+  if ($bundle = Bundle::loadByMachineName('generation_site_deck')) {
+    $bundle->delete();
+  }
+}

@@ -1,0 +1,99 @@
+diff --git a/profiles/s4rs/modules/contrib/addtocal/addtocal.module b/profiles/s4rs/modules/contrib/addtocal/addtocal.module
+index 591b87014..84abe5942 100644
+--- a/profiles/s4rs/modules/contrib/addtocal/addtocal.module
++++ b/profiles/s4rs/modules/contrib/addtocal/addtocal.module
+@@ -10,7 +10,7 @@
+ function addtocal_menu() {
+ 
+   $items = array();
+-  
++
+   foreach (addtocal_get_addtocal_entities() as $entity_name => $values) {
+     $items[$entity_name . '/%entity_object/%/%/addtocal.ics'] = array(
+       'load arguments' => array($entity_name),
+@@ -359,7 +359,7 @@ function addtocal_field_formatter_settings_summary($field, $instance, $view_mode
+  */
+ function addtocal_field_get_value($entity_type, $entity, $field_name) {
+   if (!empty($field_name)) {
+-    if (!$field_name['tokenized'])  {     // Unless tokenization has been applied,
++    if (!$field_name['tokenized'] || $field_name['tokenized'] == "\n")  {     // Unless tokenization has been applied,
+       $field_name = $field_name['field']; // just use the raw content of the field.
+ 
+       $value = field_get_items($entity_type, $entity, $field_name);
+@@ -430,13 +430,14 @@ function addtocal_extract_event_info($entity_type, $entity, $entity_id, $field_n
+ 
+   $timezone = $dates[0]['timezone_db'];
+ 
+-  if (isset($display['settings']['location_field'])) {
+-    $location = addtocal_field_get_value($entity_type, $entity, $display['settings']['location_field']);
++  if (isset($display['settings']['location']['field'])) {
++    $location = addtocal_field_get_value($entity_type, $entity, $display['settings']['location']);
+   }
+-  if (isset($display['settings']['description_field'])) {
+-    $description = addtocal_field_get_value($entity_type, $entity, $display['settings']['description_field']);
+-    if (strlen($description) > 1024) {
+-      $description = truncate_utf8($description, 1024, TRUE, TRUE);
++  if (isset($display['settings']['description']['field'])) {
++    $description = addtocal_field_get_value($entity_type, $entity, $display['settings']['description']);
++    if ($description) {
++      $description = drupal_html_to_text($description);
++      $description = truncate_utf8($description, 1024, TRUE, TRUE, 1000);
+     }
+   }
+ 
+@@ -444,7 +445,7 @@ function addtocal_extract_event_info($entity_type, $entity, $entity_id, $field_n
+   $url = $uri['path'];
+ 
+   $info = array(
+-    'title'       => check_plain($entity->title),
++    'title'       => filter_xss($entity->title),
+     'start'       => $start_date,
+     'end'         => $end_date,
+     'timezone'    => $timezone,
+@@ -600,6 +601,10 @@ function addtocal_download_ics($entity, $field_name, $view_mode) {
+   $display = addtocal_get_display($entity, $entity_type, $field_name, $view_mode);
+   $info = addtocal_extract_event_info($entity_type, $entity, $entity_id, $field_name, $display);
+ 
++  foreach($info as &$i) {
++    $i = str_replace("\n", '\\n', $i);
++  }
++
+   $url = isset($query['url']) ? $query['url'] : '';
+   $description = $info['description'];
+   $location = $info['location'];
+@@ -614,15 +619,31 @@ function addtocal_download_ics($entity, $field_name, $view_mode) {
+   }
+   $rfc_dates = addtocal_rfc_3339_date($start_date, $end_date, $info['timezone']);
+ 
++  if ($rfc_dates['local_start']) {
++    $dtstamp = $rfc_dates['local_start'];
++    $dtstart =  $rfc_dates['local_start'];
++  }
++  else {
++    $dtstamp =  $rfc_dates['start'];
++    $dtstart =  $rfc_dates['start'];
++  }
++
++  if ($rfc_dates['local_end']) {
++    $dtend =  $rfc_dates['local_end'];
++  }
++  else {
++    $dtend =  $rfc_dates['end'];
++  }
++
+   echo 'BEGIN:VCALENDAR
+ VERSION:2.0
+ PRODID:-//hacksw/handcal//NONSGML v1.0//EN
+ BEGIN:VEVENT
+ UID:' . $entity_type . '-' . $entity_id . '@' . $_SERVER['HTTP_HOST'] . '
+-DTSTAMP:' . $rfc_dates['start'] . '
+-DTSTART:' . $rfc_dates['start'] . '
+-DTEND:' . $rfc_dates['end'] . '
+-SUMMARY:' . check_plain($title) . '
++DTSTAMP:' . $dtstamp . '
++DTSTART:' . $dtstart . '
++DTEND:' . $dtend . '
++SUMMARY:' . $title . '
+ DESCRIPTION:' . $description . '
+ LOCATION:' . $location . '
+ END:VEVENT

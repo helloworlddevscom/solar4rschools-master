@@ -1,0 +1,38 @@
+<?php
+/**
+ * @file
+ * Installation for Generation Equation module.
+ */
+
+/**
+ * Implements hook_field_schema().
+ */
+function generation_equation_field_schema($field) {
+  if ($field['type'] == 'generation_math_equation') {
+    $columns = array(
+      'source' => array(
+        'type' => 'varchar',
+        'length' => '32',
+        'not null' => FALSE,
+      ),
+      'equation' => array(
+        'type' => 'text',
+        'size' => 'big',
+        'not null' => FALSE,
+      ),
+      'label' => array(
+        'type' => 'text',
+        'size' => 'big',
+        'not null' => FALSE,
+      ),
+      'label_format' => array(
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => FALSE,
+      ),
+    );
+  }
+  return array(
+    'columns' => $columns,
+  );
+}

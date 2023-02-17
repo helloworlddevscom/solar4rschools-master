@@ -1,0 +1,55 @@
+/**
+* Search pane on the Explore Data section.
+* @TODO: There is much more styling for this in style.css that should be moved here.
+*/
+
+.main-prefix {
+
+  .explore-data-school-wrapper {
+    width: 100%;
+  }
+
+  #explore-data-actions-wrapper {
+    clear: both;
+  }
+
+  .form-item-explore-data-date-start,
+  .form-item-explore-data-date-end {
+    label {
+      display: block;
+    }
+  }
+
+  @include breakpoint($bp--medium) {
+    .explore-data-school-wrapper,
+    #explore-data-dates-wrapper {
+      float: left;
+      margin-right: 15px;
+    }
+
+    .explore-data-school-wrapper {
+      width: 50%;
+    }
+
+    #explore-data-dates-wrapper {
+      margin-top: 0;
+
+      .container-inline-date {
+        display: inline-block;
+      }
+    }
+
+
+    .form-item-explore-data-date-start {
+      label {
+        margin-bottom: 18px;
+      }
+    }
+
+    .form-item-explore-data-date-end {
+      label {
+        margin-bottom: 0;
+      }
+    }
+  }
+}

@@ -1,0 +1,16 @@
+name = HTML5 Tools
+description = Provides a set of tools to allow sites to be built using HTML5.
+core = 7.x
+php = 5
+package = 'Markup'
+dependencies[] = elements
+dependencies[] = field
+configure = admin/config/development/html5-tools
+
+
+; Information added by drush on 2014-09-23
+version = "7.x-1.2+8-dev"
+core = "7.x"
+project = "html5_tools"
+datestamp = "1411493848"
+

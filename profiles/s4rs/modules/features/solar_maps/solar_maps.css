@@ -1,0 +1,27 @@
+.leaflet-bar a.leaflet-control-fullscreen-button {
+  background-position: 0 0;
+}
+
+.leaflet-fullscreen-on .leaflet-control-fullscreen a {
+  background-position:0 -26px;
+}
+
+.leaflet-popup-content span.field-label {
+  float: left;
+  padding-right: 0.3em;
+}
+
+.loadspinner {
+  width: 30px;
+  height: 30px;
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 999;
+  display: none;
+  background-image: url('images/spinner-sprite.png');
+}
+.ajax-response-map-companion-list .loadspinner {
+  position: relative;
+  display: block;
+}

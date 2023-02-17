@@ -1,0 +1,472 @@
+<?php
+
+/**
+ * @file
+ * Generation Statistics module.
+ */
+
+/**
+ * Refresh stats blocks every 15 minutes, via Ajax, by default. Unit: ms.
+ */
+define('GENERATION_STATS_BLOCK_REFRESH_INTERVAL', 900 * 1000);
+
+/**
+ * Maximum age to use cached data for during an ajax block refresh. Unit: s.
+ */
+define('GENERATION_STATS_AJAX_AGE_LIMIT', 1800);
+
+/**
+ * Lbs of carbon per KWh.
+ *
+ * Based on U.S. national average emissions rate of: 1400 lbs/MWh
+ */
+define('GENERATION_STATS_EQ_POUNDS_CARBON_PER_KWH', 1.4);
+
+/**
+ * Power a home for a year.
+ *
+ * Based on U.S. national average of 11040 kWh/year = 30.22kWh/day.
+ */
+define('GENERATION_STATS_EQ_POWER_HOME', 30.22);
+
+/**
+ * Power a 42" plasma TV uses a day.
+ *
+ * 500W * 24 hours = 12.0 kWh/day.
+ */
+define('GENERATION_STATS_EQ_POWER_PLASMA_TV', 12.0);
+
+/**
+ * Power an electric toothbrush uses a day.
+ *
+ * 1.5W * 24 hours = 0.036 kWh/day.
+ */
+define('GENERATION_STATS_EQ_POWER_TOOTHBRUSH', 0.036);
+
+/**
+ * Power a TV (28" conventional) uses a day.
+ *
+ * 120W * 24 hours = 2.88 kWh/day.
+ */
+define('GENERATION_STATS_EQ_POWER_TV', 2.88);
+
+/**
+ * Power a video game system uses a day.
+ *
+ * 20W * 24 hours = 0.48 kWh/day.
+ */
+define('GENERATION_STATS_EQ_POWER_VIDEO_GAME', 0.48);
+
+/**
+ * Implements hook_menu().
+ */
+function generation_stats_menu() {
+  return array(
+    // Arguments: node ID, block delta, period.
+    'generation-stats/%generation_site/%/%' => array(
+      'title' => 'Generation Stats Ajax block callback.',
+      'page callback' => 'generation_stats_block_ajax',
+      'page arguments' => array(1, 2, 3),
+      'access callback' => 'generation_stats_block_ajax_access',
+      'access arguments' => array(1, 2, 3),
+      'file' => 'generation_stats.pages.inc',
+      'type' => MENU_CALLBACK,
+    ),
+
+    // Arguments: node ID, block delta, period.
+    'generation-stats/all/%/%' => array(
+      'title' => 'Generation Stats Ajax block callback.',
+      'page callback' => 'generation_stats_block_ajax',
+      'page arguments' => array('0', 2, 3),
+      'access callback' => 'generation_stats_block_ajax_access',
+      'access arguments' => array('0', 2, 3),
+      'file' => 'generation_stats.pages.inc',
+      'type' => MENU_CALLBACK,
+    ),
+  );
+}
+
+/**
+ * Menu access callback.
+ */
+function generation_stats_block_ajax_access($site, $delta, $period) {
+  if (!in_array($period, array_keys(_generation_charts_get_periods()))) {
+    return FALSE;
+  }
+
+  if (empty($site)) {
+    return in_array($delta, array('global_equivalents', 'global_summary'));
+  }
+
+  return (strpos($delta, 'site_') === 0);
+}
+
+/**
+ * Implements hook_theme().
+ */
+function generation_stats_theme() {
+  return array(
+    'generation_stats_global_equivalents' => array(
+      'template' => 'generation-stats-global-equivalents',
+      'variables' => array('data' => array()),
+      'file' => 'generation_stats.theme.inc',
+    ),
+    'generation_stats_global_summary' => array(
+      'template' => 'generation-stats-global-summary',
+      'variables' => array('data' => array()),
+      'file' => 'generation_stats.theme.inc',
+    ),
+    'generation_stats_site_equivalents' => array(
+      'template' => 'generation-stats-site-equivalents',
+      'variables' => array('data' => array()),
+      'file' => 'generation_stats.theme.inc',
+    ),
+    'generation_stats_site_summary' => array(
+      'template' => 'generation-stats-site-summary',
+      'variables' => array('data' => array()),
+      'file' => 'generation_stats.theme.inc',
+    ),
+  );
+}
+
+/**
+ * Implements hook_block_info().
+ */
+function generation_stats_block_info() {
+  $base = array('cache' => DRUPAL_NO_CACHE);
+  return array(
+    // School listing page sidebar.
+    'global_equivalents' => array(
+      'info' => t('Generation: Global carbon equivalents'),
+    ) + $base,
+    // Home page summary.
+    'global_summary' => array(
+      'info' => t('Generation: Global instant summary'),
+    ) + $base,
+    // Equivalents (beneath chart) on school pages.
+    'site_equivalents' => array(
+      'info' => t('Generation: Site carbon equivalents'),
+    ) + $base,
+
+  );
+}
+
+/**
+ * Implements hook_block_view().
+ */
+function generation_stats_block_view($delta) {
+  // Allow modules to alter which period the block uses.
+  $period = 'week';
+  drupal_alter('generation_stats_default_period', $period, $delta);
+  return array(
+    'subject' => '',
+    'content' => _generation_stats_block_view($delta, NULL, $period),
+  );
+}
+
+/**
+ * Generates block view array for a stats block.
+ *
+ * @param string $delta
+ *   Block delta.
+ * @param object $site
+ *   (optional) Node to use for site blocks.
+ * @param string $period
+ *   (optional) Period to indicate for site_equivalents block.
+ * @param bool $ajax
+ *   Whether this block is being built during an Ajax data request.
+ */
+function _generation_stats_block_view($delta = '', $site = NULL, $period = 'week', $ajax = FALSE) {
+  $is_site_block = strpos($delta, 'site_') === 0;
+  if ($is_site_block) {
+    // For site_* blocks, we need a site node to work with.
+    if (!$site) {
+      // If we're trying to display a block that requires a site node, and we
+      // have no node or a non-site node, then let's ask other modules to
+      // figure out for us what site node should be used, if any.
+      $return = module_invoke_all('generation_stats_find_site_node', $site);
+      $site = is_array($return) ? array_shift($return) : $return;
+      if (!($site)) {
+        return;
+      }
+    }
+  }
+
+  $block_data = array(
+    'site' => $site,
+    'cssId' => 'generation-stats-' . str_replace('_', '-', $delta),
+    'instant' => _generation_stats_get_instant_summary($site, $ajax),
+  );
+
+  // We only need the period summary for the site equivalents block.
+  if ($delta === 'site_equivalents') {
+    $block_data['period'] = _generation_stats_get_period_summary($site, $period, $ajax);
+  }
+
+  // Add refresh url to our JS settings for each block. For site_equivalents
+  // blocks, we add a refresh URL for each period so that it can refresh itself
+  // with period-specific data when the site chart block's period is changed.
+  $site_id = $site ? $site->id : 'all';
+  if ($delta == 'site_equivalents') {
+    $refresh_url = array();
+    foreach (array_keys(_generation_charts_get_periods()) as $timeperiod) {
+      $refresh_url[$timeperiod] = url("generation-stats/$site_id/$delta/$timeperiod", array('absolute' => TRUE));
+    }
+  }
+  else {
+    // Use 'lifetime' as a dummy third argument; the third argument is not used
+    // for any block except the Site Equivalents block.
+    $refresh_url = url("generation-stats/$site_id/$delta/lifetime", array('absolute' => TRUE));
+  }
+
+  $settings = array(
+    'blocks' => array(
+      $block_data['cssId'] => array(
+        'refreshUrl' => $refresh_url,
+      ),
+    ),
+  );
+  generation_stats_js_settings($settings);
+
+  $theme_hook = 'generation_stats_' . $delta;
+  return theme($theme_hook, array('data' => $block_data));
+}
+
+/**
+ * Digs up an instant summary or placeholder data.
+ *
+ * @param object $site
+ *   Node for which an instant summary is wanted.
+ * @param bool $ajax
+ *   Whether we're currently responding to an Ajax request.
+ */
+function _generation_stats_get_instant_summary($site = NULL, $ajax = FALSE) {
+  module_load_include('inc', 'generation');
+
+  if ($ajax) {
+    // Ajax call: We want to refresh the data if it's more than 30 seconds
+    // old.
+    $instant_summary = _generation_get_instant_summary($site, GENERATION_STATS_AJAX_AGE_LIMIT);
+    $instant_summary['placeholder'] = FALSE;
+  }
+  else {
+    // Non-ajax call: We can't afford a lengthy query, so use any cached value
+    // available; if none is available, return a placeholder. The block will
+    // make an Ajax call to replace the placeholder content.
+    $instant_summary = _generation_summary_cache_get('instant', $site);
+    if (!$instant_summary) {
+      $keys = array(
+        'site_count',
+        'cell_temperature',
+        'generation',
+        'irradiance',
+        'power',
+        'temperature',
+        // Don't include wind variables here; most sites don't generate wind
+        // power and we don't want to show a placeholder only to have it later
+        // disappear.
+      );
+      return _generation_stats_build_placeholders($keys);
+    }
+  }
+
+  $instant_summary['formatted'] = generation_stats_format_values($instant_summary);
+  return $instant_summary;
+}
+
+/**
+ * Retrieves summary data for a specific period of time relative to now.
+ *
+ * @param object $site
+ *   Site node (or NULL) for which to get the period summary.
+ * @param string $period
+ *   Period (day, week, month, year, lifetime)
+ * @param bool $ajax
+ *   Indicates whether this is being called during an Ajax request handler, or
+ *   this is being called during normal page build. For a normal page build,
+ *   making a request to a generation provider won't happen, since it can cause
+ *   a rather long delay.
+ *
+ * @return array
+ *   Array containing the amount of energy generated over the period,
+ *   and containing the node and period passed in.
+ */
+function _generation_stats_get_period_summary($site, $period, $ajax = FALSE) {
+  list($date_start, $date_end) = _generation_charts_get_period_dates($site, $period);
+
+  module_load_include('inc', 'generation');
+  if ($ajax) {
+    $period_summary = _generation_get_window_summary($site, $date_start, $date_end, GENERATION_STATS_AJAX_AGE_LIMIT);
+    $period_summary['placeholder'] = FALSE;
+  }
+  elseif ($period_summary = _generation_summary_cache_get('window', $site, $date_start, $date_end)) {
+    // Cool!
+    $period_summary['placeholder'] = FALSE;
+  }
+  else {
+    $period_summary = _generation_stats_build_placeholders(array('generation', 'site_count'));
+  }
+
+  if (!$period_summary['placeholder']) {
+    $period_summary['formatted'] = generation_stats_format_values($period_summary);
+  }
+
+  $period_summary['node'] = $site;
+  $period_summary['period'] = $period;
+
+  return $period_summary;
+}
+
+/**
+ * Adds our JavaScript and adds the given JS settings.
+ */
+function generation_stats_js_settings($settings) {
+  static $js_added = FALSE;
+  if (!$js_added) {
+    $module_path = drupal_get_path('module', 'generation_stats');
+    drupal_add_css($module_path . '/generation_stats.css');
+    drupal_add_js($module_path . '/generation_stats.js');
+    $js_added = TRUE;
+
+    // We must only add this setting once, so we add it here.
+    $settings['blockRefreshInterval'] = GENERATION_STATS_BLOCK_REFRESH_INTERVAL;
+  }
+  drupal_add_js(array('generationStats' => $settings), array('type' => 'setting', 'scope' => JS_DEFAULT));
+}
+
+/**
+ * Returns equivalency data based on the given window (or period) summary.
+ */
+function generation_stats_get_equivalents($summary) {
+  if (isset($summary['placeholder']) && $summary['placeholder']) {
+    $keys = array(
+      'carbon',
+      'toothbrush',
+      'home',
+      'tv',
+      'video-game',
+      'plasma-screen',
+    );
+    return _generation_stats_build_placeholders($keys);
+  }
+
+  $generation_kwh = $summary['generation'];
+
+  $carbon = $generation_kwh * GENERATION_STATS_EQ_POUNDS_CARBON_PER_KWH;
+  $equivalents = array(
+    // Calculate CO2 that would have been emitted if this amount of electricity
+    // were generated by fossil fuels.
+    'carbon' => $carbon,
+    // Calculate equivalents. All are number of days the generation could power
+    // each type of device.
+    'toothbrush' => $generation_kwh / GENERATION_STATS_EQ_POWER_TOOTHBRUSH,
+    'home' => $generation_kwh / GENERATION_STATS_EQ_POWER_HOME,
+    'tv' => $generation_kwh / GENERATION_STATS_EQ_POWER_TV,
+    'video-game' => $generation_kwh / GENERATION_STATS_EQ_POWER_VIDEO_GAME,
+    'plasma-screen' => $generation_kwh / GENERATION_STATS_EQ_POWER_PLASMA_TV,
+    'formatted' => array(
+      'carbon' => generation_number_format($carbon),
+    ),
+  );
+  foreach (array('toothbrush', 'home', 'tv', 'video-game', 'plasma-screen') as $type) {
+    $value = format_interval((float) $equivalents[$type] * 24 * 3600, 1);
+
+    // Split formatted interval so we can run number_format() to get thousands
+    // separators on the numeric part of the interval string.
+    $parts = explode(' ', $value, 2);
+    if (count($parts) === 2) {
+      $value = number_format($parts[0]) . ' ' . $parts[1];
+    }
+    $equivalents['formatted'][$type] = $value;
+  }
+  return $equivalents;
+}
+
+/**
+ * Builds placeholder array.
+ */
+function _generation_stats_build_placeholders($keys) {
+  $placeholder = '<span class="generation-stats-placeholder"></span>';
+
+  $data = array(
+    'placeholder' => TRUE,
+    'formatted' => array(),
+  );
+  foreach ($keys as $key) {
+    $data[$key] = $placeholder;
+    $data['formatted'][$key] = $placeholder;
+  }
+  return $data;
+}
+
+/**
+ * Wrapper around generation_number_format() that allows placeholders.
+ */
+function _generation_stats_number_format($value, $decimals = 1) {
+  if (is_numeric($value)) {
+    return generation_number_format($value, $decimals);
+  }
+  return $value;
+}
+
+/**
+ * Formats an array of generation values into strings.
+ *
+ * @param array $values
+ *   Generation data values.
+ * @param int $decimals
+ *   Number of digits after the decimal point to include.
+ * @param array $keys
+ *   (optional) Keys on which to operate. Defaults to:
+ *   - 'cell_temperature'
+ *   - 'generation'
+ *   - 'irradaiance'
+ *   - 'power'
+ *   - 'temperature'
+ *   - 'wind_direction'
+ *   - 'wind_speed'
+ *
+ * @return array
+ *   Array of formatted values, keyed as in the input array.
+ */
+function generation_stats_format_values($values, $decimals = 1, $keys = array()) {
+  if (empty($keys)) {
+    $keys = array(
+      'cell_temperature',
+      'generation',
+      'irradiance',
+      'power',
+      'temperature',
+      'wind_direction',
+      'wind_speed',
+    );
+  }
+
+  $formatted = array();
+  foreach ($keys as $key) {
+    if (isset($values[$key]) && is_numeric($values[$key])) {
+      if ($key === 'wind_direction') {
+        // Yuck -- special case wind_direction.
+        $formatted[$key] = _generation_compass_to_fuzzy($values[$key]);
+      }
+      else {
+        // Usual case: Send it through our number formatter.
+        $formatted[$key] = _generation_stats_number_format($values[$key], $decimals);
+      }
+    }
+    else {
+      $formatted[$key] = NULL;
+    }
+  }
+
+  return $formatted;
+}
+
+/**
+ * Implements hook_ctools_plugin_directory().
+ */
+function generation_stats_ctools_plugin_directory($module, $type) {
+  if ($module == 'ctools') {
+    return 'plugins/' . $type;
+  }
+}

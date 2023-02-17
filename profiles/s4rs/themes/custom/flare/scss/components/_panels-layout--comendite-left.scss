@@ -1,0 +1,64 @@
+////////////////////////
+// Bedrock comendite-left Layout Partial
+//
+// Layout specific to the Bedrock comendite-left panel layout.
+//
+// This is copied from the Comendite layout provided by Bedrock module.
+// It is styling for the custom Comendite Left layout provided by the solar_activities module.
+//
+// Required Variables
+// - $small, $medium, $large, $xlarge (global breakpoints)
+// - $grids, set at global breakpoints
+// - $gutters, set at global breakpoints
+////////////////////////
+
+/*
+ * comendite-left Layout
+ */
+.comendite-left {
+  //@include background-grid;
+
+  .comendite-left-content-header {
+
+    margin-bottom: 1em;
+
+    .panel-pane {
+      margin-bottom: 1em;
+
+      &:last-child {
+        margin-bottom: 0;
+      }
+    }
+  }
+
+  .comendite-left-content-column-container {
+    width: 100%;
+
+    .comendite-left-content-main-column {
+      width: 100%;
+
+      @include breakpoint($bp--small) {
+        width: 100%;
+      }
+
+      @include breakpoint($bp--medium) {
+        float: left;
+        width: 75%;
+        padding-left: 30px;
+      }
+    }
+
+    .comendite-left-content-secondary-column {
+      width: 100%;
+
+      @include breakpoint($bp--small) {
+        width: 100%;
+      }
+
+      @include breakpoint($bp--medium) {
+        float: left;
+        width: 25%;
+      }
+    }
+  }
+}

@@ -1,0 +1,242 @@
+<?php
+/**
+ * @file
+ * Code for the Solar Projects feature.
+ */
+
+include_once 'solar_projects.features.inc';
+
+/**
+ * Implements hook_views_plugins().
+ */
+function solar_projects_views_plugins() {
+  return array(
+    'argument default' => array(
+      'solar_project_user_groups' => array(
+        'title' => t('The OG groups of the given user'),
+        'handler' => 'solar_projects_argument_given_user_groups',
+      ),
+    ),
+  );
+}
+
+/**
+ * Implements hook_field_access().
+ *
+ * FAPE allows users to edit fields for content in which they aren't editors.
+ * Field permissions allow editing of any content for which restrictions aren't
+ * explicitly set.
+ */
+function solar_projects_field_access($op, $field, $entity_type, $entity, $account) {
+  if (!isset($entity->nid) || entity_access('update', $entity_type, $entity)) {
+    return;
+  }
+  if ($entity_type == 'node' && $op == 'edit' && (!isset($field['field_permissions']['type']) || $field['field_permissions']['type'] == FIELD_PERMISSIONS_PUBLIC)) {
+    // Don't let users edit fields where no explicit permissions are set.
+    return FALSE;
+  }
+  elseif ($op == 'edit' && $entity_type != 'comment' && isset($entity->nid) && !og_is_member($entity_type, $entity->nid, 'user', $account)) {
+    // Don't let users edit fields if they're not a member of the group.
+    return FALSE;
+  }
+}
+
+/**
+ * Implements hook_menu_alter().
+ *
+ * Overwrites default callback of fape_field_edit_page with custom callback.
+ */
+function solar_projects_menu_alter(&$items) {
+  if (isset($items['admin/field/edit/%/%/%']['page callback']) && $items['admin/field/edit/%/%/%']['page callback'] == 'fape_field_edit_page') {
+    $items['admin/field/edit/%/%/%']['page callback'] = '_solar_projects_fape_field_edit_page';
+  }
+}
+
+/**
+ * Mimics the fape_field_edit_page function.
+ *
+ * We want users who can't edit all fields of a node to be able to edit some.
+ *
+ * @see fape_field_edit_page()
+ */
+function _solar_projects_fape_field_edit_page($entity_type, $entity_id, $field_name, $langcode = NULL) {
+
+  // Ensure the entity type is valid:
+  if (empty($entity_type)) {
+    return MENU_NOT_FOUND;
+  }
+
+  $entity_info = entity_get_info($entity_type);
+  if (!$entity_info) {
+    return MENU_NOT_FOUND;
+  }
+
+  $entities = entity_load($entity_type, array($entity_id));
+  if (!$entities) {
+    return MENU_NOT_FOUND;
+  }
+
+  $entity = reset($entities);
+  if (!$entity) {
+    return MENU_NOT_FOUND;
+  }
+
+  if (!isset($langcode)) {
+    $langcode = entity_language($entity_type, $entity);
+  }
+
+  // Ensure access to update the entity is granted.
+  if (!entity_access('update', $entity_type, $entity)) {
+    // Do nothing. This is how our function varies from fape_field_edit_page.
+  }
+
+  // Ensure access to actually update this particular field is granted.
+  $field = field_info_field($field_name);
+  if (!field_access('edit', $field, $entity_type, $entity)) {
+    return MENU_ACCESS_DENIED;
+  }
+
+  list(,, $bundle) = entity_extract_ids($entity_type, $entity);
+
+  // This allows us to have limited support for non-field API fields.
+  // Currently, we have support for node:title, node:author, and node:created.
+  if ($entity_type == 'node' && in_array($field_name, array(
+    'title',
+    'author',
+    'created',
+  ))) {
+    $field_instance = TRUE;
+    switch ($field_name) {
+      case 'title':
+        $subform_id = 'fape_field_edit_node_title_form';
+        break;
+
+      case 'author':
+        $subform_id = 'fape_field_edit_node_author_form';
+        break;
+
+      case 'created':
+        $subform_id = 'fape_field_edit_node_created_form';
+        break;
+
+    }
+    if (!node_access('update', $entity)) {
+      return MENU_ACCESS_DENIED;
+    }
+  }
+  else {
+    $field_instance = field_info_instance($entity_type, $field_name, $bundle);
+    $subform_id = 'fape_field_edit_field_form';
+  }
+
+  if (empty($field_instance)) {
+    return MENU_NOT_FOUND;
+  }
+
+  $form_state = array(
+    'entity_type' => $entity_type,
+    'entity' => $entity,
+    'field_name' => $field_name,
+    'langcode' => $langcode,
+    'no_redirect' => TRUE,
+    'redirect' => $_GET['q'],
+    'field_instance' => $field_instance,
+    'bundle' => $bundle,
+    'subform_id' => $subform_id,
+  );
+
+  // Try to figure out bundle's label for nicer field editing title.
+  $entity_bundles = $entity_info['bundles'];
+  $bundle_label = $bundle;
+  foreach ($entity_bundles as $key => $entity_bundle) {
+    if ($key == $bundle) {
+      if (isset($entity_bundle['label'])) {
+        $bundle_label = $entity_bundle['label'];
+      }
+      break;
+    }
+  }
+
+  drupal_set_title(t('<em>Edit @type</em> @title', array('@type' => $bundle_label, '@title' => $field_instance['label'])), PASS_THROUGH);
+
+  $output = drupal_build_form('fape_field_edit_form', $form_state);
+  if (!empty($form_state['executed'])) {
+    entity_save($entity_type, $form_state['entity']);
+    drupal_goto($form_state['redirect']);
+  }
+  return $output;
+}
+
+/**
+ * Implements hook_node_access().
+ *
+ * OG wants to allow users to add content even if they don't have permission to
+ * do so globally. In other words, this stops Funders from seeing a link to add
+ * Classroom updates.
+ */
+function solar_projects_node_access($node, $op, $account) {
+  $type = is_string($node) ? $node : (is_array($node) ? $node['type'] : $node->type);
+
+  if ($op == 'create' && !user_access("create $type content", $account)) {
+    return NODE_ACCESS_DENY;
+  }
+}
+
+/**
+ * Implements hook_form_FORM_ID_alter().
+ *
+ * Needed to have the exposed filter definitely point to /browse-projects.
+ */
+function solar_projects_form_alter(&$form, &$form_state, $formid) {
+  if ($formid === 'views_exposed_form' && $form['#action'] === '/solar-map-feed-projects') {
+    $form['#action'] = '/browse-projects';
+  }
+}
+
+/**
+ * Implements hook_block_info().
+ *
+ * Adds a map expanding button to project pages.
+ */
+function solar_projects_block_info() {
+  $blocks['project_map_expand'] = array(
+    'info' => t('Expand Map Link'),
+    'cache' => DRUPAL_CACHE_GLOBAL,
+  );
+  $blocks['project_map_expand_placeholder'] = array(
+    'info' => t('Expanded Map Placeholder'),
+    'cache' => DRUPAL_CACHE_GLOBAL,
+  );
+
+  return $blocks;
+}
+
+/**
+ * Implements hook_block_view().
+ *
+ * Adds a map expanding button to project pages.
+ */
+function solar_projects_block_view($delta = '') {
+  $block = array();
+
+  switch ($delta) {
+    case 'project_map_expand':
+      $block['content'] = array(
+        '#markup' => l(t('Full Screen Map'), '', array(
+          'attributes' => array('class' => 'map-expand'),
+          'fragment' => 'full screen map',
+          'external' => TRUE,
+        )),
+      );
+      break;
+
+    case 'project_map_expand_placeholder':
+      $block['content'] = array(
+        '#markup' => '<div id="project_map_top_placeholder"></div>',
+      );
+      break;
+
+  }
+
+  return $block;
+}

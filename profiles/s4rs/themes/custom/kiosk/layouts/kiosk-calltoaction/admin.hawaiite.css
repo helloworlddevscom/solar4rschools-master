@@ -1,0 +1,26 @@
+/**
+ * @file
+ * Bedrock Hawaiite panels layout Admin CSS.
+ */
+
+.hawaiite-content-header {
+  margin-bottom: 1%;
+}
+
+.hawaiite-column {
+  float: left;
+  margin-right: 1%;
+  width: 32%;
+}
+
+.hawaiite-column-middle {
+  width: 34%;
+}
+
+.hawaiite-column-right {
+  margin-right: 0;
+}
+
+.hawaiite-content-footer {
+  margin-top: 1%;
+}

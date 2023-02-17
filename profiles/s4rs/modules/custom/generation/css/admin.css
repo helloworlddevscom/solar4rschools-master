@@ -1,0 +1,8 @@
+#generation-admin-device-presets-form td,
+#generation-admin-device-presets-form th {
+  text-align: center;
+  padding: 2px;
+}
+#generation-admin-device-presets-form td select {
+  width: 120px;
+}

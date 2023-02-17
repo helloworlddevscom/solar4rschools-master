@@ -1,0 +1,15 @@
+/**
+ * Misc. base styling.
+ */
+
+
+ul {
+  padding-left: 30px;
+}
+
+
+img.media-element {
+  // @TODO There is some unknown JS setting height of images.
+  // This does not work on mobile where image becomes compressed.
+  height: auto !important; // sass-lint:disable-line no-important
+}

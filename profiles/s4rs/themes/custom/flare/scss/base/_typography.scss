@@ -1,0 +1,126 @@
+/**
+ * Typography.
+ */
+
+h1, h2, h3, h4, h5, h6 {
+  line-height: 1.2;
+}
+
+h2, h3, h4, h5, h6 {
+  font-family: "DezenProBold";
+  text-rendering: optimizeLegibility;
+}
+
+h1 {
+  font-size: 1.8rem;
+  font-weight: 400;
+  margin: 0.67em 0;
+  margin-top: 0;
+}
+h1#page-title {
+  -webkit-box-shadow: rgba(0, 1, 1, 0.35) 0 5px 5px -5px;
+  -moz-box-shadow: rgba(0, 1, 1, 0.35) 0 5px 5px -5px;
+  box-shadow: rgba(0, 1, 1, 0.35) 0 5px 5px -5px;
+  background: #00AFDB url('../images/bg-page-title.gif') no-repeat right top;
+  border-bottom: 1px solid #999999;
+  color: white;
+  /*min-height: 5.9375rem;*/
+  margin: 0.625rem -0.625rem -0.625rem;
+  padding: 15px 20px;
+}
+
+h2 {
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  color: #666666;
+  font-weight: 400;
+  font-size: 1.2rem;
+}
+h2 a:link,
+h2 a:visited {
+  color: #666666;
+  font-weight: 400;
+}
+
+.page-learn h2 a:link,
+.page-learn h2 a:visited {
+  color: #0081AB;
+}
+
+h3 {
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-size: 1rem;
+  font-weight: bold;
+}
+
+p {
+  display: block;
+  font-size: .9rem;
+  margin-bottom: .9rem;
+}
+
+span {
+  font-size: .9rem;
+}
+
+abbr[title] {
+  border-bottom: 1px dotted;
+}
+
+b,
+strong {
+  font-weight: bold;
+}
+
+dfn {
+  font-style: italic;
+}
+
+hr {
+  -moz-box-sizing: content-box;
+  box-sizing: content-box;
+  height: 0;
+}
+
+mark {
+  background: #FF0;
+  color: #000;
+}
+
+code,
+kbd,
+pre,
+samp {
+  font-family: monospace, serif;
+  font-size: 1em;
+}
+
+pre {
+  white-space: pre;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}
+
+q {
+  quotes: "\201C" "\201D" "\2018" "\2019";
+}
+
+small {
+  font-size: 80%;
+}
+
+sub,
+sup {
+  font-size: 75%;
+  line-height: 0;
+  position: relative;
+  vertical-align: baseline;
+}
+
+sup {
+  top: -0.5em;
+}
+
+sub {
+  bottom: -0.25em;
+}
+

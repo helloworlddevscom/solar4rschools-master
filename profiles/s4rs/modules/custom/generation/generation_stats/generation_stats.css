@@ -1,0 +1,12 @@
+.generation-stats-placeholder {
+  background: transparent url('images/ajax-spinner.gif') no-repeat center center;
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+}
+.generation-stats-error {
+  background: transparent url('/misc/message-16-error.png') no-repeat center center;
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+}

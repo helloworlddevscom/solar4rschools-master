@@ -1,0 +1,41 @@
+{
+  "name": "cebf",
+  "version": "1.0.0",
+  "description": "Theme for Clean Energy Bright Futures",
+  "author": "Hello World",
+  "private": true,
+  "engines": {
+    "node": ">= 11.0.0",
+    "npm": ">= 6.4.1"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "autoprefixer": "^6.6.1",
+    "breakpoint-sass": "^2.7.1",
+    "debug": "^3.1.0",
+    "eyeglass": "^1.1.2",
+    "gulp": "^4.0.0",
+    "gulp-add-src": "^1.0.0",
+    "gulp-autoprefixer": "^3.1.0",
+    "gulp-clean-css": "^4.0.0",
+    "gulp-install": "^1.1.0",
+    "gulp-minify": "^3.1.0",
+    "gulp-notify": "^3.2.0",
+    "gulp-plumber": "^1.2.0",
+    "gulp-rename": "^1.4.0",
+    "gulp-sass": "^4.0.2",
+    "gulp-sass-glob": "^1.0.9",
+    "gulp-sass-lint": "^1.4.0",
+    "gulp-shell": "^0.6.5",
+    "gulp-sourcemaps": "^1.12.1",
+    "gulp-uglify": "^1.5.1",
+    "gulp-watch": "^5.0.1",
+    "n": "^2.1.12",
+    "node-sass": "^4.9.2",
+    "sass-lint-auto-fix": "^0.17.0"
+  },
+  "scripts": {
+    "lint": "sass-lint -v -q",
+    "lint:fix": "sass-lint-auto-fix --config .sass-lint-auto-fix.yml;"
+  }
+}

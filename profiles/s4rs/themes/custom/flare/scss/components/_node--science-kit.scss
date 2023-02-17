@@ -1,0 +1,9 @@
+/**
+ * Science Kit node - All view modes.
+ *
+ * This is shared styling for all Science Kit node view modes.
+ */
+
+.node-science-kit {
+  @include node-meta;
+}

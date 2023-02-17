@@ -1,0 +1,9 @@
+/**
+ * Project node - All view modes.
+ *
+ * This is shared styling for all Project node view modes.
+ */
+
+.node-project {
+  @include node-meta;
+}

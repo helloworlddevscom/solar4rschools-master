@@ -1,0 +1,7 @@
+name = Solar Search Views Science Kit Multiselect
+description = Custom Views Exposed Filter.
+core = 7.x
+
+dependencies[] = search_api_autocomplete
+files[] = views_science_kit_multiselect_handler.inc
+files[] = views_science_kit_multiselect.views.inc

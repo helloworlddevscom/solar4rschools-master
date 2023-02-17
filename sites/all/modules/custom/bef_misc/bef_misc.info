@@ -1,0 +1,4 @@
+name = BEF Miscellaneous Overrides
+description = Overrides the default functionality.
+package = Metal Toad
+core = 7.x

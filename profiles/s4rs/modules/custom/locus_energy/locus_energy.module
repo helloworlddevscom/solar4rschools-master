@@ -1,0 +1,130 @@
+<?php
+/**
+ * @file
+ * Code for the Locus Energy feature.
+ */
+
+include_once 'locus_energy.features.inc';
+
+define('LOCUS_API_HOST', 'https://api.locusenergy.com');
+
+/**
+ * Implements hook_menu().
+ */
+function locus_energy_menu() {
+  $items = array();
+  // Configuration/settings page.
+  $items['admin/config/generation/providers/locus-energy'] = array(
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('locus_energy_admin_settings_form'),
+    'access arguments' => array('administer locus energy api'),
+    'title' => 'Locus Energy',
+    'description' => 'Configuration settings for interacting with the Locus Energy web service.',
+    'file' => 'locus_energy.admin.inc',
+  );
+
+  $items['admin/config/generation/providers/locus-energy/settings'] = array(
+    'title' => 'Settings',
+    'type' => MENU_DEFAULT_LOCAL_TASK,
+    'access arguments' => array('administer locus energy api'),
+  );
+
+  // API Test page.
+  $items['admin/config/generation/providers/locus-energy/test'] = array(
+    'title' => 'Test',
+    'type' => MENU_LOCAL_TASK,
+    'access arguments' => array('administer locus energy api'),
+    'page callback' => 'locus_energy_test_page',
+    'file' => 'locus_energy.admin.inc',
+  );
+
+  return $items;
+}
+
+
+/**
+ * Hourly cron function to trigger pull site data from Locus API for various granularity.
+ * Implements Ultimate Cron module hourly hook.
+ */
+function locus_energy_cron_hourly($job) {
+  module_load_include('inc', 'locus_energy', 'api');
+  module_load_include('inc', 'locus_energy', 'generation');
+  module_load_include('inc', 'locus_energy', 'service');
+
+  $LocusEnergyService = LocusEnergyService::get();
+
+  if (!$LocusEnergyService->cronEnabled()) {
+    return;
+  }
+
+  $curr_datetime = new DateTime();
+  $curr_datetime->setTimezone(new DateTimeZone('US/Pacific'));
+  $day = $curr_datetime->format('N');
+  $hour = $curr_datetime->format('H');
+  if ($day > 0 && $day < 6) {
+    // Run for 'hourly' granularity if current time is in between the hours of 6am to 9pm Pacific Time Mon-Fri.
+    if ($hour >= 6 && $hour <= 21) {
+       $LocusEnergyService->getNewDataForAllSites('hourly');
+    }
+
+    // Run for 'daily' granularity only Mon-Fri two times a day at 1pm and 7pm Pacific Time.
+    if ($hour == 13 || $hour == 19) {
+       $LocusEnergyService->getNewDataForAllSites('daily');
+    }
+
+    // Run for 'monthly' granularity only Mon-Fri two times a day at 1pm and 7pm Pacific Time.
+    if ($hour == 13 || $hour == 19) {
+       $LocusEnergyService->getNewDataForAllSites('monthly');
+    }
+
+    // Run for 'yearly' granularity only Mon-Fri two times a day at 1pm and 7pm Pacific Time.
+    if ($hour == 13 || $hour == 19) {
+       $LocusEnergyService->getNewDataForAllSites('yearly');
+    }
+
+    cache_clear_all();
+  }
+}
+
+
+/**
+ * Implements hook_permission().
+ */
+function locus_energy_permission() {
+  return array(
+    'administer locus energy api' => array(
+      'title' => t('administer locus energy api'),
+      'description' => t('Administer Locus Energy API settings'),
+    ),
+  );
+}
+
+
+/**
+ * Implements hook_generation_providers().
+ */
+function locus_energy_generation_providers() {
+  return array(
+    'locus_energy' => array(
+      'name' => t('Locus Energy'),
+      'description' => t('Queries data using the Locus Energy API.'),
+      'site types' => array('locus_energy'),
+      'provider class' => 'LocusEnergyGenerationProvider',
+      'file' => 'locus_energy.generation.inc',
+      'configure' => 'admin/config/generation/providers/locus-energy',
+    ),
+  );
+}
+
+
+function locus_energy_increment_api_call() {
+  
+  $calls = $api_calls = variable_get('locus_energy_api_call_totals', array());
+  $current_month_str = date('M Y', time());
+  if(!isset($calls[$current_month_str])) {
+    $calls[$current_month_str] = 1;
+  } else {
+    $calls[$current_month_str]++;
+  }
+  variable_set('locus_energy_api_call_totals',$calls);
+}

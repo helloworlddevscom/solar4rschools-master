@@ -1,0 +1,5 @@
+name = Solar Weather
+description = Custom implementation for Solar 4R Schools
+package = OpenSourcery
+core = 7.x
+php = 5.3

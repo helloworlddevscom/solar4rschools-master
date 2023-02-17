@@ -1,0 +1,13 @@
+diff --git a/profiles/s4rs/modules/contrib/image_resize_filter/image_resize_filter.module b/profiles/s4rs/modules/contrib/image_resize_filter/image_resize_filter.module
+index 7efd6f3..724eff4 100644
+--- a/profiles/s4rs/modules/contrib/image_resize_filter/image_resize_filter.module
++++ b/profiles/s4rs/modules/contrib/image_resize_filter/image_resize_filter.module
+@@ -677,7 +677,7 @@ function image_resize_filter_pathinfo($uri) {
+     foreach (file_get_stream_wrappers() as $scheme => $stream_wrapper) {
+       $scheme_base_path = file_stream_wrapper_get_instance_by_scheme($scheme)->getDirectoryPath();
+       $matches = array();
+-      if (preg_match('/^' . preg_quote($scheme_base_path, '/') . '\/?(.*)/', $info['dirname'], $matches)) {
++      if (!empty($scheme_base_path) && preg_match('/^' . preg_quote($scheme_base_path, '/') . '\/?(.*)/', $info['dirname'], $matches)) {
+         $info['scheme'] = $scheme;
+         $info['dirname'] = $scheme . '://' . $matches[1];
+         break;

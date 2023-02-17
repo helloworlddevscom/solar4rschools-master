@@ -1,0 +1,39 @@
+<?php
+/**
+ * @file
+ * Provides a custom grouped form exposed form plugin for View 3.x.
+ */
+
+/**
+ * Implements hook_views_api().
+ */
+function views_exposed_groups_views_api() {
+  return array(
+    'api' => 3.0,
+  );
+}
+
+/**
+ * Implements hook_theme().
+ */
+function views_exposed_groups_theme() {
+  $path = drupal_get_path('module', 'views_exposed_groups');
+
+  // Some quasi clever array merging here.
+  $base = array(
+    'file' => 'theme.inc',
+    'path' => $path . '/theme',
+  );
+
+  $hooks['views_exposed_groups'] = $base + array(
+    'template' => 'views-exposed-groups',
+    'pattern' => 'views_exposed_groups__',
+    'render element' => 'form',
+  );
+
+  $hooks['views_exposed_groups_reorder_filter_form'] = $base + array(
+    'render element' => 'form',
+  );
+
+  return $hooks;
+}

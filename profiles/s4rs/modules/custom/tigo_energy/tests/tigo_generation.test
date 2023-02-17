@@ -1,0 +1,93 @@
+<?php
+
+/**
+ * Test Tigo API.
+ */
+class TigoGenerationProviderTest extends DrupalWebTestCase {
+
+  protected $provider, $site, $mock_preset;
+
+  public static function getInfo() {
+    return array(
+      'name' => 'Tigo Generation Provider',
+      'description' => 'Tests for the Tigo Generation Provider',
+      'group' => 'Generation',
+    );
+  }
+
+  public function setUp() {
+
+    $user = variable_get('tigo_energy_api_username');
+    $pass = variable_get('tigo_energy_api_password');
+
+    parent::setUp();
+
+    variable_set('install_profile', 's4rs'); // workaround for https://www.drupal.org/node/911354
+    module_enable(array('tigo_energy'), TRUE);
+
+    variable_set('tigo_energy_api_username', $user);
+    variable_set('tigo_energy_api_password', $pass);
+    module_load_include('inc', 'generation', 'provider');
+    module_load_include('inc', 'generation');
+    module_load_include('inc', 'tigo_energy', 'tigo_energy.generation');
+
+    $this->provider = new TigoEnergyGenerationProvider();
+    $this->provider->updateSites();
+
+    $query = new EntityFieldQuery();
+
+    $results = $query->entityCondition('entity_type', 'generation_site')
+      ->propertyCondition('status', 1)
+      ->propertyCondition('type', 'tigo_energy')
+      ->propertyOrderBy('title')
+      ->execute();
+
+    $entities = entity_load('generation_site', array_keys($results['generation_site']));
+    $this->site = current($entities);
+
+    $this->mock_preset = new stdClass();
+    $this->mock_preset->alias = 'energy';
+    $this->mock_preset->chart_type = 'bar';
+  }
+
+  /**
+   * Single wrapper function to minimize the number of Simpletest re-installs.
+   */
+  public function testAll() {
+    $this->_testQueryInstantSummary();
+    $this->_testQueryBin();
+    $this->_testQueryWindowSummary();
+  }
+
+  /**
+   * Tests queryInstantSummary()
+   */
+  public function _testQueryInstantSummary() {
+    $summary = $this->provider->queryInstantSummary($this->site);
+    $this->assertTrue($summary['generation'] > 0, 'Instant summary has data');
+  }
+
+  /**
+   * Tests queryBin()
+   */
+  public function _testQueryBin() {
+    $end = new DateTime();
+    $end = new DateTime($end->format("Y-m-d 00:00"));
+    $start = clone $end;
+    $start->modify("-30 days");
+    $result = $this->provider->queryBin($this->site, array($this->mock_preset), $start, $end, 'day');
+    $this->assertTrue($result[0]['data'][15][1] > 0, 'Daily energy value present');
+  }
+
+  /**
+   * Tests queryWindowSummary
+   */
+  public function _testQueryWindowSummary() {
+    $end = new DateTime();
+    $end = new DateTime($end->format("Y-m-d 00:00"));
+    $start = clone $end;
+    $start->modify("-30 days");
+    $result = $this->provider->queryWindowSummary($this->site, $start, $end);
+    $this->assertTrue($result['generation'] > 0, 'Window summary has data');
+  }
+}

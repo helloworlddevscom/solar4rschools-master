@@ -1,0 +1,69 @@
+# Ignore Drupal local settings.
+/sites/*/local_settings.php
+/sites/*/settings.local.php
+
+# Ignore paths that contain user-generated content.
+/sites/*/files
+# Sym link: sites/all/files -> ../default/files/legacy_files/
+!/sites/all/files
+/sites/all/themes/kiosk/images/resize/
+!/sites/all/themes/kiosk/images/
+/sites/*/private
+/files/*
+/cache
+
+# ** Only works in OSs that support newer versions of fnmatch (Bash 4+)
+/sites/default/**/files
+/sites/default/**/private
+
+# Avoid accidental modification of pantheon.upstream.yml in sites
+# created from this upstream
+pantheon.upstream.yml
+
+# Packages #
+############
+*.7z
+*.dmg
+*.gz
+*.bz2
+*.iso
+*.jar
+*.rar
+*.tar
+*.zip
+*.tgz
+
+# Logs and databases #
+######################
+*.log
+*.sql
+
+# OS generated files #
+######################
+.DS_Store*
+ehthumbs.db
+Icon
+
+Thumbs.db
+._*
+
+# Vim generated files #
+######################
+*.un~
+
+# SASS #
+##########
+.sass-cache
+
+# PhpStorm generated files #
+############################
+/.idea
+
+# Lando logs #
+##############
+lando/logs/**
+
+# Lando db .sql files #
+#######################
+db/**
+!db/README.txt

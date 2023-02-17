@@ -1,0 +1,41 @@
+/**
+ * Project node - Full view mode.
+ */
+
+
+.node-project.view-mode--full {
+  .field-wrapper.field-photo-gallery,
+  .field-wrapper.field-video-gallery {
+    min-height: 50px;
+    padding-top: 10px;
+    padding-left: 60px;
+
+    .field-label {
+      display: block;
+      margin: 0;
+    }
+
+    br {
+      display: none;
+    }
+  }
+
+  .field-wrapper.field-photo-gallery {
+    background: url('../../images/icons/photo.gif') no-repeat left top transparent;
+  }
+
+  .field-wrapper.field-video-gallery {
+    background: url('../../images/icons/video.gif') no-repeat left top transparent;
+  }
+
+  .field-wrapper.field-photo-gallery a,
+  .field-wrapper.field-video-gallery a {
+    display: block;
+  }
+
+  .field-wrapper.field-photo-gallery a.button,
+  .field-wrapper.field-video-gallery a.button {
+    display: inline-block;
+    margin-bottom: 10px;
+  }
+}

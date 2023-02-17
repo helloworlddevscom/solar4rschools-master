@@ -1,0 +1,351 @@
+<?php
+/**
+ * @file
+ * Code for the Solar Activities feature.
+ */
+
+include_once 'solar_activities.features.inc';
+
+/**
+ * Implements hook_image_styles_alter().
+ *
+ * Override Magnific standard popup thumbnail dimensions.
+ */
+function solar_activities_image_styles_alter(&$styles) {
+  if (isset($styles['magnific_popup_thumbnail'])) {
+    $styles['magnific_popup_thumbnail']['effects'] = array(
+      array(
+
+        'label' => 'Scale',
+        'help' => 'Scaling will maintain the aspect-ratio of the original image. If only a single dimension is specified, the other dimension will be calculated.',
+        'effect callback' => 'image_scale_effect',
+        'dimensions callback' => 'image_scale_dimensions',
+        'form callback' => 'image_scale_form',
+        'summary theme' => 'image_scale_summary',
+        'module' => 'image',
+        'name' => 'image_scale',
+        'data' => array(
+          'width' => 200,
+          'height' => 200,
+          'upscale' => 0,
+        ),
+        'weight' => 1,
+      ),
+    );
+  }
+}
+
+/**
+ * Altered page callback for the /checkout page.
+ *
+ * Automatically submits the order node when visited.
+ *
+ * @see basic_cart_order_checkout()
+ */
+function solar_activities_cart_order_checkout() {
+  global $user;
+
+  $shopping_cart = basic_cart_get_cart();
+  if (empty($shopping_cart)) {
+    drupal_goto('cart');
+  }
+
+  $values = array(
+    'type' => 'order',
+    'uid' => $user->uid,
+    'status' => 0,
+    'comment' => 0,
+    'promote' => 0,
+  );
+  $entity = entity_create('node', $values);
+  $ewrapper = entity_metadata_wrapper('node', $entity);
+  $ewrapper->title->set('Materials list for ' . $user->name);
+
+  $entity->field_email[LANGUAGE_NONE][0] = array(
+    'value' => $user->mail,
+  );
+  $ewrapper->save();
+
+  // If the order fails, we need to be redirected to the cart page to try again.
+  drupal_goto('cart');
+}
+
+/**
+ * Implements hook_form_BASE_FORM_ID_alter().
+ *
+ * Changes the text of the "checkout" button.
+ */
+function solar_activities_form_basic_cart_cart_form_alter(&$form, &$form_state, $form_id) {
+  if (isset($form['buttons']['checkout']['#value'])) {
+    $form['buttons']['checkout']['#value'] = t('Submit for review and approval');
+  }
+}
+
+/**
+ * Altered page callback for the /cart page.
+ *
+ * Changest language of empty carts.
+ *
+ * @see basic_cart_cart()
+ */
+function solar_activities_basic_cart_cart() {
+  $cart = basic_cart_get_cart();
+
+  if (empty($cart)) {
+    return t('No materials selected.');
+  }
+  return drupal_get_form('basic_cart_cart_form');
+}
+
+/**
+ * Implements hook_preprocess_node().
+ */
+function solar_activities_preprocess_node(&$vars) {
+  if (isset($vars['content']['links']['comment'])) {
+    unset($vars['content']['links']['comment']);
+  }
+}
+
+
+/**
+ * Implements hook_preprocess_field().
+ */
+function solar_activities_preprocess_field(&$vars) {
+  $field = $vars['element'];
+  $field_name = $field['#field_name'];
+  $content_type = $vars['element']['#bundle'];
+  $view_mode = $field['#view_mode'];
+
+  switch ($field_name) {
+
+    // Grade Levels field.
+    case 'field_grade_levels':
+
+      // Change label when used in Teacher Activity Center.
+      if ($view_mode == 'activity_center') {
+        $vars['label'] = t('Grades');
+      }
+
+      // Construct more legible display of grade levels.
+      // For example: 9th, 10th, 11th, 12th becomes 9-12.
+      if (!empty($vars['items'])) {
+        $combined_grades = '';
+        $last_grade_num = null;
+        $last_grade_print = null;
+        $last_added_num = null;
+        foreach ($vars['items'] as $key => $item) {
+          // Somehow this array is different for the different view modes.
+          if (isset($item['#markup'])) {
+            $term_name = $item['#markup'];
+          }
+          elseif (isset($item['#title'])) {
+            $term_name = $item['#title'];
+          }
+
+          // @TODO: "th" is part of the taxonomy term names. Possibly changing the taxonomy
+          // terms would be the better than removing "th" here?
+          $grade_print = str_replace('th', '', $term_name);
+          $grade_print = str_replace('nd', '', $grade_print);
+          $grade_print = str_replace('st', '', $grade_print);
+          $grade_print = str_replace('rd', '', $grade_print);
+
+          $grade_num = $grade_print;
+          // Convert non numeric grades to numbers.
+          if ($grade_num == 'PK') {
+            $grade_num = -1;
+          }
+          else {
+            if ($grade_num == 'K') {
+              $grade_num = 0;
+            }
+          }
+
+          // If this is the first grade in array, add it.
+          if (!isset($last_grade_num)) {
+            $combined_grades .= $grade_print;
+
+            $last_added_num = $grade_print;
+          }
+          // If this is not the first grade in array, we need to
+          // figure out how it relates to the previous grade.
+          else {
+            end($vars['items']);
+
+            // If this grade is not the next iteration,
+            // add the last grade and comma separate this grade.
+            if ($grade_num != $last_grade_num + 1) {
+              if ($last_grade_print !== $last_added_num) {
+                $combined_grades .= '-' . $last_grade_print;
+              }
+              $combined_grades .= ', ' . $grade_print;
+
+              $last_added_num = $grade_print;
+            }
+            // If last grade in array.
+            else {
+              if ($key === key($vars['items'])) {
+                if ($grade_num == $last_grade_num + 1) {
+                  $combined_grades .= '-' . $grade_print;
+                }
+                else {
+                  $combined_grades .= ', ' . $grade_print;
+                }
+              }
+            }
+          }
+          $last_grade_num = $grade_num;
+          $last_grade_print = $grade_print;
+        }
+
+        $vars['items'] = [
+          $combined_grades
+        ];
+      }
+
+      break;
+
+    // For Teacher Activity Center taxonomy term reference fields,
+    // render link to view instead of default link to taxonomy term page.
+    case 'field_unit_title':
+    case 'field_activity_energy_content':
+    case 'field_activity_ngss_disciplinary':
+    case 'field_activity_education_science':
+    case 'field_activity_ngss_science':
+    case 'field_activity_other_subjects':
+    case 'field_common_core_standard_s_met':
+    case 'field_next_generation_science_st':
+      if ($content_type == 'activity') {
+        foreach ($vars['items'] as $key => $item) {
+          if (!empty($item['#href'])) {
+            $tid = $item['#options']['entity']->tid;
+            $vars['items'][$key]['#href'] = '/teach/teacher-activity-center?f[]=' . $field_name . ':' . $tid;
+          }
+        }
+      }
+
+      break;
+
+    // For field Relevant NGSS PE field, overwrite default link with URL
+    // pulled from taxonomy term field.
+    case 'field_next_generation_science_st':
+      foreach($vars['items'] as $key => $item) {
+        if (!empty($item['#options']['entity']->field_next_gen_url)) {
+          $external_url = $item['#options']['entity']->field_next_gen_url[LANGUAGE_NONE][0]['url'];
+          $vars['items'][$key]['#href'] = $external_url;
+          $vars['items'][$key]['#options']['attributes']['target'] = '_blank';
+          $vars['items'][$key]['#options']['attributes']['rel'] = [
+            'nofollow',
+            'noopener'
+          ];
+        }
+      }
+
+      break;
+  }
+}
+
+/**
+ * Implements hook_FORMID_form_alter().
+ */
+function solar_activities_form_comment_form_alter(&$form, $form_state, $form_id) {
+  if (isset($form['subject'])) {
+    unset($form['subject']);
+  }
+  if (isset($form['author']) && isset($form['author']['_author'])) {
+    unset($form['author']['_author']);
+  }
+  if (isset($form['actions'])) {
+    $form['actions']['#weight'] = -1;
+    if (isset($form['actions']['submit'])) {
+      $form['actions']['submit']['#value'] = 'Post Comment';
+    }
+  }
+  if (isset($form['comment_body']) && isset($form['comment_body'][LANGUAGE_NONE][0]['#title'])) {
+    unset($form['comment_body'][LANGUAGE_NONE][0]['#title']);
+  }
+}
+
+/**
+ * Implements hook_FORMID_form_alter().
+ *
+ * Load custom Ajax code for submitted Fivestar votes. Reloads page after recording.
+ */
+function solar_activities_form_fivestar_custom_widget_alter(&$form, $form_state, $form_id) {
+  $form['vote']['#attached']['js'][] = drupal_get_path('module', 'solar_activities') . '/js/solar_activities_fivestar.js';
+}
+
+/**
+ * Implements hook_permission().
+ */
+function solar_activities_permission() {
+  $permissions = array(
+    'create activities without bio' => array(
+      'title' => t('Create new activity content without a bio'),
+      'description' => t('Allows a user to create new activities without having their biographic info filled out.'),
+    ),
+  );
+  return $permissions;
+}
+
+/**
+ * Implements hook_entity_info_alter().
+ */
+function solar_activities_entity_info_alter(&$entity_info) {
+  $entity_info['node']['view modes']['activity_center'] = array(
+    'label' => t('Activity Center'),
+    'custom settings' => FALSE,
+  );
+}
+
+/**
+ * Implements hook_preprocess_panels_pane().
+ */
+function solar_activities_preprocess_panels_pane(&$vars) {
+  // For Teacher Activity Center facets displayed in panel panes,
+  // override the default "label" of each facet, rendered as the pane title.
+  // Somehow this is not possible to do through the Facets API GUI.
+  if (!empty($vars['content']['#facet'])) {
+    switch($vars['content']['#facet']['name']) {
+      case 'field_activity_energy_content':
+        $vars['title'] = t('Energy Content');
+        break;
+      case 'field_activity_education_science':
+        $vars['title'] = t('Pedagogy & Practice');
+        break;
+      case 'field_activity_ngss_disciplinary':
+        $vars['title'] = t('NGSS Disciplinary Core Idea');
+        break;
+      case 'field_activity_ngss_science':
+        $vars['title'] = t('NGSS Science and Engineering Practices');
+        break;
+      case 'field_activity_other_subjects':
+        $vars['title'] = t('Other Subjects Covered');
+        break;
+      case 'field_grade_levels':
+        $vars['title'] = t('Intended Grade Level(s)');
+        break;
+      case 'field_next_generation_science_st':
+        $vars['title'] = t('Relevant NGSS PE');
+        break;
+      case 'field_unit_title':
+        $vars['title'] = t('Unit');
+        break;
+      case 'author':
+        $vars['title'] = t('Author');
+        break;
+      case 'field_activity_length2':
+        $vars['title'] = t('Estimated Activity Length');
+        break;
+    }
+  }
+}
+
+/**
+ * Implements hook_ctools_plugin_directory().
+ */
+function solar_activities_ctools_plugin_directory($owner, $plugin_type) {
+  // Load custom Page Manager/Panels layout.
+  if ($owner == 'panels' && $plugin_type == 'layouts') {
+    return "plugins/$plugin_type";
+  }
+}

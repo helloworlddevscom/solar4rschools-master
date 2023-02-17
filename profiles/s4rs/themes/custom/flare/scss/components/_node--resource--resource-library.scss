@@ -1,0 +1,24 @@
+/**
+ * Resource node - Resource Library view mode.
+ */
+
+.node-resource.view-mode--resource-library {
+
+  .node--title {
+    a {
+      color: $color--light-blue;
+    }
+  }
+
+  .field-name-body {
+    p {
+      &:first-child {
+        margin-top: 0;
+      }
+
+      &:last-child {
+        margin-bottom: 0;
+      }
+    }
+  }
+}

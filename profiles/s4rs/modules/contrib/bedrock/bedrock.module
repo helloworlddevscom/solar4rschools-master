@@ -1,0 +1,30 @@
+<?php
+
+/**
+ * @file
+ * Custom layouts for panels.
+ */
+
+/**
+ * Implements hook_ctools_plugin_directory().
+ */
+function bedrock_ctools_plugin_directory($owner, $plugin_type) {
+  if ($owner == 'panels' && $plugin_type == 'layouts') {
+    return "plugins/$plugin_type";
+  }
+}
+
+/**
+ * Implements hook_entity_info_alter().
+ *
+ * Add a 'reference teaser' view mode, meant to be used as a light-weight teaser
+ * for content that is referenced from another node.
+ */
+function bedrock_entity_info_alter(&$entity_info) {
+  if (isset($entity_info['node'])) {
+    $entity_info['node']['view modes']['reference'] = array(
+      'label' => t('Reference teaser'),
+      'custom settings' => FALSE,
+    );
+  }
+}

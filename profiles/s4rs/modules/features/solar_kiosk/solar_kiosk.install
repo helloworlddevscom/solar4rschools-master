@@ -1,0 +1,50 @@
+<?php
+/**
+ * @file
+ * Main installation logic for Solar 4R Schools.
+ */
+
+/**
+ * Alters kiosk entity reference to a generation site instead of a project.
+ */
+function solar_kiosk_update_7001() {
+  // 1. Add the new field (it's part of the feature.)
+  features_revert(array(
+    'solar_kiosk' => array('field_instance'),
+  ));
+
+  $query = db_select('node', 'na')
+    ->fields('na', array('nid'))
+    ->condition('type', 'kiosk');
+
+  $query->join('field_data_field_kiosk_project', 'project', 'na.nid=project.entity_id');
+  $query->join('field_data_field_data_collection_site', 'site', 'project.field_kiosk_project_target_id=site.entity_id');
+
+  $query->addField('site', 'field_data_collection_site_target_id', 'site_id');
+  $query->isNotNull('field_data_collection_site_target_id');
+  $nodes = $query->execute();
+
+  // 2. Loop through existing kiosks
+  // 3. - Find the generation site associated with the kiosk's project
+  // 4. - Set the value of the new field to the found generation site.
+  foreach ($nodes as $result) {
+    $node = node_load($result->nid);
+
+    $node->field_data_collection_site = array(
+      LANGUAGE_NONE => array(array('target_id' => $result->site_id)),
+    );
+
+    node_save($node);
+  }
+
+  // 5. Delete the project field.
+  field_delete_field('field_kiosk_project');
+  field_purge_batch(1);
+}
+
+/**
+ * Update urls for kiosks.
+ */
+function solar_kiosk_update_7002(&$sandbox) {
+  variable_set('pathauto_node_kiosk_pattern', 'kiosk-[node:title]');
+}

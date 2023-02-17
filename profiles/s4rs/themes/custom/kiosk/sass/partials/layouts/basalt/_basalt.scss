@@ -1,0 +1,152 @@
+////////////////////////
+// Bedrock Basalt Layout Partial
+//
+// Layout specific to the Bedrock Basalt panel layout.
+//
+// Copy this file to your theme's Sass partial structure
+// and include in your SMACSS based layout file.
+//
+// Required Variables
+// - $small, $medium, $large, $xlarge (global breakpoints)
+// - $grids, set at global breakpoints
+// - $gutters, set at global breakpoints
+// Optional Variables
+// - $basalt-grid-height
+////////////////////////
+
+@mixin basalt-grid-height {
+  $basalt-grid-height: false !default;
+
+  @if $basalt-grid-height {
+    max-height: $basalt-grid-height;
+    min-height: $basalt-grid-height;
+  }
+}
+
+/*
+ * Basalt Layout
+ */
+.basalt {
+  //@include background-grid;
+
+  .basalt-content-header {
+    @include grid-span(3, 1);
+
+    @include breakpoint($small) {
+      @include grid-span(6, 1);
+    }
+
+    @include breakpoint($medium) {
+      @include grid-span(18, 1);
+    }
+
+    @include breakpoint($large) {
+      @include grid-span(30, 1);
+    }
+
+    @include breakpoint($xlarge) {
+      @include grid-span(30, 1);
+    }
+
+    margin-bottom: 1em;
+
+    .panel-pane {
+      margin-bottom: 1em;
+
+      &:last-child {
+        margin-bottom: 0;
+      }
+    }
+  }
+
+  .basalt-column-container {
+    @include grid-span(3, 1);
+
+    @include breakpoint($small) {
+      @include grid-span(6, 1);
+    }
+
+    @include breakpoint($medium) {
+      @include grid-span(18, 1);
+    }
+
+    @include breakpoint($large) {
+      @include grid-span(30, 1);
+    }
+
+    @include breakpoint($xlarge) {
+      @include grid-span(30, 1);
+    }
+
+    .basalt-column-left {
+      @include grid-span(3, 1);
+
+      @include breakpoint($small) {
+        @include grid-span(6, 1);
+      }
+
+      @include breakpoint($medium) {
+        @include grid-span(6, 1);
+      }
+
+      @include breakpoint($large) {
+        @include grid-span(10, 1);
+      }
+
+      @include breakpoint($xlarge) {
+        @include grid-span(10, 1);
+      }
+    }
+
+    .basalt-column-middle {
+      @include grid-span(3, 1);
+
+      @include breakpoint($small) {
+        @include grid-span(6, 1);
+      }
+
+      @include breakpoint($medium) {
+        @include grid-span(6, 7);
+      }
+
+      @include breakpoint($large) {
+        @include grid-span(10, 11);
+      }
+
+      @include breakpoint($xlarge) {
+        @include grid-span(10, 11);
+      }
+    }
+
+    .basalt-column-right {
+      @include grid-span(3, 1);
+
+      @include breakpoint($small) {
+        @include grid-span(6, 1);
+      }
+
+      @include breakpoint($medium) {
+        @include grid-span(6, 13);
+      }
+
+      @include breakpoint($large) {
+        @include grid-span(10, 21);
+      }
+
+      @include breakpoint($xlarge) {
+        @include grid-span(10, 21);
+      }
+    }
+
+    .basalt-column {
+      .panel-pane {
+        @include basalt-grid-height;
+        margin-bottom: 1em;
+
+        &:last-child {
+          margin-bottom: 0;
+        }
+      }
+    }
+  }
+}

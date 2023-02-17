@@ -1,0 +1,22 @@
+/**
+ * Variables for our theme.
+ */
+
+// Colors
+
+$color--light-gray: #EFEFEF;
+$color--gray: #999999;
+$color--medium-gray: #666666;
+$color--dark-gray: #595959;
+
+$color--light-blue: #51ADD6;
+$color--light-orange: #F89F4E;
+
+
+// Breakpoints
+// Use with breakpoint() mixin to create media queries.
+
+$bp--xlarge: 1400px;
+$bp--large: 1100px;
+$bp--medium: 800px;
+$bp--small: 500px;

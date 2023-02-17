@@ -1,0 +1,132 @@
+////////////////////////
+// Bedrock Granite Layout Partial
+//
+// Layout specific to the Bedrock Granite panel layout.
+//
+// Copy this file to your theme's Sass partial structure
+// and include in your SMACSS based layout file.
+//
+// Required Variables
+// - $small, $medium, $large, $xlarge (global breakpoints)
+// - $grids, set at global breakpoints
+// - $gutters, set at global breakpoints
+// Optional Variables
+// - $granite-grid-height
+////////////////////////
+
+@mixin granite-grid-height {
+  $granite-grid-height: false !default;
+
+  @if $granite-grid-height {
+    max-height: $granite-grid-height;
+    min-height: $granite-grid-height;
+  }
+}
+
+/*
+ * Granite Layout
+ */
+.granite {
+  //@include background-grid;
+
+  .granite-content-header {
+    @include grid-span(3, 1);
+
+    @include breakpoint($small) {
+      @include grid-span(6, 1);
+    }
+
+    @include breakpoint($medium) {
+      @include grid-span(18, 1);
+    }
+
+    @include breakpoint($large) {
+      @include grid-span(30, 1);
+    }
+
+    @include breakpoint($xlarge) {
+      @include grid-span(30, 1);
+    }
+
+    margin-bottom: 1em;
+
+    .panel-pane {
+      margin-bottom: 1em;
+
+      &:last-child {
+        margin-bottom: 0;
+      }
+    }
+  }
+
+  .granite-column-container {
+    @include grid-span(3, 1);
+
+    @include breakpoint($small) {
+      @include grid-span(6, 1);
+    }
+
+    @include breakpoint($medium) {
+      @include grid-span(18, 1);
+    }
+
+    @include breakpoint($large) {
+      @include grid-span(30, 1);
+    }
+
+    @include breakpoint($xlarge) {
+      @include grid-span(30, 1);
+    }
+
+    .granite-column-left {
+      @include grid-span(3, 1);
+
+      @include breakpoint($small) {
+        @include grid-span(6, 1);
+      }
+
+      @include breakpoint($medium) {
+        @include grid-span(9, 1);
+      }
+
+      @include breakpoint($large) {
+        @include grid-span(15, 1);
+      }
+
+      @include breakpoint($xlarge) {
+        @include grid-span(15, 1);
+      }
+    }
+
+    .granite-column-right {
+      @include grid-span(3, 1);
+
+      @include breakpoint($small) {
+        @include grid-span(6, 1);
+      }
+
+      @include breakpoint($medium) {
+        @include grid-span(9, 10);
+      }
+
+      @include breakpoint($large) {
+        @include grid-span(15, 16);
+      }
+
+      @include breakpoint($xlarge) {
+        @include grid-span(15, 16);
+      }
+    }
+
+    .granite-column {
+      .panel-pane {
+        @include granite-grid-height;
+        margin-bottom: 1em;
+
+        &:last-child {
+          margin-bottom: 0;
+        }
+      }
+    }
+  }
+}

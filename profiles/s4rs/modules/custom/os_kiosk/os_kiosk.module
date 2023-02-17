@@ -1,0 +1,33 @@
+<?php
+/**
+ * @file
+ * Custom code for the VISTA Campus Terms & Conditions learning module.
+ */
+
+define('OS_KIOSK_DEFAULT_PERIOD', 'month');
+
+/**
+ * Implements hook_ctools_plugin_directory().
+ */
+function os_kiosk_ctools_plugin_directory($module, $type) {
+  if ($module == 'ctools') {
+    return 'plugins/' . $type;
+  }
+}
+
+
+/**
+ * Implements hook_generation_stats_default_period_alter().
+ *
+ * When on the kiosk, set our default periods. The footer block always
+ * has lifetime data, and equivalents block should have our default
+ * period in order to match the chart upon page load.
+ */
+function os_kiosk_generation_stats_default_period_alter(&$period, $delta) {
+  if ($delta === 'site_summary') {
+    $period = 'lifetime';
+  }
+  elseif ($delta === 'site_equivalents') {
+    $period = OS_KIOSK_DEFAULT_PERIOD;
+  }
+}

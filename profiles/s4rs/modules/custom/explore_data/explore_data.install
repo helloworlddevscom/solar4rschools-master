@@ -1,0 +1,34 @@
+<?php
+/**
+ * @file
+ * Data Exploration Center install hooks.
+ */
+
+/**
+ * Implements hook_schema().
+ */
+function explore_data_schema() {
+  $schema['explore_data_site_presets'] = array(
+    'description' => 'Stores which presets are available on the Data Exploration Page for each generation site.',
+    'fields' => array(
+      'site_id' => array(
+        'type' => 'int',
+        'description' => 'The Drupal entity ID of the generation site in this relation.',
+        'not null' => TRUE,
+      ),
+      'preset_id' => array(
+        'type' => 'int',
+        'description' => 'The {generation_variable_presets}.preset_id of the preset in this relation.',
+        'not null' => TRUE,
+      ),
+    ),
+    'primary key' => array('site_id', 'preset_id'),
+    'indexes' => array(
+      'site_id' => array('site_id'),
+    ),
+    'unique keys' => array(
+      'site_id_preset_id' => array('site_id', 'preset_id'),
+    ),
+  );
+  return $schema;
+}

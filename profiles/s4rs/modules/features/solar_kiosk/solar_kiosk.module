@@ -1,0 +1,84 @@
+<?php
+/**
+ * @file
+ * Code for the Solar Kiosk feature.
+ */
+
+include_once 'solar_kiosk.features.inc';
+
+/**
+ * Implements hook_ctools_plugin_directory().
+ */
+function solar_kiosk_ctools_plugin_directory($owner, $plugin_type) {
+  if ($owner == 'ctools' && $plugin_type == 'content_types') {
+    return 'plugins/' . $plugin_type;
+  }
+}
+
+/**
+ * Implements hook_entity_info_alter().
+ *
+ * Create Fieldable Panel Pane bundles:
+ *  * `green_tech_content` - content subtabs for on Kiosk "Green Technology"
+ *    subsections.
+ */
+function solar_kiosk_entity_info_alter(&$entity_info) {
+  if (isset($entity_info['fieldable_panels_pane'])) {
+    $entity_info['fieldable_panels_pane']['bundles']['green_tech_content'] = array(
+      'label' => t('Green Technology Kiosk Content'),
+      'admin' => array(
+        'path' => 'admin/structure/fieldable-panels-panes/manage/%fieldable_panels_panes_type',
+        'bundle argument' => 4,
+        'real path' => 'admin/structure/fieldable-panels-panes/manage/green_tech_content',
+        'access arguments' => array('administer fieldable panels panes'),
+      ),
+    );
+  }
+}
+
+/**
+ * Implements hook_menu_alter().
+ */
+function solar_kiosk_menu_alter(&$items) {
+  $items['node/%node/view']['weight'] = -20;
+  unset($items['node/%node/view']['title']);
+  $items['node/%node/view']['title callback'] = 'solar_kiosk_view_tab_title';
+  $items['node/%node/view']['title arguments'] = array(1);
+}
+
+/**
+ * Title callback for nodes. Rename Kiosk "View" to "Live Data".
+ */
+function solar_kiosk_view_tab_title($node) {
+  if (isset($node->type) && $node->type == 'kiosk') {
+    return t('Live Data');
+  }
+
+  return t('View');
+}
+
+/**
+ * Implements hook_pathauto_alias_alter().
+ *
+ * Page manager can't autocreate paths for the kiosk pages, so we do it here.
+ */
+function solar_kiosk_pathauto_alias_alter(&$alias, array &$context) {
+  if (isset($context['data']['node']->type) && $context['data']['node']->type == 'kiosk') {
+    watchdog('solar_kiosk', 'Kiosk Pathauto: @node', array('@node' => $context['data']['node']->title), WATCHDOG_INFO);
+    $subtabs = array(
+      'about-partners',
+      'about-project',
+      'call-to-action',
+      'green-technology',
+      'how-it-works',
+      'renewable-benefits',
+    );
+    foreach ($subtabs as $subtab) {
+      $path = array(
+        'source' => implode('/', array($context['source'], $subtab)),
+        'alias' => implode('/', array($alias, $subtab)),
+      );
+      path_save($path);
+    }
+  }
+}

@@ -1,0 +1,546 @@
+<?php
+
+/**
+ * @file
+ * Explore Data module.
+ */
+
+/**
+ * Implements hook_theme().
+ */
+function explore_data_theme() {
+  return array(
+    'explore_data_chart_tools' => array(
+      'variables' => array('options' => array()),
+      'file' => 'explore_data.theme.inc',
+    ),
+    'explore_data_results' => array(
+      'variables' => array('contents' => array()),
+      'path' => drupal_get_path('module', 'explore_data') . '/templates',
+      'template' => 'explore_data_results',
+    ),
+  );
+}
+
+/**
+ * Implements hook_menu().
+ */
+function explore_data_menu() {
+  $main_routes = array(
+    'explore-data-csv/%generation_site/%/%/%',
+  );
+
+  $items = array();
+  foreach ($main_routes as $route) {
+    $items[$route] = array(
+      'title' => 'Data Exploration Center',
+      'page callback' => 'explore_data_page',
+      'page arguments' => array(1, 2, 3, 4),
+      'file' => 'explore_data.pages.inc',
+      'type' => MENU_CALLBACK,
+      'access arguments' => array('access content'),
+    );
+  }
+
+  $items['explore-data-csv/%generation_site/%/%/%']['page callback'] = 'explore_data_csv_page';
+
+  foreach (Bundle::loadByEntityType(EntityType::loadByName('generation_site')) as $bundle) {
+    $items['generation_site/' . $bundle->name . '/%generation_site/charts/explore-data'] = array(
+      'title' => 'Data Exploration Center',
+      'description' => 'Select variable presets for Data Exploration Center.',
+      'page callback' => 'drupal_get_form',
+      'page arguments' => array('explore_data_variable_presets_form', 2),
+      'access callback' => 'explore_data_node_tab_access',
+      'access arguments' => array(1),
+      'file' => 'explore_data.admin.inc',
+      'type' => MENU_LOCAL_TASK,
+    );
+  }
+
+  return $items;
+}
+
+/**
+ * Access callback.
+ */
+function explore_data_node_tab_access($node) {
+  return user_access('administer explore data variables');
+}
+
+/**
+ * Implements hook_permission().
+ */
+function explore_data_permission() {
+  return array(
+    'administer explore data variables' => array(
+      'title' => t('administer explore data variables'),
+      'description' => t('Allow administering variables for Data Exploration Center'),
+    ),
+  );
+}
+
+/**
+ * Implements hook_entity_load().
+ */
+function explore_data_entity_load($entities, $entity_type) {
+  if ($entity_type === 'generation_site') {
+    foreach ($entities as $entity) {
+      $results = db_select('explore_data_site_presets', 'edsp')
+        ->fields('edsp', array('preset_id'))
+        ->condition('site_id', $entity->id)
+        ->execute();
+
+      $entity->explore_data_presets = array();
+      foreach ($results as $row) {
+        $entity->explore_data_presets[$row->preset_id]
+          = generation_variable_preset_load($row->preset_id);
+      }
+    }
+  }
+}
+
+/**
+ * Implements hook_entity_delete().
+ */
+function explore_data_entity_delete($entity, $entity_type) {
+  if ($entity_type === 'generation_site') {
+    db_delete('explore_data_site_presets')
+      ->condition('site_id', $entity->id)
+      ->execute();
+  }
+}
+
+/**
+ * Adds variable presets to a site's data exploration presets.
+ *
+ * @param object $site
+ *   Generation site.
+ * @param array $preset_ids
+ *   Array of variable preset IDs.
+ */
+function explore_data_add_site_presets($site, $preset_ids) {
+  assert(is_object($site));
+  assert(is_array($preset_ids));
+
+  foreach ($preset_ids as $preset_id) {
+    assert(is_numeric($preset_id));
+
+    $record = array(
+      'site_id' => $site->id,
+      'preset_id' => $preset_id,
+    );
+    drupal_write_record('explore_data_site_presets', $record);
+  }
+}
+
+/**
+ * Implements hook_block_info().
+ *
+ * Custom blocks: one for the form, one for the results, and one for tools.
+ */
+function explore_data_block_info() {
+  $blocks['explore_data_form'] = array(
+    'info' => t('Explore Data Form'),
+    'cache' => DRUPAL_NO_CACHE,
+  );
+
+  $blocks['explore_data_results'] = array(
+    'info' => t('Explore Data Results'),
+    'cache' => DRUPAL_NO_CACHE,
+  );
+
+  $blocks['explore_data_chart_tools'] = array(
+    'info' => t('Explore Data Chart Tools'),
+    'cache' => DRUPAL_NO_CACHE,
+  );
+
+  return $blocks;
+}
+
+/**
+ * Implements hook_block_view().
+ *
+ * Custom blocks: one for the form, one for the results, and one for tools.
+ */
+function explore_data_block_view($delta = '') {
+  $block = array();
+  module_load_include('inc', 'explore_data', 'explore_data.pages');
+
+  switch ($delta) {
+    case 'explore_data_form':
+      $arg = arg();
+      $site = isset($arg[1]) ? generation_site_load($arg[1]) : NULL;
+      $date_start = isset($arg[2]) ? $arg[2] : '';
+      $date_end = isset($arg[3]) ? $arg[3] : '';
+      $presets = isset($arg[4]) ? $arg[4] : '';
+      $block['subject'] = NULL;
+      $form = drupal_get_form('explore_data_form', $site, $date_start, $date_end, $presets);
+      $block['content']['#markup'] = drupal_render($form);
+      break;
+
+    case 'explore_data_results':
+      $vars['contents'] = theme('generation_charts_placeholder', array('options' => array()));
+      $block['content'] = theme('explore_data_results', $vars);
+      break;
+
+    case 'explore_data_chart_tools':
+      $block['content'] = theme('explore_data_chart_tools', array());
+      break;
+  }
+  return $block;
+}
+
+
+/**
+ * Builds the main form for the Explore Data page.
+ */
+function explore_data_form($form, $form_state, $site, $date_start, $date_end, $preset_ids_encoded) {
+  $form = array();
+  form_load_include($form_state, 'inc', 'explore_data', 'explore_data.pages');
+  $form['#submit'][] = 'explore_data_form_submit';
+
+  $site_id = '';
+  if (isset($form_state['input']['explore_data']['site_id'])) {
+    $site_id = $form_state['input']['explore_data']['site_id'];
+    $site = generation_site_load($site_id);
+  }
+  elseif (is_object($site)) {
+    $site_id = $site->id;
+  }
+
+  $available_preset_ids = array();
+  $selected_preset_ids = array();
+  if ($site_id && $site) {
+    foreach ($site->explore_data_presets as $preset_id => $preset) {
+      $available_preset_ids[$preset_id] = isset($preset->alias) ? $preset->alias : $preset;
+    }
+
+    if (isset($form_state['input']['explore_data']['preset_ids'])) {
+      $selected_preset_ids = $form_state['input']['explore_data']['preset_ids'];
+    }
+    elseif (!empty($preset_ids_encoded)) {
+      $selected_preset_ids = drupal_map_assoc(generation_urldecode_preset_ids($preset_ids_encoded));
+    }
+  }
+
+  if (isset($form_state['input']['explore_data']['date_start']['date'])) {
+    $date_start = $form_state['input']['explore_data']['date_start']['date'];
+  }
+  if (isset($form_state['input']['explore_data']['date_end']['date'])) {
+    $date_end = $form_state['input']['explore_data']['date_end']['date'];
+  }
+
+  $form['explore_data'] = array(
+    '#type' => 'item',
+    '#tree' => TRUE,
+    '#prefix' => '<div id="explore-data-wrapper" class="clearfix">',
+    '#suffix' => '</div>',
+  );
+  $form['explore_data']['site_id'] = array(
+    '#type' => 'select',
+    '#title' => t('School or project'),
+    '#empty_option' => t('- Select a school or project -'),
+    '#options' => generation_get_sites_with_data(),
+    '#default_value' => $site_id,
+    '#ajax' => array(
+      'callback' => 'ajax_explore_data_form',
+      'wrapper' => 'explore-data-wrapper',
+      'method' => 'replace',
+    ),
+    '#attributes' => array(
+      'data-placeholder' => t('Select a school or project'),
+    ),
+    '#prefix' => '<div class="explore-data-school-wrapper">',
+  );
+
+  // Only display data presets and date range inputs if a location is selected.
+  if ($site) {
+    // Convert start and end dates to DateTime objects.
+    explore_data_convert_dates($site, $date_start, $date_end);
+
+    $form['explore_data']['preset_ids'] = array(
+      '#type' => 'select',
+      '#multiple' => TRUE,
+      '#size' => 6,
+      '#title' => t('Select up to !count variables to graph', array('!count' => 4)),
+      '#options' => $available_preset_ids,
+      '#default_value' => $selected_preset_ids,
+      '#attributes' => array(
+        'data-placeholder' => t('Click to select variables'),
+      ),
+      '#suffix' => '</div>',
+    );
+    $form['explore_data']['date_start'] = array(
+      '#type' => 'date_popup',
+      '#title' => t('Start date'),
+      '#date_format' => EXPLORE_DATA_DATE_FORMAT,
+      '#date_year_range' => EXPLORE_DATA_DATE_YEAR_RANGE,
+      '#default_value' => empty($date_start) ? '' : $date_start->format('Y-m-d'),
+      '#prefix' => '<div id="explore-data-dates-wrapper">',
+    );
+    $form['explore_data']['date_end'] = array(
+      '#type' => 'date_popup',
+      '#title' => t('End date'),
+      '#date_format' => EXPLORE_DATA_DATE_FORMAT,
+      '#date_year_range' => EXPLORE_DATA_DATE_YEAR_RANGE,
+      '#default_value' => empty($date_end) ? '' : $date_end->format('Y-m-d'),
+      '#suffix' => '</div>',
+    );
+
+    $form['explore_data']['submit'] = array(
+      '#type' => 'submit',
+      '#value' => t('Graph'),
+      '#weight' => 20,
+    );
+    $form['explore_data']['reset'] = array(
+      '#type' => 'submit',
+      '#value' => t('Reset'),
+      '#suffix' => '</div>',
+      '#weight' => 30,
+    );
+  }
+  else {
+    $form['explore_data']['site_id']['#suffix'] = '</div>';
+  }
+
+  // Attach the help text.
+  $form['explore_data']['help'] = array(
+    '#prefix' => '<div id="explore-data-actions-wrapper">',
+    '#type' => 'markup',
+    '#weight' => 10,
+  );
+  // Add a suffix if other actions aren't set.
+  if (!isset($form['explore_data']['reset'])) {
+    $form['explore_data']['help']['#suffix'] = '</div>';
+  }
+
+  if ($site && !empty($selected_preset_ids) && !empty($date_start) && !empty($date_end)) {
+
+    $start_stamp = $date_start->format('U');
+    $end_stamp = $date_end->format('U');
+
+    if ($start_stamp <= $end_stamp) {
+      $options = array(
+        'from' => $date_start,
+        'to' => $date_end,
+      );
+    }
+    else {
+      // Swap the dates if the user put them in the wrong order.
+      $form['explore_data']['date_end']['#default_value'] = $date_start->format(EXPLORE_DATA_DATE_FORMAT);
+      $form['explore_data']['date_start']['#default_value'] = $date_end->format(EXPLORE_DATA_DATE_FORMAT);
+      $options = array(
+        'to' => $date_start,
+        'from' => $date_end,
+      );
+    }
+
+    $errors = FALSE;
+    if (abs($end_stamp - $start_stamp) > (60 * 60 * 24 * 367)) {
+      drupal_set_message(t('Date range must be less than or equal to one year.'), 'error');
+      $errors = TRUE;
+    }
+
+    if (count($selected_preset_ids) > 4) {
+      drupal_set_message(t('Too many variables selected. Please choose up to !count.', array('!count' => 4)));
+      $errors = TRUE;
+    }
+
+    if (!$errors) {
+      $options = generation_charts_configure_chart($site, $selected_preset_ids, $options);
+    }
+  }
+
+  return $form;
+}
+
+
+/**
+ * Form validation handler.
+ */
+function explore_data_form_validate($form, &$form_state) {
+  $button = $form_state['clicked_button']['#value'];
+  if ($button == t('Reset')) {
+    return;
+  }
+
+  if (!$form_state['values']['explore_data']['site_id']) {
+    form_set_error('explore_data][site_id', t('Please select a school or project.'));
+  }
+  if (count($form_state['values']['explore_data']['preset_ids']) < 1) {
+    form_set_error('explore_data][preset_ids', t('Please select at least one variable to graph.'));
+  }
+  elseif (count($form_state['values']['explore_data']['preset_ids']) > 4) {
+    form_set_error('explore_data][preset_ids', t('Please select at most !count variables to graph.', array('!count' => 4)));
+  }
+
+  if (!isset($form_state['values']['explore_data']['date_start'])) {
+    form_set_error('explore_data][date_start', t('Please select a start date.'));
+  }
+  elseif (!isset($form_state['values']['explore_data']['date_end'])) {
+    // If there's no end date specified, use the start date.
+    form_set_value($form['explore_data']['date_end'], $form_state['values']['explore_data']['date_start'], $form_state);
+  }
+  else {
+    $start = $date_start = $form_state['values']['explore_data']['date_start'];
+    $end = $date_end = $form_state['values']['explore_data']['date_end'];
+
+    $site = generation_site_load($form_state['values']['explore_data']['site_id']);
+    generation_charts_convert_dates($site, $start, $end, array('inclusive' => FALSE));
+    $start_stamp = $start->format('U');
+    $end_stamp = $end->format('U');
+
+    // Swap the dates if the user put them in the wrong order.
+    if ($start_stamp > $end_stamp) {
+      form_set_value($form['explore_data']['date_end'], $date_start, $form_state);
+      form_set_value($form['explore_data']['date_start'], $date_end, $form_state);
+    }
+
+    $diff = abs($end_stamp - $start_stamp);
+    if ($diff > (60 * 60 * 24 * 366)) {
+      form_set_error('explore_data][date_start', t('Date range must be less than or equal to one year.'));
+    }
+  }
+}
+
+/**
+ * Callback function to refresh the form via ajax.
+ */
+function ajax_explore_data_form($form, $form_state) {
+
+  // If there's a preset id, and we try to change the site id, we need to reload
+  // the whole page to maintain accurate urls.
+  if ($form['explore_data']['preset_ids']['#default_value']) {
+    ctools_include('ajax');
+    ctools_add_js('ajax-responder');
+    $args = arg(NULL, trim($form['#action'], '/'));
+    $commands[] = ctools_ajax_command_redirect($args[0] . '/' . $form_state['values']['explore_data']['site_id']);
+    print ajax_render($commands);
+    exit;
+  }
+
+  return $form['explore_data'];
+}
+
+/**
+ * Implements hook_ctools_plugin_directory().
+ */
+function explore_data_ctools_plugin_directory($module, $type) {
+  if ($module == 'ctools') {
+    return 'plugins/' . $type;
+  }
+}
+
+/**
+ * Implements hook_form_alter().
+ *
+ * Sets the values for two hidden fields.
+ */
+function explore_data_form_alter(&$form, &$form_state, $form_id) {
+  $edit_form_id = 'eck__entity__form_edit_saved_graph_saved_graph';
+  $add_form_id = 'eck__entity__form_add_saved_graph_saved_graph';
+
+  if ($form_id == $edit_form_id || $form_id == $add_form_id) {
+    if (isset($form['field_graph_url'][LANGUAGE_NONE][0]['value'])) {
+      $form['field_graph_url'][LANGUAGE_NONE][0]['value']['#value'] = current_path();
+      $form['field_graph_url'][LANGUAGE_NONE][0]['value']['#type'] = 'hidden';
+    }
+    if (isset($form['field_related_project'][LANGUAGE_NONE])) {
+      $entity_id = _generation_get_project_from_generation_site(arg(1));
+      $form['field_related_project'][LANGUAGE_NONE]['#default_value'][0] = $entity_id;
+      $form['field_related_project'][LANGUAGE_NONE]['#type'] = 'hidden';
+    }
+
+    $form['#submit'][] = '_explore_data_graph_form_submit';
+  }
+
+}
+
+/**
+ * Implements hook_date_popup_process_alter().
+ * Set default time for start and end date
+ */
+function explore_data_date_popup_process_alter(&$element, &$form_state, $context) {
+	if ($form_state['build_info']['form_id'] == 'explore_data_form') {
+
+		if ( isset( $element['#name']) && $element['#name'] == 'explore_data[date_start]' ) {
+			$element['time']['#value']         = '00:00';
+			$element['time']['#default_value'] = '00:00';
+			$element['time']['#type']          = 'hidden';
+		}
+
+		if ( isset( $element['#name']) && $element['#name'] == 'explore_data[date_end]' ) {
+			$element['time']['#value']         = '23:59';
+			$element['time']['#default_value'] = '23:59';
+			$element['time']['#type']          = 'hidden';
+		}
+	}
+}
+
+/**
+ * Alters the form to redirect to the submitted url + the entity.
+ */
+function _explore_data_graph_form_submit($form, &$form_state) {
+  $form_state['redirect'] = trim($form['#action'], '/');
+  $args = arg(NULL, $form['#action']);
+  if (isset($form_state['values']['entity']->id) && array_pop($args) != $form_state['values']['entity']->id) {
+    $form_state['redirect'] .= '/' . $form_state['values']['entity']->id;
+
+    $saved_graph = entity_load_single('saved_graph', $form_state['values']['entity']->id);
+    $wrapper = entity_metadata_wrapper('saved_graph', $saved_graph);
+    $wrapper->field_graph_url->set($form_state['redirect']);
+    $saved_graph->save();
+  }
+}
+
+
+
+
+function batch_load_data_op($site, $date_start, $date_end, $preset_ids_encoded, &$context) {
+  module_load_include('inc', 'generation');
+  
+
+  watchdog(WATCHDOG_DEBUG, 'BATCH IS RUNNING');
+
+  if (empty($context['sandbox'])) {
+    $context['sandbox'] = array();
+    $context['sandbox']['progress'] = 0;
+    $context['sandbox'] = 0;
+    $context['sandbox']['max'] = 1;
+  }
+
+  if ($context['sandbox']['progress'] < $context['sandbox'] ['max']) {
+    $context['finished'] = $context['sandbox']['progress'] / $context['sandbox']['max'];
+  }
+
+
+
+  $preset_ids = generation_urldecode_preset_ids($preset_ids_encoded);
+  $presets = generation_variable_preset_load_multiple($preset_ids);
+  // Process any overrides.
+  foreach ($presets as $preset_id => $preset) {
+    if ($override = generation_get_site_preset_override($site, $preset_id)) {
+      foreach (array('alias', 'description', 'units') as $parameter) {
+        if (!empty($override->{$parameter})) {
+          $presets[$preset_id]->{$parameter} = $override->{$parameter};
+        }
+      }
+    }
+  }
+
+  $date_start = date_timestamp_get(DateTime::createFromFormat('m-d-Y', $date_start));
+
+  $date_end = date_timestamp_get(DateTime::createFromFormat('m-d-Y', $date_end));
+
+  
+  generation_charts_convert_dates($site, $date_start, $date_end, array());
+
+  $series_data = _generation_get_bin_data($site, $presets, $date_start, $date_end);
+
+}
+
+function batch_load_site_data_callback($success, $results, $operations) {
+  if (!$success) {
+    drupal_set_message('Error updating data.');
+  }
+}

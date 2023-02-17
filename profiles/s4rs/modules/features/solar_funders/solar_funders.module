@@ -1,0 +1,17 @@
+<?php
+/**
+ * @file
+ * Code for the Solar Funders feature.
+ */
+
+include_once 'solar_funders.features.inc';
+
+/**
+ * Implements hook_entity_info_alter().
+ */
+function solar_funders_entity_info_alter(&$entity_info) {
+  $entity_info['profile2']['view modes']['teaser'] = array(
+    'label' => t('Teaser'),
+    'custom settings' => TRUE,
+  );
+}

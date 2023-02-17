@@ -1,0 +1,23 @@
+<?php
+/**
+ * @file
+ * Stops page from changing when user is posting.
+ */
+
+/**
+ * Implements hook_form_alter().
+ *
+ * Adds the custom js to editing forms.
+ */
+function edit_protection_form_alter(&$form, &$form_state, $form_id) {
+  $nodes_to_warn = array(
+    'activity',
+  );
+
+  if (
+    (isset($form['#node_edit_form']) && isset($form['#node']->type) && in_array($form['#node']->type, $nodes_to_warn))
+    || isset($form['#entity_type']) && $form['#entity_type'] == 'entityform') {
+
+    $form['#attached']['js'][] = drupal_get_path('module', 'edit_protection') . '/edit-protection.js';
+  }
+}

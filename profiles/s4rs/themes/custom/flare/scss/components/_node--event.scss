@@ -1,0 +1,21 @@
+/**
+ * Event node Full view mode.
+ */
+
+.node-event:not(.node-teaser) > .content {
+  min-height: 400px !important; // sass-lint:disable-line no-important
+}
+
+.node-event:not(.node-teaser) .field-name-field-date,
+.node-event:not(.node-teaser) .field-name-field-location {
+  margin-bottom: 10px;
+}
+
+.node-event:not(.node-teaser) .field-name-field-link {
+  margin-bottom: 30px;
+}
+
+.node-event:not(.node-teaser) .field-name-body {
+  margin-top: 30px;
+  margin-bottom: 30px;
+}

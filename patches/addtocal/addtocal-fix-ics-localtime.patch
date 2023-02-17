@@ -1,0 +1,29 @@
+diff --git a/profiles/s4rs/modules/contrib/addtocal/addtocal.module b/profiles/s4rs/modules/contrib/addtocal/addtocal.module
+index 84abe5942..595a84558 100644
+--- a/profiles/s4rs/modules/contrib/addtocal/addtocal.module
++++ b/profiles/s4rs/modules/contrib/addtocal/addtocal.module
+@@ -546,10 +546,10 @@ function addtocal_rfc_3339_date($start, $end, $timezone) {
+   }
+ 
+   $startDate = new DateTime($start, $tz);
+-  $startDate->setTimezone($tz_utc);
++//  $startDate->setTimezone($tz_utc);
+ 
+   $endDate = new DateTime($end, $tz);
+-  $endDate->setTimezone($tz_utc);
++//  $endDate->setTimezone($tz_utc);
+ 
+   $start_timestamp = $startDate->getTimestamp();
+   $end_timestamp = $endDate->getTimestamp();
+@@ -557,9 +557,9 @@ function addtocal_rfc_3339_date($start, $end, $timezone) {
+   $diff_timestamp = $end_timestamp - $start_timestamp;
+ 
+   $start_date = gmdate('Ymd', $start_timestamp) . 'T' . gmdate('His', $start_timestamp) . 'Z';
+-  $local_start_date = date('Ymd', $start_timestamp) . 'T' . date('His', $start_timestamp) . '';
++  $local_start_date = $startDate->format('Ymd') . 'T' . $startDate->format('His');
+   $end_date = gmdate('Ymd', $end_timestamp) . 'T' . gmdate('His', $end_timestamp) . 'Z';
+-  $local_end_date = date('Ymd', $end_timestamp) . 'T' . date('His', $end_timestamp) . '';
++  $local_end_date = $endDate->format('Ymd') . 'T' . $endDate->format('His');
+ 
+   $diff_hours = str_pad(round(($diff_timestamp / 60) / 60), 2, '0', STR_PAD_LEFT);
+   $diff_minutes = str_pad(abs(round($diff_timestamp / 60) - ($diff_hours * 60)), 2, '0', STR_PAD_LEFT);

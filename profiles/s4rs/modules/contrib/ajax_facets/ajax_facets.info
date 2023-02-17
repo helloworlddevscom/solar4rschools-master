@@ -1,0 +1,24 @@
+name = Ajax facet filters
+description = Ajax facet filters.
+dependencies[] = facetapi (>=7.x-1.4)
+dependencies[] = multiselect
+dependencies[] = search_api
+dependencies[] = views
+package = Search Toolkit
+core = 7.x
+php = 5.4
+
+files[] = plugins/facetapi/ajax_widget.inc
+files[] = plugins/facetapi/ajax_widget_checkboxes.inc
+files[] = plugins/facetapi/ajax_widget_select.inc
+files[] = plugins/facetapi/ajax_widget_links.inc
+files[] = plugins/facetapi/ajax_widget_ranges.inc
+files[] = plugins/facetapi/ajax_widget_multiselect.inc
+files[] = plugins/facetapi/empty_behavior_ajax_facets.inc
+
+; Information added by Drupal.org packaging script on 2018-02-28
+version = "7.x-3.7+17-dev"
+core = "7.x"
+project = "ajax_facets"
+datestamp = "1519843984"
+

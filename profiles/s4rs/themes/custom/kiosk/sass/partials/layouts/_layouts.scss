@@ -1,0 +1,53 @@
+////////////////////////////////////////////////////////////////////////////////
+// Layouts Partials
+//
+// Your SMACSS Layouts go here
+// Build sub folders and partials in this folder, with everything
+// being imported, in cascading order, into this file.
+////////////////////////////////////////////////////////////////////////////////
+
+////////////////////////
+// Bedrock Grid Imports
+////////////////////////
+@import 'adakite/adakite';
+@import 'andesite/andesite';
+@import 'basalt/basalt';
+@import 'coal/coal';
+@import 'flint/flint';
+@import 'granite/granite';
+@import 'hawaiite/hawaiite';
+@import 'obsidian/obsidian';
+@import 'pumice/pumice';
+@import 'quartz/quartz';
+@import 'variolite/variolite';
+
+////////////////////////
+// Kiosk Grid
+////////////////////////
+/* @import 'kiosk/kiosk'; */
+
+////////////////////////
+// Regions
+////////////////////////
+.header-container,
+.main-container,
+.footer-container {
+  margin: 0 auto;
+  min-width: $container-width;
+
+  @include breakpoint($small) {
+    width: $small-container-width;
+  }
+
+  @include breakpoint($medium) {
+    width: $medium-container-width;
+  }
+
+  @include breakpoint($large) {
+    width: $large-container-width;
+  }
+
+  @include breakpoint($xlarge) {
+    width: $xlarge-container-width;
+  }
+}

@@ -1,0 +1,9 @@
+/**
+ * Funding partners view.
+ */
+
+.view-founding-partners {
+  > .view-content {
+    @include view-list;
+  }
+}

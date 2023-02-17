@@ -1,0 +1,188 @@
+<?php
+/**
+ * @file
+ * Code for the Solar Search feature.
+ */
+
+include_once 'solar_search.features.inc';
+
+/**
+ * Implements hook_form_FORM_ID_alter().
+ *
+ * Customizes inputs on the Project views filter.
+ */
+function solar_search_form_views_exposed_form_alter(&$form, &$form_state, $form_id) {
+  if (isset($form['field_system_size_value']['max'])) {
+    $form['field_system_size_value']['max']['#title'] = '';
+    $form['field_system_size_value']['max']['#attributes']['placeholder'] = t('But less than');
+    $form['field_system_size_value']['min']['#attributes']['placeholder'] = t('Greater than');
+  }
+
+  // Moved from solar_background_topics.module
+  // Needed to have the exposed filter definitely point to /learn.
+  if ($form['#action'] === '/' && $form['#id'] == 'views-exposed-form-node-search-panel-pane-7') {
+    $form['#action'] = '/learn';
+  }
+}
+
+/**
+ * Implements hook_search_api_processor_info().
+ */
+function solar_search_search_api_processor_info() {
+  $processors['solar_search_save_recent'] = array(
+    'name' => t('Save recent queries'),
+    'description' => t('This processor will save queries that have more than 0 results.'),
+    'class' => 'SolarSearchSaveRecent',
+  );
+
+  return $processors;
+}
+
+/**
+ * Implements hook_ctools_plugin_directory().
+ *
+ * Allows for displaying the 4 most recently searched terms for current user.
+ */
+function solar_search_ctools_plugin_directory($module, $type) {
+  if ($module == 'ctools') {
+    return 'plugins/' . $type;
+  }
+}
+
+/**
+ * Implements hook_views_pre_render().
+ *
+ * Adds js to view with results.
+ * Sadly, we have to use drupal_add_js, since https://drupal.org/node/1894736
+ */
+function solar_search_views_pre_render($view) {
+  drupal_add_library('system', 'jquery.cookie');
+  drupal_add_js(drupal_get_path('module', 'solar_search') . '/js/remember_search.js');
+  if (isset($view->exposed_data['topic']) && $view->name == 'node_search' && $view->current_display == 'panel_pane_7' && count($view->result)) {
+    $this_search = drupal_get_destination();
+
+    $options = array(
+      'path' => $this_search['destination'],
+      'title' => $view->exposed_data['topic'],
+    );
+
+    drupal_add_js(array('successfulSearch' => $options), array('type' => 'setting', 'scope' => JS_DEFAULT));
+  }
+}
+
+
+/**
+ * Implements hook_search_api_index_items_alter().
+ *
+ * Converts a time stored in seconds in the DB to hours in Solr.
+ */
+function solar_search_search_api_index_items_alter(array &$items, SearchApiIndex $index) {
+  foreach ($items as $item) {
+    if (isset($item->field_activity_length2)) {
+      foreach ($item->field_activity_length2[LANGUAGE_NONE] as $delta => $value) {
+        $in_hours = $value['value'] / 3600;
+        $item->field_activity_length2[LANGUAGE_NONE][$delta]['value'] = $in_hours;
+      }
+    }
+  }
+}
+
+/**
+ * Implements hook_block_info().
+ *
+ * Adds a javascript "back" button to given pages.
+ */
+function solar_search_block_info() {
+  $blocks['back_button'] = array(
+    'info' => t('Back Button'),
+    'cache' => DRUPAL_CACHE_GLOBAL,
+  );
+  $blocks['global_search'] = array(
+    'info' => t('Global search'),
+    'cache' => DRUPAL_CACHE_GLOBAL,
+  );
+
+  return $blocks;
+}
+
+/**
+ * Implements hook_block_view().
+ *
+ * Adds a javascript "back" button to given pages.
+ */
+function solar_search_block_view($delta = '') {
+  $block = array();
+
+  switch ($delta) {
+    case 'back_button':
+      $block['content'] = array(
+        '#markup' => l(t('Return to Search'), '', array(
+          'attributes' => array('class' => 'back-button'),
+          'fragment' => 'back',
+          'external' => TRUE,
+        )),
+        '#attached' => array(
+          'js' => array(
+            drupal_get_path('module', 'solar_search') . '/js/back_button.js',
+          ),
+        ),
+      );
+      break;
+
+    case 'global_search':
+      $block['content'] = drupal_get_form('_solar_search_box');
+      break;
+
+  }
+
+  return $block;
+}
+
+/**
+ * Creates a search box form.
+ *
+ * @see search_box()
+ */
+function _solar_search_box($form, &$form_state) {
+  $form['keyword'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Search'),
+    '#title_display' => 'invisible',
+    '#size' => 15,
+    '#default_value' => '',
+    '#attributes' => array('title' => t('Enter the terms you wish to search for.'), 'placeholder' => t('Search This Site')),
+  );
+  $form['#action'] = '/search';
+  $form['actions'] = array('#type' => 'actions');
+  $form['actions']['submit'] = array(
+    '#type' => 'image_button',
+    '#src' => drupal_get_path('theme', 'flare') . '/images/icons/search--gray.svg',
+  );
+  $form['#submit'][] = '_solar_search_box_form_submit';
+
+  return $form;
+}
+
+/**
+ * Handles action when a user submits a form.
+ *
+ * @see search_box_form_submit()
+ */
+function _solar_search_box_form_submit($form, &$form_state) {
+  // The search form relies on control of the redirect destination for its
+  // functionality, so we override any static destination set in the request,
+  // for example by drupal_access_denied() or drupal_not_found()
+  // (see http://drupal.org/node/292565).
+  if (isset($_GET['destination'])) {
+    unset($_GET['destination']);
+  }
+
+  $form_state['redirect'] = array(
+    'search',
+    array(
+      'query' => array(
+        'keyword' => $form_state['values']['keyword'],
+      ),
+    ),
+  );
+}

@@ -1,0 +1,20 @@
+/**
+ * Search pane on Browse Projects section.
+ */
+
+.main-prefix {
+
+  #edit-field-system-size-value-wrapper {
+    label {
+      display: block;
+    }
+  }
+
+  @include breakpoint($bp--medium) {
+    #edit-field-system-size-value-wrapper {
+      label {
+        margin: 12px 0 10px;
+      }
+    }
+  }
+}

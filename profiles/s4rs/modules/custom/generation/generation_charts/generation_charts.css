@@ -1,0 +1,50 @@
+
+.explore-data-chart-wrapper {
+  position: relative;
+  overflow-x: scroll;
+  background-color: gray;
+  padding: 30px 0;
+  -webkit-overflow-scrolling: touch;
+}
+.explore-data-chart-wrapper:before {
+  position: absolute;
+  content: 'Swipe here to scroll graph horizontally';
+  top: 3px;
+  left: 8px;
+  font-size: .9rem;
+  color: white;
+}
+.explore-data-chart-wrapper:after {
+  position: absolute;
+  content: 'Swipe here to scroll graph horizontally';
+  bottom: 3px;
+  left: 8px;
+  font-size: .9rem;
+  color: white;
+}
+#generation-chart-wrapper {
+  clear: both;
+}
+.generation-charts-ajax-spinner {
+  background: #00afdb url('images/spinner.gif') no-repeat center center;
+  border: 2px solid #d9da56;
+  display: none;
+  top: 0;
+  right: 0px;
+  bottom: 0px;
+  left: 0px;
+  filter: alpha(opacity=85); /* IE */
+  opacity: 0.85;
+  position: absolute;
+  z-index: 5;
+}
+@media (min-width: 1100px) {
+  .explore-data-chart-wrapper {
+    padding: 0;
+    background-color: transparent;
+  }
+  .explore-data-chart-wrapper:before,
+  .explore-data-chart-wrapper:after {
+    display: none;
+  }
+}

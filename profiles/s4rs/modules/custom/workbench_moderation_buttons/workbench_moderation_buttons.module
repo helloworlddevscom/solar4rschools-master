@@ -1,0 +1,64 @@
+<?php
+/**
+ * @file
+ * Workbench Moderation Buttons module file.
+ */
+
+/**
+ * Implements hook_form_FORM_ID_form_alter().
+ *
+ * Changes workbench dropdowns into submit buttons.
+ */
+function workbench_moderation_buttons_form_node_form_alter(&$form, $state, $id) {
+  global $user;
+
+  $current_state = variable_get('workbench_moderation_default_state_' . $form['type']['#value'], workbench_moderation_state_none());
+  $state_machine_names = array_merge(array($current_state), array_keys(workbench_moderation_states_next($current_state, $user, $form['#node'])));
+
+  if (count($state_machine_names)) {
+    // If any state is defined, and this user have access to them.
+    $states = workbench_moderation_states();
+    $actions = &$form['actions'];
+
+    // Hide moderation states dropdown.
+    drupal_add_css('.form-item-workbench-moderation-state-new{display:none;}', array('type' => 'inline'));
+
+    $label_machine_names = array();
+    for ($i = 0, $length = count($state_machine_names); $i < $length; $i++) {
+      $machine_name = $state_machine_names[$i];
+      $label = t($states[$machine_name]->description);
+      $actions[$machine_name] = array(
+        '#access' => 1,
+        '#attributes' => array(
+          'data-value' => $machine_name,
+        ),
+        '#submit' => $actions['submit']['#submit'],
+        '#type' => 'submit',
+        '#value' => $label,
+        // 10's the weight for preview button.
+        '#weight' => 11 + $i,
+      );
+      $label_machine_names[$label] = $machine_name;
+    };
+
+    $form['#validate'][] = 'workbench_moderation_buttons_node_form_validate';
+    $form['#workbench_moderation_buttons_list'] = $label_machine_names;
+    // Remove original submit button.
+    unset($actions['submit']);
+  }
+}
+
+/**
+ * Implements hook_node_form_validate().
+ *
+ * Sets the workbench moderation state given the submit button.
+ */
+function workbench_moderation_buttons_node_form_validate($form, &$form_state) {
+  $vals = &$form_state['values'];
+  $button_list = $form['#workbench_moderation_buttons_list'];
+  $submit_button_label = $vals['op'];
+
+  if (isset($button_list[$submit_button_label])) {
+    $vals['workbench_moderation_state_new'] = $button_list[$submit_button_label];
+  }
+}

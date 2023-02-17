@@ -1,0 +1,35 @@
+<?php
+/**
+ * @file
+ * Drupal needs this blank file.
+ */
+
+/**
+ * Implements hook_form_alter()
+ * Get all authors that have written Activities, and only show them in the view filter.
+ */
+
+function bef_misc_feat_form_alter(&$form, &$form_state, $form_id) {
+  if ($form_id == 'views_exposed_form' && $form_state['view']->name == 'node_search' && $form_state['view']->current_display == 'panel_pane_3') {
+    $author_query = db_select('node', 'n')
+      ->distinct()
+      ->fields('n', array('uid'))
+      ->condition('type', 'activity', '=')
+      ->condition('status', 1, '=')
+      ->execute()
+      ->fetchAll();
+
+    foreach ($author_query as $user) {
+      $uids[] = $user->uid;
+    }
+
+    $authors = user_load_multiple($uids);
+
+    foreach ($authors as $author) {
+      $options[$author->uid] = $author->realname;
+    }
+
+    // Set form options to viable authors
+    $form['author']['#options'] = $options;
+  }
+}

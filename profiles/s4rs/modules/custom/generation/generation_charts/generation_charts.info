@@ -1,0 +1,6 @@
+core = 7.x
+dependencies[] = chosen
+dependencies[] = generation
+description = "Provides charts of generation data."
+name = "Generation Charts"
+package = "Generation"

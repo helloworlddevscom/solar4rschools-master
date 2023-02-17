@@ -1,0 +1,12 @@
+<?php
+/**
+ * @file
+ * Install file to hold update hooks.
+ */
+
+/**
+ * Implements hook_uninstall().
+ */
+function solar_weather_uninstall() {
+  variable_del('solar_weather_debug');
+}

@@ -1,0 +1,127 @@
+<?php
+/**
+ * @file
+ * Custom weather blocks for Solar 4R Schools.
+ */
+
+
+/**
+ * Implements hook_ctools_plugin_directory().
+ */
+function solar_weather_ctools_plugin_directory($module, $type) {
+  if ($module == 'ctools') {
+    return 'plugins/' . $type;
+  }
+}
+
+/**
+ * Impelements hook_permission().
+ */
+function solar_weather_permission() {
+  return array(
+    'configure weather block debug' => array(
+      'title' => t('configure weather block debug'),
+      'description' => t('Toggle weather block debug output.'),
+    ),
+    'view weather block debug' => array(
+      'title' => t('view weather block debug'),
+      'description' => t('View debug output from the weather block.'),
+    ),
+  );
+}
+
+/**
+ * Implements hook_block_info().
+ */
+function solar_weather_block_info() {
+  $blocks['school'] = array(
+    'info' => t('Local weather block for projects'),
+    'cache' => DRUPAL_NO_CACHE,
+  );
+  return $blocks;
+}
+
+/**
+ * Implements hook_block_view().
+ */
+function solar_weather_block_view($delta) {
+  switch ($delta) {
+    case 'school':
+      // Only works on project pages.
+      if (($node = menu_get_object('node', 1))) {
+        module_load_include('inc', 'solar_weather');
+        return array(
+          'subject' => t('Weather'),
+          'content' => solar_weather_collect_data($node->nid),
+        );
+      }
+  }
+}
+
+/**
+ * Implements hook_block_configure().
+ */
+function solar_weather_block_configure($delta) {
+  if ($delta == 'school' && user_access('configure weather block debug')) {
+    $form['debug'] = array(
+      '#type' => 'checkbox',
+      '#title' => t('Show xml source link'),
+      '#description' => t('Enable this feature to verify the weather block is correctly displaying information received.'),
+      '#default_value' => variable_get('solar_weather_debug', 0),
+    );
+    return $form;
+  }
+}
+
+/**
+ * Implements hook_block_save().
+ */
+function solar_weather_block_save($delta, $edit) {
+  if ($delta == 'school' && user_access('configure weather block debug')) {
+    variable_set('solar_weather_debug', $edit['debug']);
+  }
+}
+
+/**
+ * Implements hook_theme().
+ */
+function solar_weather_theme() {
+  return array(
+    'solar_weather_block' => array(
+      'variables' => array('data' => NULL),
+      'template' => 'solar-weather-block',
+    ),
+  );
+}
+
+/**
+ * Theme a weather block.
+ */
+function template_preprocess_solar_weather_block(&$variables) {
+  $data = $variables['data'];
+
+  // Date/times in the form: Thu, 07 May 2009 2:53 pm CDT.
+  $time = date_format_date(new DateObject($data['time']), 'custom', 'g:ia');
+
+  $variables['source'] = '';
+  if (variable_get('solar_weather_debug', 0) && user_access('view weather block debug')) {
+    $options = array(
+      'attributes' => array(
+        'target' => '_blank',
+      ),
+    );
+    $variables['source'] = '<div class="solar-weather-debug">' . l(t('View XML Source'), $data['source'], $options) . '</div>';
+  }
+
+  $variables['current_icon'] = $data['icon'] == 'NULL' ? '' : theme('image', array('path' => $data['icon'], 'alt' => $data['condition']));
+  $variables['current_temperature'] = t('%f &deg;F/%c &deg;C', array('%c' => number_format(solar_weather_temp_to_centigrade($data['temperature'])), '%f' => $data['temperature']));
+  $variables['current_condition'] = $data['condition'] == 'NA' ? '' : t('@condition at @time', array('@condition' => $data['condition'], '@time' => $time));
+
+  // If units are in knots, convert to mph.
+  if ($data['wind_units'] == 'knots') {
+    $data['wind_speed'] = number_format(solar_weather_speed_to_mph($data['wind_speed']));
+    $data['wind_units'] = 'mph';
+  }
+  $variables['current_wind_speed'] = t('Wind speed: @speed @units', array('@speed' => $data['wind_speed'], '@units' => $data['wind_units']));
+  $variables['current_wind_direction'] = t('Wind direction: @direction', array('@direction' => solar_weather_compass_to_fuzzy($data['wind_direction'])));
+}

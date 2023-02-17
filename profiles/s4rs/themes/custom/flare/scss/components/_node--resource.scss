@@ -1,0 +1,119 @@
+/**
+ * Resource node - All view modes.
+ *
+ * This is shared styling for all Resource node view modes.
+ */
+
+.node-resource {
+  @include node-meta;
+
+  .node__inner.has-image {
+    .inner__image {
+      width: 60%;
+    }
+
+    .inner__text {
+      width: 100%;
+    }
+  }
+
+  .field-thumbnail-image {
+    padding: 0;
+    border: 1px solid $color--light-gray;
+
+    .field-type-image {
+      display: block;
+      text-align: center;
+    }
+  }
+
+  .inner__text {
+    padding: 20px 0 0 0;
+  }
+
+  .field-wrapper {
+    .label--above {
+      display: block;
+    }
+  }
+
+  .field-wrapper.field-resource-type {
+    .field-name-field-resource-type a {
+      color: $color--light-orange;
+    }
+  }
+
+  .field-wrapper.field-resource-url {
+    .field-name-field-resource-url {
+      display: block;
+
+      a {
+        position: relative;
+        padding-left: 20px;
+        font-size: 1.1rem;
+        color: $color--light-orange;
+
+        &:before {
+          content: url('../../images/icons/link-out.svg');
+          width: 13px;
+          height: 13px;
+          position: absolute;
+          left: 0;
+          top: 0;
+        }
+      }
+    }
+  }
+
+  .field-wrapper.field-resource-file {
+    .field-name-field-resource-file {
+      display: block;
+
+      a {
+        //padding-left: 20px;
+        font-size: 1.1rem;
+        color: $color--light-orange;
+      }
+    }
+  }
+
+  .field-name-body {
+    p {
+      font-size: 1rem;
+    }
+  }
+
+
+  // MEDIUM
+
+  @include breakpoint($bp--medium) {
+    .node__inner.has-image {
+      .inner__image {
+        float: right;
+        width: 35%;
+        padding: 0 0 20px 20px;
+      }
+
+      .inner__text {
+        float: left;
+        width: 65%;
+        padding-top: 0;
+      }
+    }
+  }
+
+
+  // LARGE
+
+  @include breakpoint($bp--large) {
+    .node__inner.has-image {
+      .inner__image {
+        width: 37%;
+      }
+
+      .inner__text {
+        width: 63%;
+      }
+    }
+  }
+}

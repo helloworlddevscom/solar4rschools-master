@@ -1,0 +1,873 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!-- 
+  By downloading or using this API, you acknowledge that you have read 
+  the Fat Spaniel Technologies, Inc. API Developer Agreement and agree 
+  to be bound by its terms. IF YOU DO NOT AGREE TO THE TERMS AND 
+  CONDITIONS OF THIS AGREEMENT PLEASE DELETE ANY AND ALL COPIES OF 
+  THIS FILE FROM YOUR SYSTEM OR SYSTEMS.
+  
+  Copyright (c) 2008 Fat Spaniel Technologies, Inc. All rights reserved.
+  
+  Fat Spaniel(r), Fat Spaniel Technologies(r), Fat Spaniel Insight Manager(tm), 
+  Energy Intelligence Platform(tm), Insight Platform(tm) and the Fat Spaniel 
+  Technologies logo are trademarks of Fat Spaniel Technologies, Inc.
+-->
+
+<definitions targetNamespace="http://www.fatspaniel.com/ws/platform/v1/"
+  xmlns="http://schemas.xmlsoap.org/wsdl/"
+  xmlns:fsp="http://www.fatspaniel.com/ws/platform/v1/"
+  xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/"
+  xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+
+  <types>
+    <schema elementFormDefault="qualified"
+      targetNamespace="http://www.fatspaniel.com/ws/platform/v1/"
+      xmlns="http://www.w3.org/2001/XMLSchema">
+
+      <!-- Object/Types -->
+
+      <!-- login result elements start-->
+      <complexType name="User">
+        <sequence>
+          <element name="userId" type="xsd:string" />
+          <element name="firstName" type="xsd:string" />
+          <element name="lastName" type="xsd:string" />
+          <element name="email" type="xsd:string" />
+        </sequence>
+      </complexType>
+      <!-- login result elements end-->
+
+      <!-- GMI related elements start-->
+      <complexType name="FieldRequestDefault">
+        <sequence>
+          <element name="entityId" type="fsp:EID" minOccurs="0" />
+          <element name="timeZone" type="xsd:string" minOccurs="0" />
+          <element name="units" type="xsd:string" minOccurs="0" />
+          <element name="parameters" type="fsp:NamedParameter" minOccurs="0" maxOccurs="unbounded" />
+          <element name="dateLabelFormat" type="xsd:string" minOccurs="0" />
+          <element name="valueFormat" type="xsd:string" minOccurs="0" />
+          <element name="instant" minOccurs="0">
+            <complexType>
+              <group ref="fsp:InstantRequestElements" />
+            </complexType>
+          </element>
+          <element name="window" minOccurs="0">
+            <complexType>
+              <group ref="fsp:WindowRequestElements" />
+            </complexType>
+          </element>
+          <element name="bins" minOccurs="0">
+            <complexType>
+              <group ref="fsp:BinsRequestElements" />
+            </complexType>
+          </element>
+        </sequence>
+      </complexType>
+
+      <complexType name="FieldRequest" abstract="true">
+        <sequence>
+          <element name="field" type="xsd:string" />
+          <element name="label" type="xsd:string" minOccurs="0" />
+          <element name="entityId" type="fsp:EID" minOccurs="0" />
+          <element name="timeZone" type="xsd:string" minOccurs="0" />
+          <element name="units" type="xsd:string" minOccurs="0" />
+          <element name="parameters" type="fsp:NamedParameter" minOccurs="0" maxOccurs="unbounded" />
+          <element name="dateLabelFormat" type="xsd:string" minOccurs="0" />
+          <element name="valueFormat" type="xsd:string" minOccurs="0" />
+        </sequence>
+      </complexType>
+
+      <complexType name="InstantRequest">
+        <complexContent>
+          <extension base="fsp:FieldRequest">
+            <sequence>
+              <group ref="fsp:InstantRequestElements" />
+            </sequence>
+          </extension>
+        </complexContent>
+      </complexType>
+
+      <group name="InstantRequestElements">
+        <choice>
+          <sequence>
+            <element name="atFixed" type="xsd:dateTime" minOccurs="0" />
+          </sequence>
+          <sequence>
+            <element name="atRelative" type="fsp:RelativePattern" minOccurs="0" />
+            <element name="relativeBase" type="xsd:dateTime" minOccurs="0" />
+          </sequence>
+        </choice>
+      </group>
+
+      <complexType name="WindowRequest">
+        <complexContent>
+          <extension base="fsp:FieldRequest">
+            <sequence>
+              <group ref="fsp:WindowRequestElements" />
+            </sequence>
+          </extension>
+        </complexContent>
+      </complexType>
+
+      <group name="WindowRequestElements">
+        <sequence>
+          <choice>
+            <sequence>
+              <element name="startFixed" type="xsd:dateTime" minOccurs="0" />
+            </sequence>
+            <sequence>
+              <element name="startRelative" type="fsp:RelativePattern" minOccurs="0" />
+            </sequence>
+          </choice>
+          <choice>
+            <sequence>
+              <element name="endFixed" type="xsd:dateTime" minOccurs="0" />
+            </sequence>
+            <sequence>
+              <element name="endRelative" type="fsp:RelativePattern" minOccurs="0" />
+            </sequence>
+          </choice>
+          <element name="relativeBase" type="xsd:dateTime" minOccurs="0" />
+          <element name="function" type="fsp:WindowFunction" minOccurs="0" />
+        </sequence>
+      </group>
+
+      <simpleType name="WindowFunction">
+        <restriction base="xsd:string">
+          <enumeration value="Avg" />
+          <enumeration value="Diff" />
+          <enumeration value="Max" />
+          <enumeration value="Min" />
+          <enumeration value="Last" />
+        </restriction>
+      </simpleType>
+
+      <complexType name="BinsRequest">
+        <complexContent>
+          <extension base="fsp:FieldRequest">
+            <sequence>
+              <group ref="fsp:BinsRequestElements" />
+            </sequence>
+          </extension>
+        </complexContent>
+      </complexType>
+
+      <group name="BinsRequestElements">
+        <sequence>
+          <choice>
+            <sequence>
+              <element name="startFixed" type="xsd:dateTime" minOccurs="0" />
+            </sequence>
+            <sequence>
+              <element name="startRelative" type="fsp:RelativePattern" minOccurs="0" />
+            </sequence>
+          </choice>
+          <choice>
+            <sequence>
+              <element name="endFixed" type="xsd:dateTime" minOccurs="0" />
+            </sequence>
+            <sequence>
+              <element name="endRelative" type="fsp:RelativePattern" minOccurs="0" />
+            </sequence>
+          </choice>
+          <element name="relativeBase" type="xsd:dateTime" minOccurs="0" />
+          <element name="function" type="fsp:BinFunction" minOccurs="0" />
+          <element name="binSize" type="fsp:BinSize" minOccurs="0" />
+        </sequence>
+      </group>
+
+      <simpleType name="BinSize">
+        <restriction base="xsd:string">
+          <enumeration value="Min15" />
+          <enumeration value="Hour" />
+          <enumeration value="Day" />
+          <enumeration value="Month" />
+          <enumeration value="Year" />
+        </restriction>
+      </simpleType>
+
+      <simpleType name="BinFunction">
+        <restriction base="xsd:string">
+          <enumeration value="Avg" />
+          <enumeration value="Diff" />
+          <enumeration value="Max" />
+          <enumeration value="Min" />
+          <enumeration value="Last" />
+        </restriction>
+      </simpleType>
+
+      <complexType name="FieldResultDefault">
+        <sequence>
+          <element name="entityId" type="fsp:EID" minOccurs="0" />
+          <element name="entityName" type="xsd:string" minOccurs="0" />
+          <element name="timeZone" type="xsd:string" minOccurs="0" />
+          <element name="parameters" type="fsp:NamedParameter" minOccurs="0" maxOccurs="unbounded" />
+        </sequence>
+      </complexType>
+
+      <complexType name="FieldResult" abstract="true">
+        <sequence>
+          <element name="field" type="xsd:string" />
+          <element name="label" type="xsd:string" minOccurs="0" />
+          <element name="entityId" type="fsp:EID" minOccurs="0" />
+          <element name="entityName" type="xsd:string" minOccurs="0" />
+          <element name="timeZone" type="xsd:string" minOccurs="0" />
+          <element name="units" type="xsd:string" minOccurs="0" />
+          <element name="parameters" type="fsp:NamedParameter" minOccurs="0" maxOccurs="unbounded" />
+          <element name="start" type="xsd:dateTime" minOccurs="0" />
+          <element name="end" type="xsd:dateTime" minOccurs="0" />
+          <element name="startLabel" type="xsd:string" minOccurs="0" />
+          <element name="endLabel" type="xsd:string" minOccurs="0" />
+          <element name="fieldException" type="fsp:FieldException" minOccurs="0" />
+        </sequence>
+      </complexType>
+
+      <complexType name="InstantResult">
+        <complexContent>
+          <extension base="fsp:FieldResult">
+            <sequence>
+              <element name="value" type="xsd:string" minOccurs="0" />
+            </sequence>
+          </extension>
+        </complexContent>
+      </complexType>
+
+      <complexType name="WindowResult">
+        <complexContent>
+          <extension base="fsp:FieldResult">
+            <sequence>
+              <element name="value" type="xsd:string" minOccurs="0" />
+            </sequence>
+          </extension>
+        </complexContent>
+      </complexType>
+
+      <complexType name="BinsResult">
+        <complexContent>
+          <extension base="fsp:FieldResult">
+            <sequence>
+              <element name="values" type="fsp:BinValue" minOccurs="0" maxOccurs="unbounded" />
+            </sequence>
+          </extension>
+        </complexContent>
+      </complexType>
+
+      <complexType name="BinValue">
+        <attribute name="start" type="xsd:int" use="required" />
+        <attribute name="startLabel" type="xsd:string" />
+        <attribute name="value" type="xsd:string" />
+      </complexType>
+      <!-- GMI related elements end -->
+
+      <!-- AMD related elements start -->
+      <complexType name="LoggerRecord">
+        <sequence>
+          <element name="deviceRecords" type="fsp:DeviceRecord" maxOccurs="unbounded" />
+        </sequence>
+        <attribute name="loggerId" type="xsd:string" use="required" />
+      </complexType>
+
+      <complexType name="DeviceRecord">
+        <sequence>
+          <element name="sampleTimeSec" type="xsd:long" />
+          <element name="channelRecords" type="fsp:ChannelRecord" minOccurs="0" maxOccurs="unbounded" />
+          <element name="channelRecordComponents" type="fsp:ChannelRecordComponent" minOccurs="0" maxOccurs="unbounded" />
+          <element name="parameters" type="fsp:NamedParameter" minOccurs="0" maxOccurs="unbounded" />
+        </sequence>
+        <attribute name="deviceId" type="xsd:string" use="required" />
+        <attribute name="type" type="xsd:string" use="required" />
+      </complexType>
+
+      <complexType name="ChannelRecord">
+        <simpleContent>
+          <extension base="xsd:string">
+            <attribute name="name" type="xsd:string" use="required" />
+            <attribute name="units" type="xsd:string" />
+          </extension>
+        </simpleContent>
+      </complexType>
+
+      <complexType name="ChannelRecordComponent">
+        <sequence>
+          <element name="components" type="fsp:NamedParameter" maxOccurs="unbounded" />
+        </sequence>
+        <attribute name="name" type="xsd:string" use="required" />
+      </complexType>
+      <!-- AMD related elements end -->
+
+      <!-- GAI related elements start -->
+      <complexType name="Attribute">
+        <sequence>
+          <element name="key" type="xsd:string" />
+          <element name="value" type="xsd:string" />
+        </sequence>
+      </complexType>
+
+      <complexType name="SystemObject" abstract="true">
+        <choice>
+          <sequence>
+            <element name="entityId" type="fsp:EID" />
+            <element name="type" type="xsd:string" />
+            <element name="attributes" type="fsp:Attribute" minOccurs="0" maxOccurs="unbounded" />
+          </sequence>
+          <sequence>
+            <element name="exceptionCode" type="fsp:AssetExceptionCode" />
+          </sequence>
+        </choice>
+      </complexType>
+
+      <complexType name="Location">
+        <sequence>
+          <element name="longitude" type="xsd:double" minOccurs="0" />
+          <element name="latitude" type="xsd:double" minOccurs="0" />
+        </sequence>
+      </complexType>
+
+      <complexType name="Address">
+        <sequence>
+          <element name="street1" type="xsd:string" minOccurs="0" />
+          <element name="street2" type="xsd:string" minOccurs="0" />
+          <element name="city" type="xsd:string" minOccurs="0" />
+          <element name="region" type="xsd:string" minOccurs="0" />
+          <element name="country" type="xsd:string" minOccurs="0" />
+          <element name="postalCode" type="xsd:string" minOccurs="0" />
+          <element name="regionCode" type="xsd:string" minOccurs="0" />
+          <element name="countryCode" type="xsd:string" minOccurs="0" />
+          <element name="location" type="fsp:Location" minOccurs="0" />
+        </sequence>
+      </complexType>
+
+      <complexType name="Contact">
+        <sequence>
+          <element name="firstName" type="xsd:string" minOccurs="0" />
+          <element name="lastName" type="xsd:string" minOccurs="0" />
+          <element name="address" type="fsp:Address" minOccurs="0" />
+          <element name="phone" type="xsd:string" minOccurs="0" />
+          <element name="fax" type="xsd:string" minOccurs="0" />
+          <element name="mobile" type="xsd:string" minOccurs="0" />
+          <element name="pager" type="xsd:string" minOccurs="0" />
+          <element name="email" type="xsd:string" minOccurs="0" />
+        </sequence>
+      </complexType>
+
+      <complexType name="Asset" abstract="true">
+        <complexContent>
+          <extension base="fsp:SystemObject">
+            <sequence>
+              <element name="name" type="xsd:string" minOccurs="0" />
+              <element name="ascendants" type="fsp:Asset" minOccurs="0" maxOccurs="unbounded" />
+              <element name="descendants" type="fsp:Asset" minOccurs="0" maxOccurs="unbounded" />
+              <element name="fields" type="xsd:string" minOccurs="0" maxOccurs="unbounded" />
+              <element name="location" type="fsp:Location" minOccurs="0" />
+            </sequence>
+          </extension>
+        </complexContent>
+      </complexType>
+
+      <complexType name="Customer">
+        <complexContent>
+          <extension base="fsp:Asset">
+            <sequence>
+              <element name="customerId" type="xsd:int" minOccurs="0" />
+              <element name="address" type="fsp:Address" minOccurs="0" />
+              <element name="contact" type="fsp:Contact" minOccurs="0" />
+            </sequence>
+          </extension>
+        </complexContent>
+      </complexType>
+
+      <complexType name="Site">
+        <complexContent>
+          <extension base="fsp:Asset">
+            <sequence>
+              <element name="siteId" type="xsd:int" minOccurs="0" />
+              <element name="address" type="fsp:Address" minOccurs="0" />
+              <element name="contact" type="fsp:Contact" minOccurs="0" />
+              <element name="systemSize" type="xsd:double" minOccurs="0" />
+              <element name="systemSizeQualifier" type="xsd:string" minOccurs="0" />
+              <element name="installDate" type="xsd:dateTime" minOccurs="0" />
+              <element name="timeZone" type="xsd:string" minOccurs="0" />
+            </sequence>
+          </extension>
+        </complexContent>
+      </complexType>
+
+      <complexType name="Logger">
+        <complexContent>
+          <extension base="fsp:Asset">
+            <sequence>
+              <element name="loggerId" type="xsd:string" minOccurs="0" />
+              <element name="fsLoggerId" type="xsd:int" minOccurs="0" />
+              <element name="macAddress" type="xsd:string" minOccurs="0" />
+              <element name="loggerType" type="xsd:int" minOccurs="0" />
+              <element name="active" type="xsd:boolean" minOccurs="0" />
+              <!--  asset parameters -->
+              <element name="manufacturer"       type="xsd:string"   minOccurs="0" />
+              <element name="model"              type="xsd:string"   minOccurs="0" />
+              <element name="firmwareVersion"    type="xsd:string"   minOccurs="0" />
+              <element name="serialNumber"       type="xsd:string"   minOccurs="0" />
+              <element name="hardwareVersion"    type="xsd:string"   minOccurs="0" />
+              <element name="categories"         type="xsd:string"   minOccurs="0" maxOccurs="unbounded"/>
+            </sequence>
+          </extension>
+        </complexContent>
+      </complexType>
+
+      <complexType name="Device">
+        <complexContent>
+          <extension base="fsp:Asset">
+            <sequence>
+              <element name="deviceId" type="xsd:string" minOccurs="0" />
+              <element name="deviceNumber" type="xsd:int" minOccurs="0" />
+              <element name="deviceTypeId" type="xsd:int" minOccurs="0" />
+              <element name="active" type="xsd:boolean" minOccurs="0" />
+              <!--  asset parameters -->
+              <element name="manufacturer"       type="xsd:string"  minOccurs="0" />
+              <element name="model"              type="xsd:string"  minOccurs="0" />
+              <element name="firmwareVersion"    type="xsd:string"  minOccurs="0" />
+              <element name="serialNumber"       type="xsd:string"  minOccurs="0" />
+              <element name="hardwareVersion"    type="xsd:string"  minOccurs="0" />
+              <element name="categories"         type="xsd:string"  minOccurs="0" maxOccurs="unbounded" />
+            </sequence>
+          </extension>
+        </complexContent>
+      </complexType>
+      <!-- GAI related elements end -->
+
+      <!-- Base/Common Objects/Enumerations for all operations start -->
+      <complexType name="NamedParameter">
+        <simpleContent>
+          <extension base="xsd:string">
+            <attribute name="name" type="xsd:string" use="required" />
+          </extension>
+        </simpleContent>
+      </complexType>
+
+      <simpleType name="StatusType">
+        <restriction base="xsd:string">
+          <enumeration value="SUCCESS" />
+          <enumeration value="FAILURE" />
+          <enumeration value="PARTIAL_FAILURE" />
+          <enumeration value="LIMIT_EXCEEDED" />
+          <enumeration value="NONE_MATCHED" />
+          <enumeration value="ACCESS_DENIED" /> 
+        </restriction>
+      </simpleType>
+
+      <simpleType name="EID">
+        <restriction base="xsd:int" />
+      </simpleType>
+
+      <simpleType name="RelativePattern">
+        <restriction base="xsd:string">
+          <pattern value="now|first-recorded|(start|end)-of-\d+-(minute|hour|day|week|month|year)s?-ago" />
+        </restriction>
+      </simpleType>
+      <!-- Base/Common Objects/Enumerations for all operations end -->
+
+      <!-- Result Types for all operations start -->
+      <complexType name="LoginResult">
+        <sequence>
+          <element name="sessionId" type="xsd:string" />
+          <element name="userId" type="xsd:string" />
+          <element name="locale" type="xsd:string" />
+          <element name="fspApiKey" type="xsd:string" />
+          <element name="user" type="fsp:User" />
+        </sequence>
+      </complexType>
+
+      <complexType name="GetMonitoredInfoResult">
+        <sequence>
+          <element name="status" type="fsp:StatusType" />
+          <element name="defaults" type="fsp:FieldResultDefault" minOccurs="0" />
+          <element name="fields" type="fsp:FieldResult" minOccurs="0" maxOccurs="unbounded" />
+        </sequence>
+      </complexType>
+
+      <complexType name="AddMonitoredDataResult">
+        <sequence>
+          <element name="status" type="fsp:StatusType" />
+          <element name="recordExceptions" type="fsp:RecordException" minOccurs="0" maxOccurs="unbounded" />
+        </sequence>
+      </complexType>
+
+      <complexType name="GetAssetInfoResult">
+        <sequence>
+          <element name="status" type="fsp:StatusType" />
+          <element name="assets" type="fsp:Asset" minOccurs="0" maxOccurs="unbounded" />
+          <element name="query" type="xsd:string" />
+          <element name="resultQuery" type="xsd:string" minOccurs="0"/>          
+          <element name="limit" type="xsd:int" minOccurs="0" />
+        </sequence>
+      </complexType>
+      <!-- Result Types for all operations end -->
+
+      <!-- Faults and Exception codes start -->
+      <simpleType name="ApiExceptionCode">
+        <restriction base="xsd:string">
+          <enumeration value="SESSIONID_INVALID" />
+          <enumeration value="SESSIONID_EXPIRED" />
+          <enumeration value="USERIDPW_INVALID" />
+          <enumeration value="FSPAPIKEY_INVALID" />
+          <enumeration value="ACCESS_DENIED" />
+          <enumeration value="REQUEST_INVALID" />
+          <enumeration value="RESPONSE_INVALID" />
+          <enumeration value="SECURITY_EXCEPTION" />
+          <enumeration value="SYSTEM_MAINTENANCE" />
+          <enumeration value="UNEXPECTED_EXCEPTION" />
+          <enumeration value="LIMIT_EXCEEDED" />
+        </restriction>
+      </simpleType>
+
+      <simpleType name="AssetExceptionCode">
+        <restriction base="xsd:string">
+          <enumeration value="ACCESS_DENIED" />
+        </restriction>
+      </simpleType>
+
+      <simpleType name="FieldExceptionCode">
+        <restriction base="xsd:string">
+          <enumeration value="INVALID_EID" />
+          <enumeration value="INVALID_TIMEZONE" />
+          <enumeration value="INVALID_FIELD" />
+          <enumeration value="INVALID_DATE_FIXED" />
+          <enumeration value="INVALID_DATERANGE" />
+          <enumeration value="INVALID_DATE_FORMAT" />
+          <enumeration value="INVALID_BINSIZEFUNCTION" />
+          <enumeration value="INVALID_UNITS" />
+          <enumeration value="INVALID_VALUE_FORMAT" />
+          <enumeration value="ACCESS_DENIED" />
+          <enumeration value="NOT_IMPLEMENTED" />
+        </restriction>
+      </simpleType>
+
+      <simpleType name="RecordExceptionCode">
+        <restriction base="xsd:string">
+          <enumeration value="ACCESS_DENIED" />
+          <enumeration value="UNKNOWN_LOGGER" />
+          <enumeration value="UNKNOWN_DEVICE" />
+          <enumeration value="UNKNOWN_CHANNEL" />
+          <enumeration value="PROCESSING_EXCEPTION" />
+        </restriction>
+      </simpleType>
+
+      <simpleType name="GetAssetInfoExceptionCode">
+        <restriction base="xsd:string">
+          <enumeration value="INVALID_ASSET_SELECTOR_QUERY" />
+          <enumeration value="INVALID_CRITERION_OPERATOR" />
+          <enumeration value="INVALID_CRITERION_BOOLEAN_VALUE" />
+          <enumeration value="INVALID_CRITERION_VALUE" />
+          <enumeration value="INVALID_QUERY" />
+          <enumeration value="INVALID_TOKEN_ENTITY_ID_QUERY" />
+        </restriction>
+      </simpleType>
+
+      <complexType name="Exception" abstract="true">
+        <sequence>
+          <element name="reason" type="xsd:string" minOccurs="0" />
+          <element name="message" type="xsd:string" minOccurs="0" />
+        </sequence>
+      </complexType>
+      
+      <complexType name="ApiException">
+        <complexContent>
+          <extension base="fsp:Exception">
+            <sequence>
+              <element name="code" type="fsp:ApiExceptionCode" />
+            </sequence>
+          </extension>
+        </complexContent>
+      </complexType>
+
+      <complexType name="FieldException">
+        <complexContent>
+          <extension base="fsp:Exception">
+            <sequence>
+              <element name="code" type="fsp:FieldExceptionCode" />
+            </sequence>
+          </extension>
+        </complexContent>
+      </complexType>
+
+      <complexType name="RecordException">
+        <complexContent>
+          <extension base="fsp:Exception">
+            <sequence>
+              <element name="code" type="fsp:RecordExceptionCode" />
+            </sequence>
+            <attribute name="loggerId" type="xsd:string" use="required" />
+            <attribute name="deviceId" type="xsd:string" />
+            <attribute name="channelName" type="xsd:string" />
+            <attribute name="sampleTimeSec" type="xsd:long" />
+          </extension>
+        </complexContent>
+      </complexType>
+
+      <element name="unexpectedException">
+        <complexType>
+          <complexContent>
+            <extension base="fsp:ApiException" />
+          </complexContent>
+        </complexType>
+      </element>
+
+      <element name="loginException">
+        <complexType>
+          <complexContent>
+            <extension base="fsp:ApiException" />
+          </complexContent>
+        </complexType>
+      </element>
+
+      <element name="getAssetInfoException">
+        <complexType>
+          <complexContent>
+            <extension base="fsp:Exception">
+              <sequence>
+                <element name="code" type="fsp:GetAssetInfoExceptionCode" />
+              </sequence>
+            </extension>
+          </complexContent>
+        </complexType>
+      </element>
+      <!-- Faults and Exception codes end -->
+
+      <!-- Headers start -->
+      <element name="sessionHeader">
+        <complexType>
+          <sequence>
+            <element name="sessionId" type="xsd:string" />
+          </sequence>
+        </complexType>
+      </element>
+      <!-- Headers end -->
+
+      <!-- Login Type -->
+      <element name="login">
+        <complexType>
+          <sequence>
+            <element name="userId" type="xsd:string" />
+            <element name="password" type="xsd:string" />
+            <element name="fspApiKey" type="xsd:string" />
+          </sequence>
+        </complexType>
+      </element>
+      <element name="loginResponse">
+        <complexType>
+          <sequence>
+            <element name="result" type="fsp:LoginResult" />
+          </sequence>
+        </complexType>
+      </element>
+
+      <!-- Get Monitored Info Type -->
+      <element name="getMonitoredInfo">
+        <complexType>
+          <sequence>
+            <element name="defaults" type="fsp:FieldRequestDefault" minOccurs="0" />
+            <element name="fields" type="fsp:FieldRequest" maxOccurs="unbounded" />
+          </sequence>
+        </complexType>
+      </element>
+      <element name="getMonitoredInfoResponse">
+        <complexType>
+          <sequence>
+            <element name="result" type="fsp:GetMonitoredInfoResult" />
+          </sequence>
+        </complexType>
+      </element>
+
+      <!-- Add Monitored Data Type -->
+      <element name="addMonitoredData">
+        <complexType>
+          <sequence>
+            <element name="loggerRecords" type="fsp:LoggerRecord" maxOccurs="unbounded" />
+          </sequence>
+        </complexType>
+      </element>
+      <element name="addMonitoredDataResponse">
+        <complexType>
+          <sequence>
+            <element name="result" type="fsp:AddMonitoredDataResult" />
+          </sequence>
+        </complexType>
+      </element>
+
+      <!-- Get Asset Info Type -->
+      <element name="getAssetInfo">
+        <complexType>
+          <sequence>
+            <element name="query" type="xsd:string" />
+            <element name="resultQuery" type="xsd:string" minOccurs="0" />
+            <!-- optional limit supplied by client -->
+            <element name="limit" type="xsd:int" minOccurs="0" maxOccurs="1"/>
+          </sequence>
+        </complexType>
+      </element>
+      <element name="getAssetInfoResponse">
+        <complexType>
+          <sequence>
+            <element name="result" type="fsp:GetAssetInfoResult" />
+          </sequence>
+        </complexType>
+      </element>
+
+    </schema>
+  </types>
+
+
+  <!-- Header Messages -->
+  <message name="header">
+    <part element="fsp:sessionHeader" name="sessionHeader" />
+  </message>
+
+  <!-- Messages -->
+  <message name="loginRequest">
+    <part element="fsp:login" name="parameters" />
+  </message>
+  <message name="loginResponse">
+    <part element="fsp:loginResponse" name="parameters" />
+  </message>
+  <message name="getMonitoredInfoRequest">
+    <part element="fsp:getMonitoredInfo" name="parameters" />
+  </message>
+  <message name="getMonitoredInfoResponse">
+    <part element="fsp:getMonitoredInfoResponse" name="parameters" />
+  </message>
+  <message name="addMonitoredDataRequest">
+    <part element="fsp:addMonitoredData" name="parameters" />
+  </message>
+  <message name="addMonitoredDataResponse">
+    <part element="fsp:addMonitoredDataResponse" name="parameters" />
+  </message>
+  <message name="getAssetInfoRequest">
+    <part element="fsp:getAssetInfo" name="parameters" />
+  </message>
+  <message name="getAssetInfoResponse">
+    <part element="fsp:getAssetInfoResponse" name="parameters" />
+  </message>
+
+  <!-- Fault Messages -->
+  <message name="unexpectedFault">
+    <part element="fsp:unexpectedException" name="fault" />
+  </message>
+  <message name="loginFault">
+    <part element="fsp:loginException" name="fault" />
+  </message>
+  <message name="getAssetInfoFault">
+    <part element="fsp:getAssetInfoException" name="fault" />
+  </message>
+
+
+  <!-- Port -->
+  <portType name="PlatformService">
+    <documentation>Fat Spaniel Technologies' Energy Intelligence Platform(tm) services.</documentation>
+
+    <operation name="login">
+      <documentation>Login and establish a session.</documentation>
+      <input message="fsp:loginRequest" />
+      <output message="fsp:loginResponse" />
+      <fault message="fsp:loginFault" name="loginFault" />
+      <fault message="fsp:unexpectedFault" name="unexpectedFault" />
+    </operation>
+
+    <operation name="getMonitoredInfo">
+      <documentation>Get monitored information.</documentation>
+      <input message="fsp:getMonitoredInfoRequest" />
+      <output message="fsp:getMonitoredInfoResponse" />
+      <fault message="fsp:unexpectedFault" name="unexpectedFault" />
+    </operation>
+
+    <operation name="addMonitoredData">
+      <documentation>Add monitored data.</documentation>
+      <input message="fsp:addMonitoredDataRequest" />
+      <output message="fsp:addMonitoredDataResponse" />
+      <fault message="fsp:unexpectedFault" name="unexpectedFault" />
+    </operation>
+
+    <operation name="getAssetInfo">
+      <documentation>Get information about assets using a query.</documentation>
+      <input message="fsp:getAssetInfoRequest" />
+      <output message="fsp:getAssetInfoResponse" />
+      <fault message="fsp:getAssetInfoFault" name="getAssetInfoFault" />
+      <fault message="fsp:unexpectedFault" name="unexpectedFault" />
+    </operation>
+  </portType>
+
+
+  <!-- Binding -->
+  <binding name="PlatformServiceSOAP" type="fsp:PlatformService">
+    <soap:binding style="document" transport="http://schemas.xmlsoap.org/soap/http" />
+
+    <operation name="login">
+      <soap:operation soapAction="" />
+      <input>
+        <soap:body parts="parameters" use="literal" />
+      </input>
+      <output>
+        <soap:body use="literal" />
+      </output>
+      <fault name="loginFault">
+        <soap:fault name="loginFault" use="literal" />
+      </fault>
+      <fault name="unexpectedFault">
+        <soap:fault name="unexpectedFault" use="literal" />
+      </fault>
+    </operation>
+
+    <operation name="getMonitoredInfo">
+      <soap:operation soapAction="" />
+      <input>
+        <soap:body parts="parameters" use="literal" />
+        <soap:header message="fsp:header" part="sessionHeader" use="literal" />
+      </input>
+      <output>
+        <soap:body use="literal" />
+      </output>
+      <fault name="unexpectedFault">
+        <soap:fault name="unexpectedFault" use="literal" />
+      </fault>
+    </operation>
+
+    <operation name="addMonitoredData">
+      <soap:operation soapAction="" />
+      <input>
+        <soap:body parts="parameters" use="literal" />
+        <soap:header message="fsp:header" part="sessionHeader" use="literal" />
+      </input>
+      <output>
+        <soap:body use="literal" />
+      </output>
+      <fault name="unexpectedFault">
+        <soap:fault name="unexpectedFault" use="literal" />
+      </fault>
+    </operation>
+
+    <operation name="getAssetInfo">
+      <soap:operation soapAction="" />
+      <input>
+        <soap:body parts="parameters" use="literal" />
+        <soap:header message="fsp:header" part="sessionHeader" use="literal" />
+      </input>
+      <output>
+        <soap:body use="literal" />
+      </output>
+      <fault name="getAssetInfoFault">
+        <soap:fault name="getAssetInfoFault" use="literal" />
+      </fault>
+      <fault name="unexpectedFault">
+        <soap:fault name="unexpectedFault" use="literal" />
+      </fault>
+    </operation>
+  </binding>
+
+
+  <!-- Service -->
+  <service name="Platform">
+    <port name="PlatformServiceSOAP" binding="fsp:PlatformServiceSOAP">
+      <soap:address location="https://insight.fatspaniel.net/platform/soap/v1" />
+    </port>
+  </service>
+
+</definitions>

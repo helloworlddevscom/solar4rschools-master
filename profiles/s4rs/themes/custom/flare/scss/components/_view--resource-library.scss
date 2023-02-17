@@ -1,0 +1,9 @@
+/**
+ * Resource Library view.
+ */
+
+.view-id-resource_library {
+  > .view-content {
+    @include view-list;
+  }
+}

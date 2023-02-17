@@ -1,0 +1,137 @@
+<?php
+/**
+ * Created by PhpStorm.
+ * User: dan
+ * Date: 6/3/16
+ * Time: 2:16 PM
+ */
+
+
+function locus_energy_schema() {
+  $schema['cache_locus_api'] = drupal_get_schema_unprocessed('system', 'cache');
+
+  // Create new database table locus_api_data.
+  $schema['locus_api_data'] = _locus_api_data_schema();
+
+  // Create new database table locus_api_log.
+  $schema['locus_api_log'] = _locus_api_log_schema();
+
+  return $schema;
+}
+
+
+/**
+ * Schema used to create locus_api_data table.
+ */
+function _locus_api_data_schema() {
+  return array(
+    'description' => 'Data pulled from Locus API on cron.',
+    'fields' => array(
+      'site_id' => array('type' => 'int', 'unsigned' => TRUE, 'not null' => TRUE),
+      'Wh_sum' => array('type' => 'numeric', 'precision' => 13, 'scale' => 3),
+      'W_avg' => array('type' => 'numeric', 'precision' => 13, 'scale' => 3),
+      'W_max' => array('type' => 'numeric', 'precision' => 13, 'scale' => 3),
+      // @TODO Drupal Schema API does not support enum type.
+      // Because of this we'll use the following for granularity:
+      // 0 = hourly
+      // 1 = daily
+      // 2 = monthly
+      // 3 = yearly
+      'granularity' => array('type' => 'int', 'unsigned' => TRUE, 'size' => 'tiny', 'not null' => TRUE),
+      // @TODO Drupal Schema API does not support datetime type.
+      'data_timestamp' => array('type' => 'int', 'unsigned' => TRUE, 'not null' => TRUE),
+    ),
+    'primary key' => array('site_id', 'granularity', 'data_timestamp')
+  );
+}
+
+/**
+ * Schema used to create locus_api_log table.
+ */
+function _locus_api_log_schema() {
+  return array(
+    'description' => 'Log of queries against the Locus API',
+    'fields' => array(
+      'lid' => array(
+        'type' => 'serial',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'request_url' => array(
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'default' => '',
+      ),
+      'request_data' => array(
+        'type' => 'text',
+        'serialize' => TRUE,
+        'not null' => FALSE,
+      ),
+      'response_code' => array(
+        'type' => 'int',
+        'size' => 'small',
+        'not null' => FALSE,
+        'default' => 0,
+      ),
+      'response_data' => array(
+        'type' => 'text',
+        'not null' => FALSE,
+        'size' => 'big',
+      ),
+      'request_timestamp' => array(
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      'response_timestamp' => array(
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+    ),
+    'primary key' => array(
+      'lid',
+    ),
+  );
+}
+
+
+/**
+ * Create new database table cache_locus_api.
+ */
+function locus_energy_update_7001() {
+  $schema['cache_locus_api'] = drupal_get_schema_unprocessed('system', 'cache');
+  db_create_table('cache_locus_api', $schema['cache_locus_api']);
+}
+
+
+/**
+ * Create new database table locus_api_data.
+ */
+function locus_energy_update_7002() {
+  db_create_table('locus_api_data', _locus_api_data_schema());
+}
+
+
+/**
+ * Enable locus_energy_auto_update_available_sites setting.
+ */
+function locus_energy_update_7003() {
+  variable_set('locus_energy_auto_update_available_sites', TRUE);
+}
+
+
+/**
+ * Drop deprecated cache_locus_api table.
+ */
+function locus_energy_update_7004() {
+  db_drop_table('cache_locus_api');
+}
+
+/**
+ * Create new database table locus_api_log.
+ */
+function locus_energy_update_7005() {
+  db_create_table('locus_api_log', _locus_api_log_schema());
+}

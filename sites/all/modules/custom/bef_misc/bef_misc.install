@@ -1,0 +1,695 @@
+<?php
+
+/**
+ * Implements hook_update_N().
+ * Disables admin_views
+ */
+function bef_misc_update_7000() {
+  module_disable(array('admin_views'));
+  drupal_uninstall_modules(array('admin_views'));
+}
+
+/**
+ * Implements hook_update_N().
+ * Deletes field_other_materials from Activities content type.
+ */
+function bef_misc_update_7001() {
+  $delete_instances = array('field_other_materials');
+  $instances = field_info_instances('node', 'activity');
+
+  foreach ($delete_instances as $instance_name) {
+    $instance = $instances[$instance_name];
+    field_delete_instance($instance);
+  }
+}
+
+/**
+ * Implements hook_update_N().
+ * Deletes add_to_cart from Science Kit content type.
+ */
+function bef_misc_update_7002() {
+  // Clean up station fields.
+  $delete_instances = array('add_to_cart');
+  $instances = field_info_instances('node', 'science_kit');
+
+  foreach ($delete_instances as $instance_name) {
+    $instance = $instances[$instance_name];
+    field_delete_instance($instance);
+  }
+}
+
+/**
+ * Implements hook_update_N().
+ * Converts Learning Goal(s) Met field for Activities to text area.
+ */
+function bef_misc_update_7003() {
+  // Update field_config
+  $row = db_query("SELECT id, data FROM {field_config} WHERE field_name = 'field_learning_goals_met'")->fetchObject();
+  $row->data = unserialize($row->data);
+  unset($row->data['settings']['max_length']);
+  $row->type = "text_long";
+  drupal_write_record("field_config", $row, "id");
+
+
+  // Update field_config_instance
+  $row = db_query("SELECT id, data FROM {field_config_instance} WHERE field_name = 'field_learning_goals_met'")->fetchObject();
+  $row->data = unserialize($row->data);
+  $row->data['widget']['type']='text_textarea';
+  unset($row->data['widget']['settings']['size']);
+  $row->data['widget']['settings']['rows'] = 5;
+  drupal_write_record("field_config_instance", $row, "id");
+
+
+  // Update the field table
+  db_change_field("field_data_field_learning_goals_met", "field_learning_goals_met_value", "field_learning_goals_met_value", array(
+    "type" => "varchar",
+    "length" => "20000",
+  ));
+  db_change_field("field_revision_field_learning_goals_met", "field_learning_goals_met_value", "field_learning_goals_met_value", array(
+    "type" => "varchar",
+    "length" => "20000",
+  ));
+
+  // Clear caches.
+  field_cache_clear(TRUE);
+}
+
+/**
+ * Implements hook_update_N().
+ * Deletes field_standards_met from Activity content type.
+ */
+function bef_misc_update_7004() {
+  // Clean up station fields.
+  $delete_instances = array('field_standards_met');
+  $instances = field_info_instances('node', 'activity');
+
+  foreach ($delete_instances as $instance_name) {
+    $instance = $instances[$instance_name];
+    field_delete_instance($instance);
+  }
+}
+
+/**
+ * Implements hook_update_N().
+ * Disables founding partner (Founder) accounts.
+ */
+function bef_misc_update_7005() {
+  $all_users = entity_load('user');
+
+  foreach ($all_users as $user) {
+    // If user has a Founder role and authenticated user role only
+    // consider that user a Founder and disable it.
+    // We don't necessarily want to disable accounts that have other roles as well.
+    // This is why the check for the role count of 2 is in the statement.
+    // All authenticated users will have 'authenticated user' role in addition to any other roles.
+    // Generally it would be best practice to use user_role_load_by_name() to get the role ID
+    // just in case RID varies accross environments (in some rare scenarios). This however is
+    // not the case for BEF and I know RID 5 corresponds to 'Founder' role.
+    if (isset($user->roles[5]) && count($user->roles) == 2) {
+      $user->status = 0;
+      user_save($user);
+    }
+  }
+}
+
+/**
+ * Implements hook_update_N().
+ * Disables the solar_background_topics module.
+ */
+function bef_misc_update_7006() {
+  module_disable(array('solar_background_topics'));
+  drupal_uninstall_modules(array('solar_background_topics'));
+}
+
+/**
+ * Implements hook_update_N().
+ * Deletes unnecessary links from user_menu.
+ */
+function bef_misc_update_7007() {
+  // 232 was My Materials List
+  // 235 was Messages
+  // 1531 was My Background Topics
+  $mlid = array('232','235','1531');
+  foreach ($mlid as $link) {
+    _menu_delete_item(db_query("SELECT * FROM {menu_links} WHERE mlid = :mlid", array(':mlid' => $link))->fetchAssoc());
+  }
+}
+
+/**
+ * Implements hook_update_N().
+ * Enables the module_filter module
+ */
+function bef_misc_update_7008() {
+  if (!module_exists('module_filter')) {
+    module_enable(array('module_filter'));
+  }
+}
+
+/**
+ * Implements hook_update_N().
+ * Disables the privatemsg module
+ */
+function bef_misc_update_7009() {
+  if (module_exists('privatemsg')) {
+    module_disable(array('privatemsg'));
+  }
+}
+
+/**
+ * Implements hook_update_N().
+ * Enable the Solar Slideshow feature, run a db_update for the Slick optionset
+ */
+function bef_misc_update_7010() {
+  if (!module_exists('solar_slideshow')) {
+    module_enable(array('solar_slideshow'));
+  }
+
+  // Do we already have a default Slick profile?
+  $result = db_select('slick_optionset', 's')
+    ->fields('s')
+    ->condition('name', 'default','=')
+    ->execute()
+    ->fetchAssoc();
+
+  // If we do have a default profile, then update it.
+  if ($result && $result['name'] == 'default') {
+    $slick_update = db_update('slick_optionset')
+    ->fields(array(
+     'options' => 'a:2:{s:7:"general";a:6:{s:6:"normal";s:0:"";s:9:"thumbnail";s:0:"";s:14:"template_class";s:0:"";s:7:"goodies";a:3:{s:7:"pattern";i:0;s:10:"arrow-down";i:0;s:6:"random";i:0;}s:17:"arrow_down_target";s:0:"";s:17:"arrow_down_offset";s:0:"";}s:8:"settings";a:45:{s:11:"mobileFirst";b:0;s:8:"asNavFor";s:0:"";s:13:"accessibility";b:1;s:14:"adaptiveHeight";b:0;s:8:"autoplay";b:1;s:13:"autoplaySpeed";i:3000;s:12:"pauseOnHover";b:1;s:16:"pauseOnDotsHover";b:0;s:6:"arrows";b:0;s:12:"appendArrows";s:10:"$(element)";s:9:"prevArrow";s:97:"<button type="button" data-role="none" class="slick-prev" aria-label="previous">Previous</button>";s:9:"nextArrow";s:89:"<button type="button" data-role="none" class="slick-next" aria-label="next">Next</button>";s:10:"centerMode";b:0;s:13:"centerPadding";s:4:"50px";s:4:"dots";b:0;s:9:"dotsClass";s:10:"slick-dots";s:10:"appendDots";s:10:"$(element)";s:9:"draggable";b:1;s:4:"fade";b:0;s:13:"focusOnSelect";b:0;s:8:"infinite";b:1;s:12:"initialSlide";i:0;s:8:"lazyLoad";s:8:"ondemand";s:9:"respondTo";s:6:"window";s:3:"rtl";b:0;s:4:"rows";i:1;s:12:"slidesPerRow";i:1;s:5:"slide";s:0:"";s:12:"slidesToShow";i:1;s:14:"slidesToScroll";i:1;s:5:"speed";i:500;s:5:"swipe";b:1;s:12:"swipeToSlide";b:0;s:12:"edgeFriction";d:0.34999999999999998;s:9:"touchMove";b:1;s:14:"touchThreshold";i:5;s:6:"useCSS";b:1;s:7:"cssEase";s:4:"ease";s:13:"cssEaseBezier";s:0:"";s:15:"cssEaseOverride";s:0:"";s:6:"easing";s:6:"linear";s:13:"variableWidth";b:0;s:8:"vertical";b:0;s:15:"verticalSwiping";b:0;s:14:"waitForAnimate";b:1;}}'
+      ))
+    ->condition('name', 'default', '=')
+    ->execute();
+  }
+  // If we don't, then create it.
+  else {
+    $slick_update = db_insert('slick_optionset')
+    ->fields(array(
+      'name' => 'default',
+      'label' => 'Default',
+      'breakpoints' => 0,
+      'skin' => '',
+      'options' => 'a:2:{s:7:"general";a:6:{s:6:"normal";s:0:"";s:9:"thumbnail";s:0:"";s:14:"template_class";s:0:"";s:7:"goodies";a:3:{s:7:"pattern";i:0;s:10:"arrow-down";i:0;s:6:"random";i:0;}s:17:"arrow_down_target";s:0:"";s:17:"arrow_down_offset";s:0:"";}s:8:"settings";a:45:{s:11:"mobileFirst";b:0;s:8:"asNavFor";s:0:"";s:13:"accessibility";b:1;s:14:"adaptiveHeight";b:0;s:8:"autoplay";b:1;s:13:"autoplaySpeed";i:3000;s:12:"pauseOnHover";b:1;s:16:"pauseOnDotsHover";b:0;s:6:"arrows";b:0;s:12:"appendArrows";s:10:"$(element)";s:9:"prevArrow";s:97:"<button type="button" data-role="none" class="slick-prev" aria-label="previous">Previous</button>";s:9:"nextArrow";s:89:"<button type="button" data-role="none" class="slick-next" aria-label="next">Next</button>";s:10:"centerMode";b:0;s:13:"centerPadding";s:4:"50px";s:4:"dots";b:0;s:9:"dotsClass";s:10:"slick-dots";s:10:"appendDots";s:10:"$(element)";s:9:"draggable";b:1;s:4:"fade";b:0;s:13:"focusOnSelect";b:0;s:8:"infinite";b:1;s:12:"initialSlide";i:0;s:8:"lazyLoad";s:8:"ondemand";s:9:"respondTo";s:6:"window";s:3:"rtl";b:0;s:4:"rows";i:1;s:12:"slidesPerRow";i:1;s:5:"slide";s:0:"";s:12:"slidesToShow";i:1;s:14:"slidesToScroll";i:1;s:5:"speed";i:500;s:5:"swipe";b:1;s:12:"swipeToSlide";b:0;s:12:"edgeFriction";d:0.34999999999999998;s:9:"touchMove";b:1;s:14:"touchThreshold";i:5;s:6:"useCSS";b:1;s:7:"cssEase";s:4:"ease";s:13:"cssEaseBezier";s:0:"";s:15:"cssEaseOverride";s:0:"";s:6:"easing";s:6:"linear";s:13:"variableWidth";b:0;s:8:"vertical";b:0;s:15:"verticalSwiping";b:0;s:14:"waitForAnimate";b:1;}}'
+      ))
+    ->execute();
+  }
+
+  return $slick_update;
+}
+
+/**
+ * Implements hook_update_N().
+ * Remove Take a Tour section
+ */
+function bef_misc_update_7011() {
+  module_disable(array('take_a_tour'));
+}
+
+/**
+ * Implements hook_update_N().
+ * Enables the entityqueue module
+ */
+function bef_misc_update_7012() {
+  if (!module_exists('entityqueue')) {
+    module_enable(array('entityqueue'));
+  }
+}
+
+/**
+ * Implements hook_update_N().
+ * Deletes field_materials_used from Activities content type.
+ */
+function bef_misc_update_7013() {
+  $delete_instances = array('field_materials_used');
+  $instances = field_info_instances('node', 'activity');
+
+  foreach ($delete_instances as $instance_name) {
+    $instance = $instances[$instance_name];
+    field_delete_instance($instance);
+  }
+}
+
+/**
+ * Implements hook_update_N().
+ * Enables the taxonomy_csv module
+ */
+function bef_misc_update_7014() {
+  if (!module_exists('taxonomy_csv')) {
+    module_enable(array('taxonomy_csv'));
+  }
+}
+
+/**
+ * Implements hook_update_N().
+ * Deregister old migrations.
+ */
+function bef_misc_update_7015() {
+  Migration::deregisterMigration('Funder');
+  Migration::deregisterMigration('FunderProfile');
+}
+
+/**
+ * Implements hook_update_N.
+ * Register the new Funders node migration.
+ */
+function bef_misc_update_7016() {
+    $arguments = array(
+    'source_connection' => 'legacydrupal',
+    'source_version' => 6,
+    'group_name' => 's4rs6',
+    'description' => t('Migration of general Funders data to a Funder content type.'),
+    'machine_name' => 'FunderNodes',
+    'source_type' => 'funder',
+    'destination_type' => 'funder',
+    'default_uid' => 1,
+    'dependencies' => array('Files'),
+  );
+
+  Migration::registerMigration('SolarFunderNodesMigration', $arguments['machine_name'],
+                              $arguments);
+}
+
+/**
+ * Implements hook_update_N().
+ * Disable redirect module.
+ */
+function bef_misc_update_7017() {
+  module_disable(array('redirect'));
+}
+
+/**
+ * Implements hook_update_N().
+ * Disable solar_migrate module.
+ */
+function bef_misc_update_7018() {
+  module_disable(array('solar_migrate'));
+}
+
+/**
+ * Implements hook_update_N().
+ * Enables php and views_php modules
+ */
+function bef_misc_update_7019() {
+  module_enable(array('php', 'views_php'));
+}
+
+/**
+ * Implements hook_update_N().
+ * Add/updates existing kiosks with the 5 'green_tech_content' listed.
+ */
+function bef_misc_update_7020(&$sandbox) {
+  // SELECT fpid, title FROM `fieldable_panels_panes` WHERE `bundle` = 'green_tech_content' ORDER BY `title`;
+  $default_target_ids = array(
+    array('target_id' => 63), // Biomass
+    array('target_id' => 65), // Geothermal
+    array('target_id' => 28), // Solar Thermal
+    array('target_id' => 64), // Wave Energy
+    array('target_id' => 29), // Wind
+  );
+
+  $other_valid_target_ids = array(
+    array('target_id' => 53), // Climate Protection and Sustainability
+    array('target_id' => 30), // Conservation Technology
+    array('target_id' => 31), // Renewable Employment
+    array('target_id' => 54), // Solid Waste and Recycling
+    array('target_id' => 52), // Water Quality and Conservation
+  );
+
+  if (!isset($sandbox['progress'])) {
+    $sandbox['progress'] = 0;
+    $sandbox['limit']    = 10;
+    $sandbox['max']      = (int) db_select('node', 'n')
+        ->condition('n.type', 'kiosk')
+        ->countQuery()->execute()->fetchField();
+  }
+
+  $query = db_select('node', 'n');
+  $query->fields('n', array('nid'));
+  $query->condition('n.type', 'kiosk');
+  $query->orderBy('n.nid');
+  $query->range($sandbox['progress'], $sandbox['limit']);
+
+  $result = $query->execute();
+
+  $node_ids = $result->fetchCol();
+
+  if ($node_ids) {
+    $nodes = node_load_multiple($node_ids);
+
+    foreach ($nodes as $node) {
+      $current = $node->field_kiosk_green_tech_content[LANGUAGE_NONE];
+      $new = $default_target_ids;
+
+      foreach($current as $v1){
+        foreach($other_valid_target_ids as $v2){
+          if($v1['target_id'] === $v2['target_id']) {
+            $new[] = $v1;
+          }
+        }
+      }
+
+      $node->field_kiosk_green_tech_content[LANGUAGE_NONE] = $new;
+      node_save($node);
+    }
+  }
+
+  $sandbox['progress'] += count($node_ids);
+
+  if (empty($sandbox['max'])) {
+    $sandbox['#finsihed'] = 1;
+  }
+  else {
+    $sandbox['#finished'] = $sandbox['progress'] / $sandbox['max'];
+  }
+}
+
+/**
+ * Implements hook_update_N().
+ * Enables the imagestyleflush module
+ */
+function bef_misc_update_7021() {
+  if (!module_exists('imagestyleflush')) {
+    module_enable(array('imagestyleflush'));
+  }
+}
+
+/**
+ * Implements hook_update_N().
+ * Change absolute URLs to relative
+ */
+function bef_misc_update_7022() {
+
+  $fields = array(
+    'field_data_body' => 'body_value',
+    'field_data_field_body' => 'field_body_value',
+    'field_data_field_freeform_html' => 'field_freeform_html_value',
+    'field_data_field_kiosk_about_partners_body' => 'field_kiosk_about_partners_body_value',
+    'field_data_field_kiosk_about_partners_thx' => 'field_kiosk_about_partners_thx_value',
+    'field_data_field_kiosk_about_project_body' => 'field_kiosk_about_project_body_value',
+    'field_data_field_kiosk_call_to_action_body' => 'field_kiosk_call_to_action_body_value',
+    'field_data_field_slideshow_slide_link' => 'field_slideshow_slide_link_url',
+    'field_data_field_this_project_funded_by' => 'field_this_project_funded_by_value',
+  );
+  $patterns = array('/=("|\')https?\:\/\/www\.solar4rschools\.org/i');
+  foreach ($fields as $field_name => $col) {
+    $query = db_select($field_name, 'b')
+      ->fields('b', array('entity_type', 'entity_id', 'delta', $col))
+      ->condition($col, '%' . db_like('solar4rschools.org') . '%', 'LIKE');
+    $results = $query->execute();
+    foreach ($results as $row) {
+      $row->{$col} = preg_replace($patterns, '', $row->{$col});
+      db_update($field_name)
+        ->fields(array($col => $row->{$col}))
+        ->condition('entity_type', $row->entity_type)
+        ->condition('entity_id', $row->entity_id)
+        ->condition('delta', $row->delta)
+        ->execute();
+    }
+  }
+}
+/**
+ * Implements hook_update_N().
+ * Change absolute URLs to relative in revision tables
+ */
+function bef_misc_update_7023() {
+
+  $fields = array(
+    'field_revision_body' => 'body_value',
+    'field_revision_field_body' => 'field_body_value',
+    'field_revision_field_freeform_html' => 'field_freeform_html_value',
+    'field_revision_field_kiosk_about_partners_body' => 'field_kiosk_about_partners_body_value',
+    'field_revision_field_kiosk_about_partners_thx' => 'field_kiosk_about_partners_thx_value',
+    'field_revision_field_kiosk_about_project_body' => 'field_kiosk_about_project_body_value',
+    'field_revision_field_kiosk_call_to_action_body' => 'field_kiosk_call_to_action_body_value',
+    'field_revision_field_slideshow_slide_link' => 'field_slideshow_slide_link_url',
+    'field_revision_field_this_project_funded_by' => 'field_this_project_funded_by_value'
+  );
+  $patterns = array('/=("|\')https?\:\/\/www\.solar4rschools\.org/i');
+  foreach ($fields as $field_name => $col) {
+    $query = db_select($field_name, 'b')
+      ->fields('b', array('entity_type', 'entity_id', 'revision_id','delta', $col))
+      ->condition($col, '%' . db_like('solar4rschools.org') . '%', 'LIKE');
+    $results = $query->execute();
+    foreach ($results as $row) {
+      $row->{$col} = preg_replace($patterns, '', $row->{$col});
+      db_update($field_name)
+        ->fields(array($col => $row->{$col}))
+        ->condition('entity_type', $row->entity_type)
+        ->condition('entity_id', $row->entity_id)
+        ->condition('revision_id', $row->revision_id)
+        ->condition('delta', $row->delta)
+        ->execute();
+    }
+  }
+}
+
+/**
+ * Disable and uninstall varnish and memcache modules.
+ * Disable developer modules.
+ * Enable redis module.
+ */
+function bef_misc_update_7024() {
+  // Remove modules that do not work with Pantheon
+  module_disable(array('varnish', 'memcache'));
+  drupal_uninstall_modules(array('varnish', 'memcache'));
+
+  // Disable developer modules
+  module_disable(array('devel', 'migrate_d2d', 'migrate_extras', 'migrate_ui', 'migrate'));
+
+  // Enable Redis for Pantheon
+  module_enable(array('redis'));
+}
+
+/**
+ * Disable and uninstall context reaction theme
+ */
+function bef_misc_update_7025() {
+ module_disable(array('context_reaction_theme'));
+ drupal_uninstall_modules(array('context_reaction_theme'));
+}
+
+/**
+ * Fix broken links caused by bef_misc_update_7022() and bef_misc_update_7023() [now fixed]
+ */
+function bef_misc_update_7026() {
+  $fields = array(
+    'body' => 'body_value',
+    'field_body' => 'field_body_value',
+    'field_freeform_html' => 'field_freeform_html_value',
+    'field_kiosk_about_partners_body' => 'field_kiosk_about_partners_body_value',
+    'field_kiosk_about_partners_thx' => 'field_kiosk_about_partners_thx_value',
+    'field_kiosk_about_project_body' => 'field_kiosk_about_project_body_value',
+    'field_kiosk_call_to_action_body' => 'field_kiosk_call_to_action_body_value',
+    'field_slideshow_slide_link' => 'field_slideshow_slide_link_url',
+    'field_this_project_funded_by' => 'field_this_project_funded_by_value'
+  );
+  $patterns = array('/(href|src)\/([^\'|"]*)([\'|"])/i');
+
+  $totalCount = 0;
+  $replaceCount = 0;
+
+  foreach ($fields as $field_name => $col) {
+    $or = db_or()
+      ->condition($col, '%href/%', 'LIKE')
+      ->condition($col, '%src/%', 'LIKE');
+    foreach (array('field_data', 'field_revision') as $storage) {
+      $table_name = $storage . '_' . $field_name;
+      $query = db_select($table_name, 'b')
+        ->fields('b', [
+          'entity_type',
+          'entity_id',
+          'revision_id',
+          'delta',
+          $col
+        ])
+        ->condition($or);
+      $results = $query->execute();
+      foreach ($results as $row) {
+        $totalCount++;
+        $oldValue = $row->{$col};
+        $newValue = preg_replace($patterns, '$1=$3/$2$3', $oldValue);
+
+        if ($oldValue != $newValue) {
+          $replaceCount++;
+          db_update($table_name)
+            ->fields([$col => $newValue])
+            ->condition('entity_type', $row->entity_type)
+            ->condition('entity_id', $row->entity_id)
+            ->condition('revision_id', $row->revision_id)
+            ->condition('delta', $row->delta)
+            ->execute();
+        }
+      }
+    }
+  }
+
+  return t('Replaced @replaced of @total', array('@replaced' => $replaceCount, '@total' => $totalCount));
+}
+/**
+ * Enable captcha modules and configure to display on signup form
+ */
+function bef_misc_update_7027() {
+  if (!module_exists('captcha')) {
+    module_enable(array('captcha'));
+  }
+  if (!module_exists('image_captcha')) {
+    module_enable(array('image_captcha'));
+  }
+  if (!module_exists('bef_captcha_settings')) {
+    module_enable(array('bef_captcha_settings'));
+  }
+}
+/**
+ * Enable rules admin module so site owner can edit workbench moderation emails
+ */
+function bef_misc_update_7028() {
+  if (!module_exists('rules_admin')) {
+    module_enable(array('rules_admin'));
+  }
+}
+/**
+ * Remove captcha settings features export because now using recaptcha
+ */
+function bef_misc_update_7029() {
+  if (module_exists('bef_captcha_settings')) {
+    module_disable(array('bef_captcha_settings'));
+  }
+}
+/**
+ * Enable enable recaptcha module and features export for the settings
+ */
+function bef_misc_update_7030() {
+  if (!module_exists('recaptcha')) {
+    module_enable(array('recaptcha'));
+  }
+  if (!module_exists('bef_recaptcha_settings')) {
+    module_enable(array('bef_recaptcha_settings'));
+  }
+}
+
+/**
+ * Enable the social_media_links module.
+ */
+function bef_misc_update_7031() {
+  if (!module_exists('social_media_links')) {
+    module_enable(array('social_media_links'));
+  }
+}
+
+/**
+ * Disable mollom module.
+ */
+function bef_misc_update_7032() {
+  // Make sure we have cleared the dependency on mollom first
+  features_revert_module('solar_core');
+  drupal_flush_all_caches();
+  if (module_exists('mollom')) {
+    module_disable(array('mollom'), FALSE);
+    drupal_uninstall_modules(array('mollom'), FALSE);
+  }
+}
+
+/**
+ * Enable autoban module and create autoban rules.
+ */
+function bef_misc_update_7033() {
+  module_enable(array('autoban', 'ip_ranges'));
+
+  // Create autoban rules
+  $rules = array(
+    array(
+      'type' => 'user',
+      'message' => 'Login attempt failed for %user.',
+      'threshold' => 3,
+      'user_type' => 1,
+      'ip_type' => 0,
+    ),
+    array(
+      'type' => 'bef_misc',
+      'message' => 'User register pending approval emails sent.',
+      'threshold' => 2,
+      'user_type' => 1,
+      'ip_type' => 0,
+    ),
+    array(
+      'type' => 'page not found',
+      'message' => 'wp-login|wp-includes|wp-admin',
+      'threshold' => 1,
+      'user_type' => 1,
+      'ip_type' => 0,
+    ),
+  );
+  $query = db_insert('autoban')
+    ->fields(array('type', 'message', 'threshold', 'user_type', 'ip_type'));
+  foreach ($rules as $rule) {
+    $query->values($rule);
+  }
+  $query->execute();
+}
+
+/**
+ * Set top level menu links for menu-field-articles-category to expanded.
+ */
+function bef_misc_update_7034() {
+  db_update('menu_links')
+    ->fields([
+      'expanded' => 1,
+    ])
+    ->condition('menu_name', 'menu-field-articles-category')
+    ->condition('depth', 1)
+    ->execute();
+}
+
+/**
+ * Enable Page Manager term_view page.
+ */
+function bef_misc_update_7035() {
+  variable_set('page_manager_term_view_disabled', 0);
+}
+
+/**
+ * Enable metatag module.
+ */
+function bef_misc_update_7036() {
+  module_enable(array('metatag', 'metatag_context', 'cebf_metatags'));
+}
+
+/**
+ * Enable tvi module.
+ */
+function bef_misc_update_7037() {
+  module_enable(array('tvi'));
+}
+
+/**
+ * Resave project nodes in attempt to get geolocations regenerated.
+ */
+function bef_misc_update_7038() {
+  $projects = db_select('node', 'n')
+    ->fields('n', [
+      'nid'
+    ])
+    ->condition('n.type', 'project')
+    ->execute()
+    ->fetchCol();
+
+  foreach($projects as $project) {
+    $node = node_load($project);
+    if ($node) {
+      node_save($node);
+    }
+  }
+}
+
+/**
+ * Enable honeypot module.
+ */
+function bef_misc_update_7039() {
+  module_enable(array('honeypot'));
+}
+
+/**
+ * Enable easy_breadcrumb module.
+ */
+function bef_misc_update_7040() {
+  module_enable(array('easy_breadcrumb'));
+}

@@ -1,0 +1,114 @@
+<?php
+/**
+ * @file
+ * Installation for Generation Charts module.
+ */
+
+/**
+ * Implements hook_install().
+ */
+function generation_charts_install() {
+  db_update('system')
+    ->fields(array('weight' => 1))
+    ->condition('name', 'generation_charts')
+    ->execute();
+}
+
+/**
+ * Implements hook_schema().
+ */
+function generation_charts_schema() {
+  $schema['generation_charts_site_presets'] = array(
+    'description' => 'Indicates which data to chart in the generation site chart block.',
+    'fields' => array(
+      'site_id' => array(
+        'type' => 'int',
+        'description' => 'The Drupal entity ID of the generation site.',
+        'not null' => TRUE,
+      ),
+      'period' => array(
+        'type' => 'varchar',
+        'length' => 16,
+        'description' => 'The period.',
+        'not null' => TRUE,
+      ),
+      'preset_id' => array(
+        'type' => 'int',
+        'description' => 'The variable preset to show on the site chart.',
+        'not null' => TRUE,
+      ),
+    ),
+    'primary key' => array('site_id', 'period', 'preset_id'),
+    'indexes' => array(
+      'site_id' => array('site_id'),
+      'preset_id' => array('preset_id'),
+      'period' => array('period'),
+    ),
+    'unique keys' => array(),
+  );
+
+  return $schema;
+}
+
+
+/**
+ * Schema for table generation_charts_log, which
+ * tracks kiosk usage in order to collect data to determine sun-setting of kiosks.
+ */
+function _generation_charts_log_schema() {
+  return array(
+    'description' => 'Increments for each kiosk site anytime chart is loaded.',
+    'fields' => array(
+      'site_id' => array(
+        'type' => 'int',
+        'description' => 'The Drupal entity ID of the generation site.',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'load_count_today' => array(
+        'type' => 'int',
+        'description' => 'Counter incremented for each use of Today chart.',
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      'load_count_week' => array(
+        'type' => 'int',
+        'description' => 'Counter incremented for each use of Week chart.',
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      'load_count_month' => array(
+        'type' => 'int',
+        'description' => 'Counter incremented for each use of Month chart.',
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      'load_count_year' => array(
+        'type' => 'int',
+        'description' => 'Counter incremented for each use of Year chart.',
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      'load_count_lifetime' => array(
+        'type' => 'int',
+        'description' => 'Counter incremented for each use of Lifetime chart.',
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+    ),
+    'primary key' => array('site_id'),
+  );
+}
+
+
+
+/**
+ * Add new table to track kiosk usage in order to
+ * collect data to use in decision making for eventual
+ * sunsetting of kiosks.
+ */
+function generation_charts_update_7001() {
+  if (!db_table_exists('generation_charts_log')) {
+    db_create_table('generation_charts_log', _generation_charts_log_schema());
+  }
+}

@@ -1,0 +1,74 @@
+/**
+ * Search panes as seen on Learn and Teach sections.
+ * @TODO: There is much more styling for this in style.css that should be moved here.
+ */
+
+.main-prefix {
+  form {
+    margin: 20px 0;
+  }
+
+  label {
+    display: none;
+    font-weight: 800;
+
+    // Chosen does not work on IOS or Android.
+    // IOS will display a multi-select with "x items" instead of the placeholder text. This means
+    // that the user does not not know the purpose of the field. This is an attempt to display the
+    // labels if the primary pointing system does not support hover.
+    @media (hover:none), (hover:on-demand) {
+      display: block;
+    }
+  }
+
+  .views-exposed-form {
+    .views-exposed-widgets {
+      margin-bottom: 0;
+    }
+
+    .widget-grouping,
+    .views-exposed-widget {
+      width: 100%;
+      float: left;
+      padding: 0 8px;
+    }
+
+    .widget-grouping {
+      .views-exposed-widget {
+        width: 100%;
+        padding: 0;
+      }
+    }
+
+    .views-widget-button,
+    .views-submit-button {
+      width: auto;
+      padding: 0 8px;
+    }
+
+    .form-submit {
+      float: right;
+    }
+
+    .views-reset-button {
+      width: auto;
+    }
+
+    @include breakpoint($bp--medium) {
+      .widget-grouping,
+      .views-exposed-widget {
+        width: 33%;
+      }
+
+      .views-widget-button,
+      .views-submit-button {
+        clear: both;
+        width: auto;
+      }
+
+      .form-submit {
+        float: none;
+      }
+    }
+  }
+}

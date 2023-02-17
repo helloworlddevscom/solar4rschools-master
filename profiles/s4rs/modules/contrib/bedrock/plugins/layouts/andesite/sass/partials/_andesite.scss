@@ -1,0 +1,184 @@
+////////////////////////
+// Bedrock Andesite Layout Partial
+//
+// Layout specific to the Bedrock Andesite panel layout.
+//
+// Copy this file to your theme's Sass partial structure
+// and include in your SMACSS based layout file.
+//
+// Required Variables
+// - $small, $medium, $large, $xlarge (global breakpoints)
+// - $grids, set at global breakpoints
+// - $gutters, set at global breakpoints
+// Optional Variables
+// - $andesite-grid-height
+////////////////////////
+
+@mixin andesite-grid-height {
+  $andesite-grid-height: false !default;
+
+  @if $andesite-grid-height {
+    max-height: $andesite-grid-height;
+    min-height: $andesite-grid-height;
+  }
+}
+
+/*
+ * Andesite Layout
+ */
+.andesite {
+  //@include background-grid;
+
+  .andesite-content-header-container {
+    @include grid-span(3, 1);
+
+    @include breakpoint($small) {
+      @include grid-span(6, 1);
+    }
+
+    @include breakpoint($medium) {
+      @include grid-span(18, 1);
+    }
+
+    @include breakpoint($large) {
+      @include grid-span(30, 1);
+    }
+
+    @include breakpoint($xlarge) {
+      @include grid-span(30, 1);
+    }
+
+    margin-bottom: 1em;
+
+    .andesite-content-header-left {
+      @include grid-span(3, 1);
+
+      @include breakpoint($small) {
+        @include grid-span(6, 1);
+      }
+
+      @include breakpoint($medium) {
+        @include grid-span(9, 1);
+      }
+
+      @include breakpoint($large) {
+        @include grid-span(15, 1);
+      }
+
+      @include breakpoint($xlarge) {
+        @include grid-span(15, 1);
+      }
+    }
+
+    .andesite-content-header-right {
+      @include grid-span(3, 1);
+
+      @include breakpoint($small) {
+        @include grid-span(6, 1);
+      }
+
+      @include breakpoint($medium) {
+        @include grid-span(9, 10);
+      }
+
+      @include breakpoint($large) {
+        @include grid-span(15, 16);
+      }
+
+      @include breakpoint($xlarge) {
+        @include grid-span(15, 16);
+      }
+    }
+  }
+
+  .andesite-column-container {
+    @include grid-span(3, 1);
+
+    @include breakpoint($small) {
+      @include grid-span(6, 1);
+    }
+
+    @include breakpoint($medium) {
+      @include grid-span(18, 1);
+    }
+
+    @include breakpoint($large) {
+      @include grid-span(30, 1);
+    }
+
+    @include breakpoint($xlarge) {
+      @include grid-span(30, 1);
+    }
+
+    .andesite-column-left {
+      @include grid-span(3, 1);
+
+      @include breakpoint($small) {
+        @include grid-span(6, 1);
+      }
+
+      @include breakpoint($medium) {
+        @include grid-span(6, 1);
+      }
+
+      @include breakpoint($large) {
+        @include grid-span(10, 1);
+      }
+
+      @include breakpoint($xlarge) {
+        @include grid-span(10, 1);
+      }
+    }
+
+    .andesite-column-middle {
+      @include grid-span(3, 1);
+
+      @include breakpoint($small) {
+        @include grid-span(6, 1);
+      }
+
+      @include breakpoint($medium) {
+        @include grid-span(6, 7);
+      }
+
+      @include breakpoint($large) {
+        @include grid-span(10, 11);
+      }
+
+      @include breakpoint($xlarge) {
+        @include grid-span(10, 11);
+      }
+    }
+
+    .andesite-column-right {
+      @include grid-span(3, 1);
+
+      @include breakpoint($small) {
+        @include grid-span(6, 1);
+      }
+
+      @include breakpoint($medium) {
+        @include grid-span(6, 13);
+      }
+
+      @include breakpoint($large) {
+        @include grid-span(10, 21);
+      }
+
+      @include breakpoint($xlarge) {
+        @include grid-span(10, 21);
+      }
+    }
+
+    .andesite-column {
+      .panel-pane {
+        @include andesite-grid-height;
+        margin-bottom: 1em;
+
+        &:last-child {
+          margin-bottom: 0;
+        }
+      }
+    }
+  }
+}

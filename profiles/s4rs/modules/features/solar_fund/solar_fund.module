@@ -1,0 +1,27 @@
+<?php
+/**
+ * @file
+ * Code for the Solar Fund feature.
+ */
+
+include_once 'solar_fund.features.inc';
+
+/**
+ * Implements hook_entity_info_alter().
+ *
+ * Create Fieldable Panels Pane bundle 'Funding partner option'.
+ */
+function solar_fund_entity_info_alter(&$entity_info) {
+  if (isset($entity_info['fieldable_panels_pane'])) {
+    // Funding partner options.
+    $entity_info['fieldable_panels_pane']['bundles']['funding_partner_option'] = array(
+      'label' => t('Funding Partner Option'),
+      'admin' => array(
+        'path' => 'admin/structure/fieldable-panels-panes/manage/%fieldable_panels_panes_type',
+        'bundle argument' => 4,
+        'real path' => 'admin/structure/fieldable-panels-panes/manage/funding_partner_option',
+        'access arguments' => array('administer fieldable panels panes'),
+      ),
+    );
+  }
+}

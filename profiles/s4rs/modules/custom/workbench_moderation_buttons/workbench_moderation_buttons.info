@@ -1,0 +1,6 @@
+name = Workbench Moderation Buttons
+description = Show Workbench Moderation states as buttons instead of a dropdown.
+core = 7.x
+dependencies[] = workbench_moderation
+package = TESSIndia
+version = "7.x-0.1b"

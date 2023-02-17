@@ -1,0 +1,201 @@
+////////////////////////
+// Bedrock Jerusalem Marble Layout Partial
+//
+// Layout specific to the Bedrock Jerusalem Marble panel layout.
+//
+// Copy this file to your theme's Sass partial structure
+// and include in your SMACSS based layout file.
+//
+// Required Variables
+// - $small, $medium, $large, $xlarge (global breakpoints)
+// - $grids, set at global breakpoints
+// - $gutters, set at global breakpoints
+// Optional Variables
+// - $jerusalem_marble-grid-height
+////////////////////////
+
+@mixin jerusalem_marble-grid-height {
+  $jerusalem_marble-grid-height: false !default;
+
+  @if $jerusalem_marble-grid-height {
+    max-height: $jerusalem_marble-grid-height;
+    min-height: $jerusalem_marble-grid-height;
+  }
+}
+
+/*
+ * Jerusalem Marble Layout
+ */
+.jerusalem_marble {
+  //@include background-grid;
+
+  .jerusalem_marble-content-header {
+    @include grid-span(3, 1);
+
+    @include breakpoint($small) {
+      @include grid-span(6, 1);
+    }
+
+    @include breakpoint($medium) {
+      @include grid-span(18, 1);
+    }
+
+    @include breakpoint($large) {
+      @include grid-span(30, 1);
+    }
+
+    @include breakpoint($xlarge) {
+      @include grid-span(30, 1);
+    }
+
+    margin-bottom: 1em;
+
+    .panel-pane {
+      margin-bottom: 1em;
+
+      &:last-child {
+        margin-bottom: 0;
+      }
+    }
+  }
+
+  .jerusalem_marble-column-container {
+    @include grid-span(3, 1);
+
+    @include breakpoint($small) {
+      @include grid-span(6, 1);
+    }
+
+    @include breakpoint($medium) {
+      @include grid-span(18, 1);
+    }
+
+    @include breakpoint($large) {
+      @include grid-span(30, 1);
+    }
+
+    @include breakpoint($xlarge) {
+      @include grid-span(30, 1);
+    }
+
+    .jerusalem_marble-column-left {
+      @include grid-span(3, 1);
+
+      @include breakpoint($small) {
+        @include grid-span(6, 1);
+      }
+
+      @include breakpoint($medium) {
+        @include grid-span(9, 1);
+      }
+
+      @include breakpoint($large) {
+        @include grid-span(15, 1);
+      }
+
+      @include breakpoint($xlarge) {
+        @include grid-span(15, 1);
+      }
+    }
+
+    .jerusalem_marble-column-inner-left {
+      @include grid-span(3, 1);
+
+      @include breakpoint($small) {
+        @include grid-span(6, 1);
+      }
+
+      @include breakpoint($medium) {
+        @include grid-span(9, 1);
+      }
+
+      @include breakpoint($large) {
+        @include grid-span(15, 1);
+      }
+
+      @include breakpoint($xlarge) {
+        @include grid-span(15, 1);
+      }
+    }
+
+    .jerusalem_marble-column-inner-right {
+      @include grid-span(3, 1);
+
+      @include breakpoint($small) {
+        @include grid-span(6, 1);
+      }
+
+      @include breakpoint($medium) {
+        @include grid-span(9, 10);
+      }
+
+      @include breakpoint($large) {
+        @include grid-span(15, 16);
+      }
+
+      @include breakpoint($xlarge) {
+        @include grid-span(15, 16);
+      }
+    }
+
+    .jerusalem_marble-column-right {
+      @include grid-span(3, 1);
+
+      @include breakpoint($small) {
+        @include grid-span(6, 1);
+      }
+
+      @include breakpoint($medium) {
+        @include grid-span(9, 10);
+      }
+
+      @include breakpoint($large) {
+        @include grid-span(15, 16);
+      }
+
+      @include breakpoint($xlarge) {
+        @include grid-span(15, 16);
+      }
+    }
+
+    .jerusalem_marble-column {
+      .panel-pane {
+        @include jerusalem_marble-grid-height;
+        margin-bottom: 1em;
+
+        &:last-child {
+          margin-bottom: 0;
+        }
+      }
+    }
+    .jerusalem_marble-content-full-width {
+    @include grid-span(3, 1);
+
+    @include breakpoint($small) {
+      @include grid-span(6, 1);
+    }
+
+    @include breakpoint($medium) {
+      @include grid-span(18, 1);
+    }
+
+    @include breakpoint($large) {
+      @include grid-span(30, 1);
+    }
+
+    @include breakpoint($xlarge) {
+      @include grid-span(30, 1);
+    }
+
+    margin-bottom: 1em;
+
+    .panel-pane {
+      margin-bottom: 1em;
+
+      &:last-child {
+        margin-bottom: 0;
+      }
+    }
+  }
+  }
+}

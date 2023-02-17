@@ -1,0 +1,156 @@
+name: cebf
+#recipe: pantheon
+# @TODO: Using drupal7 recipe instead of pantheon because
+# Solr reports incorrect schema.xml with pantheon recipe.
+# This is not great because it means we have to manually recreate
+# some of the abilities of the pantheon recipe via our own tooling scripts.
+recipe: drupal7
+config:
+  framework: drupal7
+  php: '7.4'
+  via: nginx
+  database: mariadb
+  webroot: .
+  drush: ^8
+
+#  framework: drupal
+#  site: solar4schools
+#  id: 727f67e7-eb02-409e-bae8-83c38874da94
+#  api_version: 1
+#  database: pantheon
+#  username: pantheon
+#  password: pantheon
+#  host: database
+#  port: 3306
+  xdebug: false
+  config:
+    # Custom PHP config overrides.
+    # @TODO: Need to allow overrides per developer.
+    php: lando/php-conf/php.ini
+proxy:
+  appserver_nginx:
+    # Add reliable domain. Requires adding to /etc/hosts on local machine to work.
+    - cebf.lando
+#  solr:
+#    - solr.cebf.lndo.site:8985
+services:
+  appserver:
+    build_as_root:
+      # Create error logs.
+      - mkdir -p /app/lando/logs
+      - rm -f /app/lando/logs/php_errors.log
+      - touch /app/lando/logs/php_errors.log
+      - rm -f /app/lando/logs/xdebug.log
+      - touch /app/lando/logs/xdebug.log
+      # Install Terminus. @TODO: If the pantheon recipe and Solr would work together this wouldn't be necessary.
+      - mkdir /terminus
+      - |-
+        curl -L https://github.com/pantheon-systems/terminus/releases/download/$(curl --silent "https://api.github.com/repos/pantheon-systems/terminus/releases/latest" | perl -nle'print $& while m{"tag_name": "\K.*?(?=")}g')/terminus.phar --output /terminus/terminus
+      - chmod +x /terminus/terminus
+      - ln -s /terminus/terminus /usr/local/bin/terminus
+      # Install ClamAV necessary for ClamAV Drupal module.
+      # See: https://mnguyen.io/blog/how-to-install-clamav-in-lando-for-drupal/
+      - apt-get update -y
+      - apt-get install clamav clamav-daemon -y
+      - echo "TCPSocket 3310" >> /etc/clamav/clamd.conf
+      - freshclam
+      - update-rc.d clamav-daemon enable
+      # Install Nano for debugging purposes.
+      - mkdir -p /var/lib/apt/lists/partial
+      - apt-get update && apt install nano
+    build:
+      # Custom configuration for Terminus.
+      - mkdir -p /var/www/.terminus
+      - cp /app/lando/terminus-conf/config.yml /var/www/.terminus/config.yml
+    run_as_root:
+      - freshclam
+      - update-rc.d clamav-daemon enable
+      - service clamav-daemon start
+    overrides:
+      environment:
+        # Support debugging Drush with Xdebug.
+        PHP_IDE_CONFIG: "serverName=appserver"
+        DRUSH_OPTIONS_URI: "https://cebf.lando"
+        # This is apparently necessary to overwrite the default Xdebug 3.0
+        # config so that our config in /lando/php-conf/php.ini is used.
+        XDEBUG_MODE:
+  database:
+    type: mariadb
+    portforward: 32808
+    creds:
+      database: cebf
+      user: cebf
+      password: cebf
+      host: database
+      port: 3306
+  solr:
+    type: solr:6
+    # Solr port will be 8983 and is not configurable.
+    # 8986 is only for accessing admin at http://localhost:8986/solr
+    # See: https://github.com/lando/lando/issues/1078
+    portforward: 8986
+    core: cebf_search_local
+    config:
+      dir: lando/solr-conf/6.x
+  mailhog:
+    type: mailhog:v1.0.0
+    portforward: false
+    hogfrom:
+      - appserver
+  node:
+    type: node:11
+    build:
+      - cd /app/profiles/s4rs/themes/custom/flare && npm install
+      - cd /app/profiles/s4rs/themes/custom/flare && npm rebuild node-sass
+      - cd /app/profiles/s4rs/themes/custom/flare && gulp build
+    globals:
+      gulp-cli: latest
+tooling:
+  xdebug:
+    description: Loads Xdebug in the selected mode
+    cmd:
+      - appserver: /app/lando/scripts/xdebug.sh
+    user: root
+  # @TODO: This script wouldn't be necessary if pantheon recipe and Solr worked together.
+  db-pull:
+    service: appserver
+    description: Pulls database from Pantheon env and replaces your local database
+    cmd:
+      - /app/lando/scripts/db-pull.sh
+  # @TODO: This script wouldn't be necessary if pantheon recipe and Solr worked together.
+  files-pull:
+    service: appserver
+    description: Pulls files directory from Pantheon env and replaces your local files directory
+    cmd:
+      - /app/lando/scripts/files-pull.sh
+  env-deploy:
+    service: appserver
+    description: Deploys to test or live Pantheon env (deploys code, updates database, reverts features and clears caches)
+    cmd:
+      - /app/lando/scripts/env-deploy.sh
+  env-config-import:
+    service: appserver
+    description: Updates database, reverts features and clears caches on a remote Pantheon env
+    cmd:
+      - /app/lando/scripts/env-config-import.sh
+  env-solr-reindex:
+    service: appserver
+    description: Reindexes Solr on a remote Pantheon env
+    cmd:
+      - /app/lando/scripts/env-solr-reindex.sh
+  drupal-config-import:
+    service: appserver
+    description: Updates database, reverts features and clears caches on your local Lando env
+    cmd:
+      - /app/lando/scripts/config-import.sh
+  drupal-solr-reindex:
+    service: appserver
+    description: Reindexes Solr on your local Lando env
+    cmd:
+      - /app/lando/scripts/solr-reindex.sh
+  npm:
+    service: node
+  node:
+    service: node
+  gulp:
+    service: node

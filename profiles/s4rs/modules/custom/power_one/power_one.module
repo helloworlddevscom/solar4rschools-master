@@ -1,0 +1,473 @@
+<?php
+/**
+ * @file
+ * Code for the Power-One API feature.
+ */
+
+include_once 'power_one.features.inc';
+/**
+ * @file
+ * Power-One API module.
+ */
+
+/**
+ * Implements hook_menu().
+ */
+function power_one_menu() {
+  $items = array();
+  // Configuration/settings page.
+  $items['admin/config/generation/providers/power-one'] = array(
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('power_one_admin_settings_form'),
+    'access arguments' => array('administer power-one api'),
+    'title' => 'Power-One',
+    'description' => 'Configuration settings for interacting with the Power-One web service.',
+    'file' => 'power_one.admin.inc',
+  );
+  $items['admin/config/generation/providers/power-one/settings'] = array(
+    'title' => 'Settings',
+    'type' => MENU_DEFAULT_LOCAL_TASK,
+    'access arguments' => array('administer power-one api'),
+  );
+
+  // API Test page.
+  $items['admin/config/generation/providers/power-one/test'] = array(
+    'title' => 'Test',
+    'type' => MENU_LOCAL_TASK,
+    'access arguments' => array('administer power-one api'),
+    'page callback' => 'power_one_test_page',
+    'file' => 'power_one.admin.inc',
+  );
+
+  return $items;
+}
+
+/**
+ * Implements hook_permission().
+ */
+function power_one_permission() {
+  return array(
+    'administer power-one api' => array(
+      'title' => t('administer power-one api'),
+      'description' => t('Administer Power-One API settings'),
+    ),
+  );
+}
+
+/**
+ * Implements hook_generation_providers().
+ */
+function power_one_generation_providers() {
+  return array(
+    'power_one' => array(
+      'name' => t('Power-One'),
+      'description' => t('Queries data using the Power-One API.'),
+      'site types' => array('power_one'),
+      'provider class' => 'PowerOneGenerationProvider',
+      'file' => 'power_one.generation.inc',
+      'configure' => 'admin/config/generation/providers/power-one',
+    ),
+  );
+}
+
+/**
+ * Returns earliest install date of any descendant sites for a given customer.
+ *
+ * @param int $entity_id
+ *   A Power-One Customer entity ID.
+ *
+ * @return int
+ *   A UNIX timestamp.
+ */
+function power_one_get_customer_start_date($entity_id) {
+  $start = db_query('SELECT MIN(s.install_date) FROM {power_one_site} s LEFT JOIN {power_one_customer} c ON s.customer_nid = c.nid WHERE c.entity_id = :entity_id', array(':entity_id' => $entity_id))->fetchField();
+
+  // @TODO
+  // Certain schools are getting empty install dates. Fix this at the
+  // year 2005 for now.
+  if (!$start) {
+    $start = strtotime('2005-01-01');
+  }
+
+  return $start;
+}
+
+/**
+ * @defgroup "Power-One API SOAP Functions."
+ * @{
+ */
+
+/**
+ * Power-One getAssetInfo response codes.
+ *
+ * SUCCESS – no errors were encountered in processing the request.
+ * NONE_MATCHED – no Assets matched the criteria specified in the query.
+ * LIMIT_EXCEEDED – criteria specified in the query matched more Assets than
+ *                  allowed by the limit. The response contains a truncated or
+ *                  empty Asset list.
+ * ACCESS_DENIED – criteria specified in the query matched at least one Asset
+ *                 but user lacks access privileges.
+ */
+define('POWER_ONE_GET_ASSET_INFO_RESPONSE_SUCCESS', 'SUCCESS');
+define('POWER_ONE_GET_ASSET_INFO_RESPONSE_NONE', 'NONE_MATCHED');
+define('POWER_ONE_GET_ASSET_INFO_RESPONSE_EXCEEDED', 'LIMIT_EXCEEDED');
+define('POWER_ONE_GET_ASSET_INFO_RESPONSE_DENIED', 'ACCESS_DENIED');
+
+/**
+ * Retrieve asset information.
+ *
+ * @param string $query
+ *   Query that specifies the assets for which information is required.
+ * @param string $result_query
+ *   Query that specifies the type, the hierarchy, and the amount of detail of
+ *   the result assets.
+ * @param mixed $limit
+ *   Limit.
+ */
+function power_one_get_asset_info($query, $result_query, $limit = FALSE) {
+  return;
+  $params = array(
+    'query' => $query,
+    'resultQuery' => $result_query,
+  );
+  if ($limit !== FALSE) {
+    $params['limit'] = $limit;
+  }
+
+  $soap = power_one_api_call();
+  $result = $soap->call('getAssetInfo', $params);
+  if ($result['#error'] !== FALSE) {
+    watchdog('power_one', 'getAssetInfo error:<pre>!error</pre><pre>Params: !params</pre><pre>Result: !result</pre>',
+      array(
+        '!error' => $result['#error'],
+        '!params' => print_r($params, TRUE),
+        '!result' => print_r($result, TRUE),
+      ));
+    return FALSE;
+  }
+
+  $status = $result['#return']['result']['status'];
+  switch ($status) {
+    case POWER_ONE_GET_ASSET_INFO_RESPONSE_SUCCESS:
+      return $result['#return']['result']['assets'];
+
+    case POWER_ONE_GET_ASSET_INFO_RESPONSE_NONE:
+    default:
+      // @todo error logging.
+      return FALSE;
+  }
+}
+
+/**
+ * Power-One getMonitoredInfo response codes.
+ *
+ * SUCCESS – no errors were encountered in
+ *           processing the request. Note that this does not necessarily mean
+ *           that all requested fields have values.
+ *
+ * FAILURE – either the request as a whole failed, or errors were encountered
+ *           during the processing of each of the fields in the request.
+ *
+ * PARTIAL_FAILURE – errors were encountered during the processing of one or
+ *                   more fields in the request, but one or more fields in the
+ *                   request were also processed without errors. This means
+ *                   that at least one of the fields in the response will have
+ *                   its fieldException member set.
+ */
+define('POWER_ONE_GET_MONITORED_INFO_RESPONSE_SUCCESS', 'SUCCESS');
+define('POWER_ONE_GET_MONITORED_INFO_RESPONSE_FAILURE', 'FAILURE');
+define('POWER_ONE_GET_MONITORED_INFO_RESPONSE_PARTIAL', 'PARTIAL_FAILURE');
+
+/**
+ * Retrieve monitored information.
+ *
+ * @param array $defaults
+ *   The default values to use for each field.
+ * @param array $fields
+ *   The list of fields to retrieve.
+ * @param string $type
+ *   The type of request.
+ *
+ * @return array
+ *   Power-One monitored info result array.
+ */
+function power_one_get_monitored_info($defaults, $fields, $type = 'BinsRequest') {
+  // Since fields is an abstract type, it has to be properly defined.
+  $params = new stdClass();
+  $params->defaults = $defaults;
+  $params->fields = _power_one_prepare_fields($fields, $type);
+
+  $soap = power_one_api_call();
+  $result = $soap->call('getMonitoredInfo', $params);
+
+  if ($result['#error'] !== FALSE) {
+    watchdog('power_one', 'getMonitoredInfo error:<pre>!error</pre><pre>!fields</pre><pre>!result</pre>',
+      array(
+        '!error' => $result['#error'],
+        '!fields' => print_r($fields, TRUE),
+        '!result' => print_r($result, TRUE),
+      ));
+    return FALSE;
+  }
+
+  $status = $result['#return']['result']['status'];
+  switch ($status) {
+    case POWER_ONE_GET_MONITORED_INFO_RESPONSE_SUCCESS:
+    case POWER_ONE_GET_MONITORED_INFO_RESPONSE_PARTIAL:
+      return $result['#return']['result']['fields'];
+
+    case POWER_ONE_GET_MONITORED_INFO_RESPONSE_FAILURE:
+    default:
+      watchdog('power_one', 'getMonitoredInfo error:<pre>!result</pre><pre>!fields</pre>',
+        array(
+          '!result' => print_r($result, TRUE),
+          '!fields' => print_r($fields, TRUE),
+        ), WATCHDOG_ERROR);
+      return FALSE;
+  }
+}
+
+/**
+ * Returns data on a customer by ID.
+ *
+ * @param int $id
+ *   Power-One customer entity ID.
+ * @param string $detail
+ *   Result detail level. Can be one of:
+ *     - All
+ *     - Limited
+ *     - Minimal
+ *
+ * @return array
+ *   Power-One asset info result array.
+ */
+function power_one_get_customer_by_id($id, $detail = 'All') {
+  $query = _power_one_build_asset_info_query('Customer', 'entityId', $id, '=');
+  $result_query = _power_one_build_asset_info_result_query('Customer', 'detailLevel', "'" . $detail . "'");
+  $result = power_one_get_asset_info($query, $result_query);
+  return _power_one_filter_verbage($result[0]);
+}
+
+/**
+ * Returns data on a site by name.
+ *
+ * @param string $name
+ *   Site name
+ * @param string $detail
+ *   Result detail level. Can be one of:
+ *     - All
+ *     - Limited
+ *     - Minimal
+ *
+ * @return array
+ *   Power-One asset info result array.
+ */
+function power_one_get_site_by_name($name, $detail = 'All') {
+  $query = _power_one_build_asset_info_query('Site', 'name', "'" . $name . "'", '=');
+  $result_query = _power_one_build_asset_info_result_query('Site', 'detailLevel', "'" . $detail . "'");
+  $result = power_one_get_asset_info($query, $result_query);
+  return _power_one_filter_verbage($result[0]);
+}
+
+/**
+ * Returns data on a site by Entity ID.
+ *
+ * @param int $id
+ *   Power-One site Entity ID.
+ * @param string $detail
+ *   Result detail level. Can be one of:
+ *     - All
+ *     - Limited
+ *     - Minimal
+ *
+ * @return array
+ *   Power-One asset info result array.
+ */
+function power_one_get_site_by_id($id, $detail = 'All') {
+  $query = _power_one_build_asset_info_query('Site', 'entityId', $id, '=');
+  $result_query = _power_one_build_asset_info_result_query('Site', 'detailLevel', "'" . $detail . "'");
+  $result = power_one_get_asset_info($query, $result_query);
+  return _power_one_filter_verbage($result[0]);
+}
+
+/**
+ * Obtains device information for a given site ID.
+ *
+ * @param int $id
+ *   Power-One site entity ID.
+ * @param string $detail
+ *   Site result detail level.
+ * @param string $site_detail
+ *   Device result detail level.
+ * @param bool $get_loggers
+ *   Optionally return devices as descendants of their corresponding loggers.
+ *
+ * @return array
+ *   Power-One asset info result array containing descendant device detail.
+ */
+function power_one_get_devices_by_site_id($id, $detail = 'All', $site_detail = 'All', $get_loggers = FALSE) {
+  $query = _power_one_build_asset_info_query('Site', 'entityId', $id, '=');
+  $result_query = _power_one_build_asset_info_result_query('Site', 'detailLevel', "'" . $detail . "'");
+  $site_result_query = _power_one_build_asset_info_result_query('Device', 'detailLevel', "'" . $site_detail . "'");
+  if ($get_loggers) {
+    $logger_result_query = '/' . _power_one_build_asset_info_result_query('Logger', 'detailLevel', "'" . $site_detail . "'");
+  }
+  $result = power_one_get_asset_info($query, $result_query  . $logger_result_query . '/' . $site_result_query);
+  return _power_one_filter_verbage($result[0]);
+}
+
+/**
+ * @} End defgroup "Power-One API SOAP Functions."
+ */
+
+/**
+ * @defgroup "Power-One API private functions."
+ * @{
+ */
+
+/**
+ * Builds a query segment for use in get_asset_info().
+ *
+ * @param string $type
+ *   Asset type, can be one of:
+ *     - Customer
+ *     - Site
+ *     - Logger
+ *     - Device
+ * @param string $property
+ *   Property name.
+ * @param string $value
+ *   Value for right-hand-side.
+ * @param string $op
+ *   Comparison operator, can be one of:
+ *     - =
+ *     - <
+ *     - >
+ *     - !=
+ *
+ * @return string
+ *   Formatted query segment.
+ */
+function _power_one_build_asset_info_query($type, $property, $value, $op = '=') {
+  return $type . '[' . $property . ']' . $op . $value;
+}
+
+/**
+ * Builds a result query segment for use in get_asset_info().
+ *
+ * @param string $type
+ *   Asset type, can be one of:
+ * @param string $function
+ *   Can be one of:
+ *     - detailLevel
+ *     - fields
+ * @param varied $value
+ *   Argument depends on $function
+ *
+ * @return string
+ *   Formated resultQuery segment
+ */
+function _power_one_build_asset_info_result_query($type, $function, $value) {
+  return $type . '[' . $function . '(' . $value . ')]';
+}
+
+/**
+ * Converts Power-One field names to local field names.
+ */
+function _power_one_filter_verbage($raw) {
+  if (!is_array($raw)) {
+    return $raw;
+  }
+
+  $new = array();
+  foreach ($raw as $key => $value) {
+    if (is_array($value)) {
+      $value = _power_one_filter_verbage($value);
+    }
+    else {
+      $key = _power_one_to_underscore($key);
+    }
+    $new[$key] = $value;
+  }
+  return $new;
+}
+
+/**
+ * Converts CamelCase to underscore.
+ */
+function _power_one_to_underscore($word) {
+  static $words = array();
+  if (!isset($words[$word])) {
+    $pattern = array(
+      '/[^A-Z^a-z^0-9^\/]+/',
+      '/([a-z\d])([A-Z])/',
+      '/([A-Z]+)([A-Z][a-z])/',
+    );
+    $replacement = array('_', '\1_\2', '\1_\2');
+    $words[$word] = strtolower(preg_replace($pattern, $replacement, $word));
+  }
+  return $words[$word];
+}
+
+/**
+ * Prepares fields as SoapVar objects.
+ *
+ * Since fields are abstract types, the xsi:type parameter must be set via the
+ * SoapVar class.
+ *
+ * @param array $fields
+ *   An array of Power-One FieldResult arrays.
+ * @param string $type
+ *   xsi:type to set.
+ *
+ * @return array
+ *   Array of prepared SoapVar objects.
+ */
+function _power_one_prepare_fields($fields, $type) {
+  $formatted = array();
+  foreach ($fields as $set) {
+    $field = new stdClass();
+    foreach ($set as $key => $value) {
+      $field->$key = new SoapVar($value, XSD_ANYTYPE);
+    }
+    $formatted[] = new SoapVar($field, SOAP_ENC_OBJECT, $type, POWER_ONE_PLATFORM_NAMESPACE);
+  }
+  return $formatted;
+}
+
+/**
+ * @} End defgroup "Power-One API private functions."
+ */
+
+/**
+ * Implements hook_ctools_plugin_directory().
+ */
+function power_one_ctools_plugin_directory($module, $type) {
+  if ($module == 'ctools') {
+    return 'plugins/' . $type;
+  }
+}
+
+/**
+ * Synchronizes a site's descendant data to the Power One API.
+ *
+ * Was fat_spaniel_node_refresh_node().
+ *
+ * @param object $site
+ *   A Drupal node object.
+ * @param bool $descendant_data
+ *   If TRUE, then descendant data for the $node object will be refreshed. In
+ *   the context of a Power-One Customer node, this means that site/project
+ *   nodes will be updated.
+ */
+function power_one_refresh($site, $descendant_data) {
+  $provider = new PowerOneGenerationProvider();
+  $wrapper = entity_metadata_wrapper('generation_site', $site);
+
+  $provider->updateSiteKnown($wrapper);
+  // For refreshing customer node types, if descendant data refresh is selected,
+  if ($descendant_data) {
+    // Update all descendant data.
+    $provider->updateSiteLogger($wrapper);
+  }
+}

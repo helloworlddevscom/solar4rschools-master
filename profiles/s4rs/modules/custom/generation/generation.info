@@ -1,0 +1,17 @@
+name = Generation API
+description = Provides an API to query energy generation devices using multiple data providers.
+core = 7.x
+package = Generation
+dependencies[] = eck
+dependencies[] = features
+dependencies[] = number
+dependencies[] = tzfield
+features[features_api][] = api:2
+features[field_base][] = field_school_module_orientation
+features[field_base][] = field_school_module_tilt
+features[field_base][] = field_school_shading_percent
+features[field_base][] = field_school_system_size
+features[field_base][] = field_timezone
+files[] = includes/provider.inc
+files[] = views/generation_handler_field_generation.inc
+files[] = views/generation_handler_filter_node_type.inc

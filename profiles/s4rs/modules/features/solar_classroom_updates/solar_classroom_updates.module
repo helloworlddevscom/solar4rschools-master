@@ -1,0 +1,7 @@
+<?php
+/**
+ * @file
+ * Code for the Solar classroom updates feature.
+ */
+
+include_once 'solar_classroom_updates.features.inc';

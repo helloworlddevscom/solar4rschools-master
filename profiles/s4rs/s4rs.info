@@ -1,0 +1,632 @@
+; Project-specific installation profile
+
+name = Solar 4R Schools
+distribution_name = Solar 4R Schools
+description = Solar 4R Schools educates students, teachers and community members about the science and benefits of renewable energy technology.
+core = 7.x
+theme = flare
+
+; Core
+dependencies[] = block
+dependencies[] = contextual
+dependencies[] = dashboard
+dependencies[] = dblog
+dependencies[] = field_ui
+dependencies[] = file
+dependencies[] = help
+dependencies[] = image
+dependencies[] = list
+dependencies[] = menu
+dependencies[] = number
+dependencies[] = options
+dependencies[] = overlay
+dependencies[] = path
+dependencies[] = rdf
+dependencies[] = shortcut
+dependencies[] = taxonomy
+
+; Contrib
+dependencies[] = bedrock
+dependencies[] = context_admin
+dependencies[] = ctools
+dependencies[] = eck_entitycache
+dependencies[] = entitycache
+dependencies[] = features
+dependencies[] = footable
+dependencies[] = elements
+dependencies[] = fences
+dependencies[] = html5_tools
+dependencies[] = libraries
+dependencies[] = linkchecker
+dependencies[] = pathauto
+dependencies[] = redirect
+dependencies[] = strongarm
+dependencies[] = token
+dependencies[] = wysiwyg
+
+; Features
+dependencies[] = os_base
+dependencies[] = solar_core
+dependencies[] = solar_data
+dependencies[] = solar_fund
+dependencies[] = solar_funders
+dependencies[] = solar_homepage
+dependencies[] = solar_kiosk
+dependencies[] = solar_projects
+dependencies[] = solar_classroom_updates
+dependencies[] = solar_activities
+dependencies[] = solar_background_topics
+dependencies[] = solar_applications
+dependencies[] = solar_explore
+dependencies[] = solar_search
+dependencies[] = solar_maps
+dependencies[] = take_a_tour
+
+; Custom
+dependencies[] = deck_monitoring
+dependencies[] = explore_data
+dependencies[] = generation
+dependencies[] = generation_charts
+dependencies[] = generation_stats
+dependencies[] = os_kiosk
+dependencies[] = power_one
+dependencies[] = solar_migrate
+
+;
+; Users
+;
+users[admin][uid] = 1
+users[admin][name] = admin
+users[admin][mail] = admin@s4rs.example.com
+users[admin][status] = 1
+users[admin][data][overlay] = 0
+
+users[site-editor][uid] = 2
+users[site-editor][name] = site-editor
+users[site-editor][mail] = site-editor@s4rs.example.com
+users[site-editor][status] = 1
+users[site-editor][data][overlay] = 0
+users[site-editor][roles] = site editor
+
+users[teacher-champion][uid] = 3
+users[teacher-champion][name] = teacher-champion
+users[teacher-champion][mail] = teacher-champion@s4rs.example.com
+users[teacher-champion][status] = 1
+users[teacher-champion][data][overlay] = 0
+users[teacher-champion][roles] = teacher champion
+
+users[educator][uid] = 4
+users[educator][name] = educator
+users[educator][mail] = educator@s4rs.example.com
+users[educator][status] = 1
+users[educator][data][overlay] = 0
+users[educator][roles] = educator
+
+;
+; Variables
+;
+variables[site_frontpage] = home
+;variables[site_404] =
+variables[site_mail] = admin@s4rs.dev
+variables[site_name] = Solar 4R Schools
+variables[admin_theme] = seven
+variables[node_admin_theme] = 1
+variables[site_default_country] = US
+
+; Up default log limit.
+variables[dblog_row_limit] = 1000000
+
+; Disable core image styles
+variables[os_base_remove_core_image_styles] = 1
+
+; Up image quality.
+variables[image_jpeg_quality] = 100
+
+; If needed, override default user_register setting
+; (which is 2). Possible values:
+; 0: Only administrators can create user accounts.
+; 1: Visitors can create their own accounts.
+; 2: Visitors can create accounts, but they don't become active without
+;    administrative approval.
+variables[user_register] = 1
+
+; No goofy 'content/title' default alias.
+variables[pathauto_node_pattern] = ''
+
+;
+; Superfish
+;
+variables[superfish_slp] = "profiles/s4rs/libraries/superfish/jquery.hoverIntent.minified.js
+profiles/s4rs/libraries/superfish/jquery.bgiframe.min.js
+profiles/s4rs/libraries/superfish/superfish.js
+profiles/s4rs/libraries/superfish/supersubs.js
+profiles/s4rs/libraries/superfish/supposition.js
+profiles/s4rs/libraries/superfish/sftouchscreen.js
+profiles/s4rs/libraries/superfish/sfsmallscreen.js"
+
+;
+; API keys and credentials.
+;
+variables[deck_monitoring_api_key] = 4861f278-f92e-4808-940a-0d26f8d4ad87
+variables[power_one_api_username] = bef.developer
+variables[power_one_api_password] = yucca.bloc.epsom.jolly.pad
+variables[power_one_api_key] = d32de6b8-8a91-4768-86f8-f8df1ca193b9-02a1
+variables[power_one_global_eid] = 1573
+
+;
+; Nodes
+;
+; Data Exploration Center help page.
+nodes[dec_help][type] = page
+nodes[dec_help][title] = Using the Data Exploration Center
+nodes[dec_help][body][und][0][value] = <dl><dt><strong>Step One:</strong></dt><dd>Use the drop-down list to select a school or project. This will enable you to select data variables and the date range in the next field.</dd><dt><strong>Step Two:</strong></dt><dd>Select up to four data variables to graph using the drop-down list. The variables available are dependent on the technology installed at the site.</dd><dt><strong>Step Three:</strong></dt><dd>Select a Start Date and End Date for the time period you’d like to graph. The length of your selected interval will dictate how much granularity you will see in your graph or spreadsheet.  <ul> <li>To view data in 15-minute blocks: Select a single day to graph (the start date and end date will be the same).</li> <li>To view data in hour blocks: Select a time interval that is less than or equal to 7 days and greater than 1 day.</li> <li>To view data in day blocks: Select a time interval that is less than or equal to 31 days and greater than 7 days. To view data in month blocks: Select a time interval that is less than or equal to 366 days and greater than 31 days. When graphing complete months of data, remember to include entire calendar months in your time-interval.</li> </ul> </dd><dt><strong>Step Four:</strong></dt><dd>Click on the “GRAPH” button. After the graph has been generated, you can print your graph, download the data into a spreadsheet or share it over email, Twitter or Facebook by clicking on the buttons that appear below.</dd></dl>
+nodes[dec_help][body][und][0][format] = full_html
+nodes[dec_help][path][alias] = explore-data/help
+nodes[dec_help][path][pathauto] = 0
+
+variables[explore_data_help_dialog_nid] = 1
+variables[mollom_public_key] = 94adeafc007c155effe54b58ab6ce090
+variables[mollom_private_key] = 57e6f2e3463f368bb94d35656fb89219
+
+;; About page.
+nodes[about][type] = page
+nodes[about][title] = About
+nodes[about][body][und][0][value] = Developed by Bonneville Environmental Foundation, Solar 4R Schools educates students, teachers and community members about the science and benefits of renewable energy technology. The program provides hands-on activity guides, science kits and demonstration solar electric systems at no cost to schools, by working with local funding partners who want to show their commitment to renewable energy education. To receive a solar-electric system, schools must agree to own and maintain the system after installation. In turn, the school receives an exciting learning tool and all of the clean, renewable electricity it produces.
+nodes[about][body][und][0][format] = full_html
+nodes[about][uid] = 1
+nodes[about][language] = und
+nodes[about][menu][enabled] = 1
+nodes[about][menu][link_title] = About the program
+nodes[about][menu][menu_name] = menu-quick-links
+nodes[about][menu][weight] = 0
+nodes[about][path][alias] = about
+nodes[about][path][pathauto] = 0
+
+;; What to expect page.
+nodes[what-to-expect][type] = page
+nodes[what-to-expect][title] = before you get started—what to expect
+nodes[what-to-expect][body][und][0][value] = Lorem ipsum dolor sit amet, consectetur adipiscing elit. Pellentesque pellentesque turpis id eros aliquet, vel eleifend sem ullamcorper. Aliquam eu justo non turpis adipiscing lacinia. Nunc bibendum et libero in adipiscing. Fusce suscipit, mi quis feugiat congue, libero velit eleifend nulla, eu semper est justo quis sapien. Donec purus quam, ultrices ac molestie et, sagittis sed magna. Vivamus bibendum hendrerit tellus, et tempus orci rhoncus et. Cras dictum in metus non viverra. Etiam ullamcorper lorem felis, ut adipiscing augue placerat nec. Class aptent taciti sociosqu ad litora torquent per conubia nostra, per inceptos himenaeos. Vestibulum nec viverra nibh. Integer volutpat sapien eu dolor accumsan, sed faucibus odio vulputate. In nec enim non felis porta ultricies sed et risus.
+nodes[what-to-expect][body][und][0][format] = full_html
+nodes[what-to-expect][uid] = 1
+nodes[what-to-expect][language] = und
+nodes[what-to-expect][path][alias] = apply/what-to-expect
+nodes[what-to-expect][path][pathauto] = 0
+
+;; Privacy Policy.
+nodes[privacy-policy][type] = page
+nodes[privacy-policy][title] = Privacy Policy
+nodes[privacy-policy][body][und][0][value] = <p>Bonneville Environmental Foundation (BEF) is committed to protecting your privacy and we take all reasonable steps to protect all data and information supplied in association with <a href="http://www.b-e-f.org">www.b-e-f.org</a>. We protect your privacy in a variety of ways including using industry accepted security measures to protect against the loss, misuse and alteration of data used by our system. We do not share any of your personally identifiable information with third parties.</p><p>We respect each site visitor’s right to personal privacy. To that end, we collect and use information on this website only as disclosed in this Privacy Policy. This statement applies solely to information collected on <a href="http://www.b-e-f.org">www.b-e-f.org</a>. For each visitor to our website, our web server automatically recognizes no information regarding the domain or e-mail address. The information we collect is: (1) used to subscribe visitors to the BEF enewsletter as requested by the site visitor&#59, (2) used to deliver goods and services as requested by the site visitor, (3) never shared with other organizations for commercial purposes. Bonneville Environmental Foundation does not sell, rent, loan, trade, or lease any personal information.</p><h3>Contact Us</h3><p>Bonneville Environmental Foundation reserves the right to modify this policy at any time. We will always post the most current version of this policy on our website. If you have received an unwanted email that appears to be from <a href="http://www.b-e-f.org">www.b-e-f.org</a>, or if you have any questions about this privacy policy, please contact us via <a href="mailto:info@b-e-f.org">email</a> or by phone at 503-248-1905.</p>
+nodes[privacy_policy][body][und][0][format] = full_html
+nodes[privacy_policy][uid] = 1
+nodes[privacy_policy][language] = und
+nodes[privacy_policy][path][alias] = privacy-policy
+nodes[privacy_policy][path][pathauto] = 0
+nodes[privacy_policy][menu][enabled] = 1
+nodes[privacy_policy][menu][link_title] = Privacy Policy
+nodes[privacy_policy][menu][menu_name] = menu-footer-menu
+nodes[privacy_policy][menu][weight] = 2
+
+;; RPFs for Installers placeholder.
+nodes[rpgs_for_installers][type] = page
+nodes[rpgs_for_installers][title] = RPFs for Installers
+nodes[rpgs_for_installers][body][und][0][value] = PLACEHOLDER
+nodes[rpgs_for_installers][body][und][0][format] = full_html
+nodes[rpgs_for_installers][uid] = 1
+nodes[rpgs_for_installers][language] = und
+nodes[rpgs_for_installers][path][alias] = rpfs-for-installers
+nodes[rpgs_for_installers][path][pathauto] = 0
+nodes[rpgs_for_installers][menu][enabled] = 1
+nodes[rpgs_for_installers][menu][link_title] = RPFs for Installers
+nodes[rpgs_for_installers][menu][menu_name] = menu-footer-menu
+nodes[rpgs_for_installers][menu][weight] = 20
+
+;; Taxonomy terms for articles mega-menu
+terms[taxonomy1][name] = Electricity
+terms[taxonomy1][vocabulary_machine_name] = article_categories
+
+terms[taxonomy2][name] = Circuits
+terms[taxonomy2][vocabulary_machine_name] = article_categories
+
+; Terms to categorize widgets
+terms[realtime_data][name] = Real-time data
+terms[realtime_data][vocabulary_machine_name] = widget_types
+
+terms[funders_reach][name] = This funder's reach
+terms[funders_reach][vocabulary_machine_name] = widget_types
+
+terms[lifetime_data][name] = System lifetime data
+terms[lifetime_data][vocabulary_machine_name] = widget_types
+
+terms[system_specs][name] = System specs
+terms[system_specs][vocabulary_machine_name] = widget_types
+
+terms[common][name] = Common Core Standard(s) Met
+terms[common][vocabulary_machine_name] = standards
+
+terms[next_gen][name] = Next Generation Science Standard(s) Met
+terms[next_gen][vocabulary_machine_name] = standards
+
+terms[scissors][name] = Scissors
+terms[scissors][vocabulary_machine_name] = materials
+
+terms[scrap_paper][name] = Scrap paper
+terms[scrap_paper][vocabulary_machine_name] = materials
+
+terms[glue][name] = Glue
+terms[glue][vocabulary_machine_name] = materials
+
+;; Example articles for background topics
+nodes[example_article][type] = articles
+nodes[example_article][title] = Example Article
+nodes[example_article][body][und][0][value] = <p>This is an example article for testing the menu with.</p>
+nodes[example_article][body][und][0][format] = full_html
+nodes[example_article][field_articles_category][und][0][tid] = 1
+nodes[example_article][uid] = 1
+nodes[example_article][language] = und
+nodes[example_article][path][alias] = example-article
+nodes[example_article][path][pathauto] = 0
+
+nodes[example_article_2][type] = articles
+nodes[example_article_2][title] = Example Article 2
+nodes[example_article_2][body][und][0][value] = <p>This is an example article for testing the menu with.</p>
+nodes[example_article_2][body][und][0][format] = full_html
+nodes[example_article_2][field_articles_category][und][0][tid] = 1
+nodes[example_article_2][uid] = 1
+nodes[example_article_2][language] = und
+nodes[example_article_2][path][alias] = example-article-2
+nodes[example_article_2][path][pathauto] = 0
+
+nodes[example_article_3][type] = articles
+nodes[example_article_3][title] = Example Article 3
+nodes[example_article_3][body][und][0][value] = <p>This is an example article for testing the menu with.</p>
+nodes[example_article_3][body][und][0][format] = full_html
+nodes[example_article_3][field_articles_category][und][0][tid] = 2
+nodes[example_article_3][uid] = 1
+nodes[example_article_3][language] = und
+nodes[example_article_3][path][alias] = example-article-3
+nodes[example_article_3][path][pathauto] = 0
+
+;; Pressroom
+nodes[content/media][type] = page
+nodes[content/media][title] = News & Media
+nodes[content/media][body][und][0][value] = <p>If you have a media inquiry about the Solar 4R Schools program, please call BEF at (503) 248-1905.</p><p>See our latest news below:</p>
+nodes[content/media][body][und][0][format] = full_html
+nodes[content/media][uid] = 1
+nodes[content/media][language] = und
+nodes[content/media][menu][enabled] = 1
+nodes[content/media][menu][link_title] = Pressroom
+nodes[content/media][menu][menu_name] = menu-quick-links
+nodes[content/media][menu][weight] = 1
+nodes[content/media][path][alias] = content/media
+nodes[content/media][path][pathauto] = 0
+
+;; installer RFPs
+nodes[installers][type] = page
+nodes[installers][title] = Active Requests for Proposals
+nodes[installers][body][und][0][value] = '<blockquote>
+<p><strong>Active RFP\'s: (this page is optimized for Firefox)</strong></p>
+<p>_________________________________________________________________________________</p>
+<p>These are installation proposals for projects to be funded and managed by BEF staff.</p>
+<p>_________________________________________________________________________________</p>
+<p><img src="/sites/all/files/BEF_1.jpg" alt="" width="150" height="150"></p>
+<p>There are no active RFPs at this time.&nbsp;</p>
+<p>_________________________________________________________________________________</p>
+</blockquote>
+<blockquote>
+<p><strong>General Supplemental Information/Documentation/Resources</strong></p>
+<ul>
+<li><strong><strong><a href="/sites/all/files/BEF%20PV%20System%20Requirements-072010_0.pdf">PV System Installation Requirements.pdf</a></strong></strong></li>
+<li><strong><strong><a href="/sites/all/files/PV%20System%20Labeling%20Requirements.pdf">PV System Labeling Requirements.pdf</a></strong></strong></li>
+<li><strong><strong><a href="/sites/all/files/PV%20Documentation%20Checklist.pdf">PV System Documentation Checklist.pdf</a></strong></strong></li>
+<li><strong><strong><a href="/sites/all/files/BEF_PV_Commissioning_Checklist%281%29.pdf">PV Commissioning Checklist.pdf</a></strong></strong></li>
+</ul>
+</blockquote>'
+nodes[installers][body][und][0][format] = full_html
+nodes[installers][uid] = 1
+nodes[installers][language] = und
+nodes[installers][menu][enabled] = 1
+nodes[installers][menu][link_title] = installer RFPs
+nodes[installers][menu][menu_name] = menu-quick-links
+nodes[installers][menu][weight] = 2
+nodes[installers][path][alias] = installers
+nodes[installers][path][pathauto] = 0
+
+;; Blocks
+
+; Contact Us block
+blocks[contact_us][info] = "Contact Block"
+blocks[contact_us][body] = <p><strong>Bonneville Environmental Foundation</strong></p><p>240 SW 1st Avenue</p><p>Portland OR 97204</p><p>phone: 503-248-1905 • fax: 503-248-1908</p><p><a href="mailto:info@b-e-f.org">email</a></p>
+blocks[contact_us][title] = "Contact Us"
+blocks[contact_us][format] = filtered_html
+
+files[caricon][uri] = profiles/s4rs/themes/custom/flare/images/icons/car.gif
+files[caricon][destination] = public://car.gif
+files[caricon][uid] = 1
+
+files[classroomsicon][uri] = profiles/s4rs/themes/custom/flare/images/icons/classrooms.gif
+files[classroomsicon][destination] = public://classrooms.gif
+files[classroomsicon][uid] = 1
+
+files[clean-energyicon][uri] = profiles/s4rs/themes/custom/flare/images/icons/clean-energy.gif
+files[clean-energyicon][destination] = public://clean-energy.gif
+files[clean-energyicon][uid] = 1
+
+files[co2icon][uri] = profiles/s4rs/themes/custom/flare/images/icons/co2.gif
+files[co2icon][destination] = public://co2.gif
+files[co2icon][uid] = 1
+
+files[houseicon][uri] = profiles/s4rs/themes/custom/flare/images/icons/house.gif
+files[houseicon][destination] = public://house.gif
+files[houseicon][uid] = 1
+
+files[irradianceicon][uri] = profiles/s4rs/themes/custom/flare/images/icons/irradiance.gif
+files[irradianceicon][destination] = public://irradiance.gif
+files[irradianceicon][uid] = 1
+
+files[powericon][uri] = profiles/s4rs/themes/custom/flare/images/icons/power.gif
+files[powericon][destination] = public://power.gif
+files[powericon][uid] = 1
+
+files[temperatureicon][uri] = profiles/s4rs/themes/custom/flare/images/icons/temperature.gif
+files[temperatureicon][destination] = public://temperature.gif
+files[temperatureicon][uid] = 1
+
+; File 9 - beginning slides
+files[idahopower][uri] = profiles/s4rs/modules/features/solar_homepage/images/idahopower.jpg
+files[idahopower][destination] = public://idahopower.jpg
+files[idahopower][uid] = 1
+
+; File 10
+files[foxlogo][uri] = profiles/s4rs/modules/features/solar_homepage/images/foxlogo.jpg
+files[foxlogo][destination] = public://foxlogo.jpg
+files[foxlogo][uid] = 1
+
+; File 11
+files[Wells][uri] = profiles/s4rs/modules/features/solar_homepage/images/Wells-Fargo-Logo-color.jpg
+files[Wells][destination] = public://Wells-Fargo-Logo-color.jpg
+files[Wells][uid] = 1
+
+; File 12
+files[north][uri] = profiles/s4rs/modules/features/solar_homepage/images/the-north-face-logo.jpg
+files[north][destination] = public://the-north-face-logo.jpg
+files[north][uid] = 1
+
+; File 13
+files[MLSW][uri] = profiles/s4rs/modules/features/solar_homepage/images/MLSW_Greener_Goals_vert.jpg
+files[MLSW][destination] = public://MLSW_Greener_Goals_vert.jpg
+files[MLSW][uid] = 1
+
+; Learn Homepage FPP.
+fieldable_panels_panes[learn][admin_title] = "Homepage learn"
+fieldable_panels_panes[learn][bundle] = homepage_callouts
+fieldable_panels_panes[learn][category] = "Homepage callouts"
+fieldable_panels_panes[learn][title] = "Learn"
+fieldable_panels_panes[learn][field_subhead][und][0][value] = 'New to renewable energy education?'
+fieldable_panels_panes[learn][field_body][und][0][value] = "Educators -- learn renewable energy essentials to bring into your classroom with our robust library of articles and info graphics in the Solar Learning Center."
+fieldable_panels_panes[learn][field_body][und][0][format] = "filtered_html"
+fieldable_panels_panes[learn][field_button][und][0][title] = "Search Learning Center"
+fieldable_panels_panes[learn][field_button][und][0][url] = "learn"
+
+; Teach Homepage FPP.
+fieldable_panels_panes[teach][admin_title] = "Homepage teach"
+fieldable_panels_panes[teach][bundle] = homepage_callouts
+fieldable_panels_panes[teach][category] = "Homepage callouts"
+fieldable_panels_panes[teach][title] = "Teach"
+fieldable_panels_panes[teach][field_subhead][und][0][value] = 'Teacher generated STEM activities and science kits for your classroom'
+fieldable_panels_panes[teach][field_body][und][0][value] = "Search, rate, download and adapt a growing library of teacher-created hands-on STEM-based renewable energy education activities in the Teacher Activity Center."
+fieldable_panels_panes[teach][field_body][und][0][format] = "filtered_html"
+fieldable_panels_panes[teach][field_button][und][0][title] = "Search for Activities"
+fieldable_panels_panes[teach][field_button][und][0][url] = "teach"
+
+; Explore Homepage FPP.
+fieldable_panels_panes[explore][admin_title] = "Homepage explore"
+fieldable_panels_panes[explore][bundle] = homepage_callouts
+fieldable_panels_panes[explore][category] = "Homepage callouts"
+fieldable_panels_panes[explore][title] = "Explore data"
+fieldable_panels_panes[explore][field_subhead][und][0][value] = 'Live solar data right at your fingertips'
+fieldable_panels_panes[explore][field_body][und][0][value] = "Educators and students can graph, chart and analyze live solar data from 150+ schools nationwide in our unique Solar Data Exploration Center. Bring renewable energy activities to life for your students."
+fieldable_panels_panes[explore][field_body][und][0][format] = "filtered_html"
+fieldable_panels_panes[explore][field_button][und][0][title] = "Start Exploring Now"
+fieldable_panels_panes[explore][field_button][und][0][url] = "explore"
+
+; Homepage text area 1
+fieldable_panels_panes[text1][admin_title] = "call for proposals--get funding for your renewable energy activity"
+fieldable_panels_panes[text1][title] = "call for proposals--get funding for your renewable energy activity"
+fieldable_panels_panes[text1][bundle] = freeform
+fieldable_panels_panes[text1][category] = "Homepage callouts"
+fieldable_panels_panes[text1][field_freeform_html][und][0][value] = 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer nec odio. Praesent libero. Sed cursus ante dapibus diam. Sed nisi. Nulla quis sem at nibh elementum imperdiet. Duis sagittis ipsum. Praesent mauris. Fusce nec tellus sed augue semper porta. Mauris massa. Vestibulum lacinia arcu eget nulla. Class aptent taciti sociosqu ad litora torquent per conubia nostra, per inceptos himenaeos.'
+fieldable_panels_panes[text1][field_freeform_html][und][0][format] = "filtered_html"
+
+; Homepage text area 2
+fieldable_panels_panes[text2][admin_title] = "Support these projects online now--crowns funding opportunities"
+fieldable_panels_panes[text2][title] = "Support these projects online now--crowns funding opportunities"
+fieldable_panels_panes[text2][bundle] = freeform
+fieldable_panels_panes[text2][category] = "Homepage callouts"
+fieldable_panels_panes[text2][field_freeform_html][und][0][value] = 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer nec odio. Praesent libero. Sed cursus ante dapibus diam. Sed nisi. Nulla quis sem at nibh elementum imperdiet. Duis sagittis ipsum. Praesent mauris. Fusce nec tellus sed augue semper porta. Mauris massa. Vestibulum lacinia arcu eget nulla. Class aptent taciti sociosqu ad litora torquent per conubia nostra, per inceptos himenaeos.'
+fieldable_panels_panes[text2][field_freeform_html][und][0][format] = "filtered_html"
+
+; Homepage text area 3
+fieldable_panels_panes[text3][admin_title] = "Latest project news"
+fieldable_panels_panes[text3][title] = "Latest project news"
+fieldable_panels_panes[text3][bundle] = freeform
+fieldable_panels_panes[text3][category] = "Homepage callouts"
+fieldable_panels_panes[text3][field_freeform_html][und][0][value] = 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer nec odio. Praesent libero. Sed cursus ante dapibus diam. Sed nisi. Nulla quis sem at nibh elementum imperdiet. Duis sagittis ipsum. Praesent mauris. Fusce nec tellus sed augue semper porta. Mauris massa. Vestibulum lacinia arcu eget nulla. Class aptent taciti sociosqu ad litora torquent per conubia nostra, per inceptos himenaeos.'
+fieldable_panels_panes[text3][field_freeform_html][und][0][format] = "filtered_html"
+
+; Explore Data help
+fieldable_panels_panes[explore_help][admin_title] = "Explore help"
+fieldable_panels_panes[explore_help][title] = "Graph, chart, and explore live solar data now..."
+fieldable_panels_panes[explore_help][bundle] = freeform
+fieldable_panels_panes[explore_help][category] = "Solar4Rschools elements"
+fieldable_panels_panes[explore_help][field_freeform_html][und][0][value] = '<dl><dt><strong>Step One:</strong></dt><dd>Use the drop-down list to select a school or project. This will enable you to select data variables and the date range in the next field.</dd><dt><strong>Step Two:</strong></dt><dd>Select up to four data variables to graph using the drop-down list. The variables available are dependent on the technology installed at the site.</dd><dt><strong>Step Three:</strong></dt><dd>Select a Start Date and End Date for the time period you’d like to graph. The length of your selected interval will dictate how much granularity you will see in your graph or spreadsheet.<ul><li>To view data in 15-minute blocks: Select a single day to graph (the start date and end date will be the same).</li><li>To view data in hour blocks: Select a time interval that is less than or equal to 7 days and greater than 1 day.</li><li>To view data in day blocks: Select a time interval that is less than or equal to 31 days and greater than 7 days. To view data in month blocks: Select a time interval that is less than or equal to 366 days and greater than 31 days. When graphing complete months of data, remember to include entire calendar months in your time-interval.</li></ul></dd><dt><strong>Step Four:</strong></dt><dd>Click on the “GRAPH” button. After the graph has been generated, you can print your graph, download the data into a spreadsheet or share it over email, Twitter or Facebook by clicking on the buttons that appear below.</dd></dl>'
+fieldable_panels_panes[explore_help][field_freeform_html][und][0][format] = "full_html"
+
+; Start application help
+fieldable_panels_panes[explore_help][admin_title] = "Start application help"
+fieldable_panels_panes[explore_help][bundle] = freeform
+fieldable_panels_panes[explore_help][category] = "Solar4Rschools elements"
+fieldable_panels_panes[explore_help][field_freeform_html][und][0][value] = 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer nec odio. Praesent libero. Sed cursus ante dapibus diam. Sed nisi. Nulla quis sem at nibh elementum imperdiet. Duis sagittis ipsum. Praesent mauris. Fusce nec tellus sed augue semper porta. Mauris massa. Vestibulum lacinia arcu eget nulla. Class aptent taciti sociosqu ad litora torquent per conubia nostra, per inceptos himenaeos. Curabitur sodales ligula in libero. Sed dignissim lacinia nunc. Curabitur tortor. Pellentesque nibh. Aenean quam. In scelerisque sem at dolor. Maecenas mattis. Sed convallis tristique sem. Proin ut ligula vel nunc egestas porttitor. Morbi lectus risus, iaculis vel, suscipit quis, luctus non, massa. Fusce ac turpis quis ligula lacinia aliquet. Mauris ipsum.'
+fieldable_panels_panes[explore_help][field_freeform_html][und][0][format] = "full_html"
+
+; Start grant application link
+fieldable_panels_panes[grant_application][admin_title] = "Project Grant Application link"
+fieldable_panels_panes[grant_application][title] = "Our project grant application cycle opens soon."
+fieldable_panels_panes[grant_application][bundle] = tout
+fieldable_panels_panes[grant_application][category] = "Solar4Rschools elements"
+fieldable_panels_panes[grant_application][field_tout_caption][und][0][value] = 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer nec odio. Praesent libero. Sed cursus ante dapibus diam. Sed nisi. Nulla quis sem at nibh elementum imperdiet. Duis sagittis ipsum. Praesent mauris. Fusce nec tellus sed augue semper porta. Mauris massa. Vestibulum lacinia arcu eget nulla. Class aptent taciti sociosqu ad litora torquent per conubia nostra, per inceptos himenaeos. Curabitur sodales ligula in libero. Sed dignissim lacinia nunc. Curabitur tortor. Pellentesque nibh. Aenean quam. In scelerisque sem at dolor. Maecenas mattis. Sed convallis tristique sem. Proin ut ligula vel nunc egestas porttitor. Morbi lectus risus, iaculis vel, suscipit quis, luctus non, massa. Fusce ac turpis quis ligula lacinia aliquet. Mauris ipsum.'
+fieldable_panels_panes[grant_application][field_tout_caption][und][0][format] = "full_html"
+fieldable_panels_panes[grant_application][field_tout_link][und][0][title] = "Start New Project Grant Application"
+fieldable_panels_panes[grant_application][field_tout_link][und][0][url] = "user/login?destination=eform/submit/renewable-classroom-application"
+
+; Start activity grant application link
+fieldable_panels_panes[activity_development][admin_title] = "Activity Grant Application link"
+fieldable_panels_panes[activity_development][title] = "Our new activity development grant application cycle opens soon."
+fieldable_panels_panes[activity_development][bundle] = tout
+fieldable_panels_panes[activity_development][category] = "Solar4Rschools elements"
+fieldable_panels_panes[activity_development][field_tout_caption][und][0][value] = 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer nec odio. Praesent libero. Sed cursus ante dapibus diam. Sed nisi. Nulla quis sem at nibh elementum imperdiet. Duis sagittis ipsum. Praesent mauris. Fusce nec tellus sed augue semper porta. Mauris massa. Vestibulum lacinia arcu eget nulla. Class aptent taciti sociosqu ad litora torquent per conubia nostra, per inceptos himenaeos. Curabitur sodales ligula in libero. Sed dignissim lacinia nunc. Curabitur tortor. Pellentesque nibh. Aenean quam. In scelerisque sem at dolor. Maecenas mattis. Sed convallis tristique sem. Proin ut ligula vel nunc egestas porttitor. Morbi lectus risus, iaculis vel, suscipit quis, luctus non, massa. Fusce ac turpis quis ligula lacinia aliquet. Mauris ipsum.'
+fieldable_panels_panes[activity_development][field_tout_caption][und][0][format] = "full_html"
+fieldable_panels_panes[activity_development][field_tout_link][und][0][title] = "Start New Activity Development Grant Application"
+fieldable_panels_panes[activity_development][field_tout_link][und][0][url] = "user/login?destination=eform/submit/renewable-school-application"
+
+; Kiosk - Renewable Benefits
+fieldable_panels_panes[kiosk_renewable_benefits][admin_title] = "Kiosk - Renewable Benefits"
+fieldable_panels_panes[kiosk_renewable_benefits][bundle] = "freeform"
+fieldable_panels_panes[kiosk_renewable_benefits][field_freeform_html][und][0][value] = '<div id="renewable-benefits">
+<h2>Renewable Energy</h2>
+<hr>
+<div class="picture"><img src="/sites/all/themes/kiosk/images/rb-pic-1.jpg" alt=""></div>
+<ol>
+<li>
+<h4>Provides environmental benefits.</h4>
+<p>Renewable energy generators emit no carbon dioxide and, thus, do not contribute to climate change.</p>
+</li>
+<li>
+<h4>Sustains the Local Economy</h4>
+<p>The dollars spent on renewable energy projects are usually circulated locally, not overseas, creating more community jobs and fostering local economic growth.</p>
+</li>
+<li>
+<h4>Improves Energy Independence</h4>
+<p>The vast majority of conventional energy reserves are located overseas, while renewable fuel is local and abundant.</p>
+</li>
+<li>
+<h4>Encourages Price Stability</h4>
+<p>Volatile fossil fuel costs create unpredictable electricity prices. Renewable energy prices are stable and help reduce the volatility of our electricity bills.</p>
+</li>
+<li>
+<h4>Our Sun</h4>
+<p>While many experts predict fossil fuel production will peak in the near future, renewable sources of energy will never run out.</p>
+</li>
+</ol></div>'
+fieldable_panels_panes[kiosk_renewable_benefits][field_freeform_html][und][0][format] = "full_html"
+
+; Explore your business
+fieldable_panels_panes[explore_best_fit][admin_title] = "Fund subpage sidebar"
+fieldable_panels_panes[explore_best_fit][title] = "Explore the best-fit project for your business or foundation—request a consultation"
+fieldable_panels_panes[explore_best_fit][bundle] = tout
+fieldable_panels_panes[explore_best_fit][category] = "Solar4Rschools elements"
+fieldable_panels_panes[explore_best_fit][field_tout_caption][und][0][value] = 'Schedule a one-on-one consultation with one of our team members now.'
+fieldable_panels_panes[explore_best_fit][field_tout_caption][und][0][format] = "full_html"
+fieldable_panels_panes[explore_best_fit][field_tout_link][und][0][title] = "Go"
+fieldable_panels_panes[explore_best_fit][field_tout_link][und][0][url] = "home"
+
+; Renewable School
+fieldable_panels_panes[renewable_school][admin_title] = "Renewable School"
+fieldable_panels_panes[renewable_school][title] = "Renewable School"
+fieldable_panels_panes[renewable_school][bundle] = funding_partner_option
+fieldable_panels_panes[renewable_school][category] = "Solar4Rschools elements"
+fieldable_panels_panes[renewable_school][field_freeform_html][und][0][value] = 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer nec odio. Praesent libero. Sed cursus ante dapibus diam.'
+fieldable_panels_panes[renewable_school][field_freeform_html][und][0][format] = "full_html"
+
+; Renewable Classroom Plus
+fieldable_panels_panes[renewable_class_plus][admin_title] = "Renewable Classroom PLUS"
+fieldable_panels_panes[renewable_class_plus][title] = "Renewable Classroom PLUS"
+fieldable_panels_panes[renewable_class_plus][bundle] = funding_partner_option
+fieldable_panels_panes[renewable_class_plus][category] = "Solar4Rschools elements"
+fieldable_panels_panes[renewable_class_plus][field_freeform_html][und][0][value] = 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer nec odio. Praesent libero. Sed cursus ante dapibus diam.'
+fieldable_panels_panes[renewable_class_plus][field_freeform_html][und][0][format] = "full_html"
+
+; Renewable Classroom Plus
+fieldable_panels_panes[renewable_class][admin_title] = "Renewable Classroom"
+fieldable_panels_panes[renewable_class][title] = "Renewable Classroom"
+fieldable_panels_panes[renewable_class][bundle] = funding_partner_option
+fieldable_panels_panes[renewable_class][category] = "Solar4Rschools elements"
+fieldable_panels_panes[renewable_class][field_freeform_html][und][0][value] = 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer nec odio. Praesent libero. Sed cursus ante dapibus diam.'
+fieldable_panels_panes[renewable_class][field_freeform_html][und][0][format] = "full_html"
+
+; What each school recieves - 15
+fieldable_panels_panes[school_recieves][admin_title] = "What Each School Receives"
+fieldable_panels_panes[school_recieves][title] = "What Each School Receives"
+fieldable_panels_panes[school_recieves][bundle] = freeform
+fieldable_panels_panes[school_recieves][category] = "Solar4Rschools elements"
+fieldable_panels_panes[school_recieves][field_freeform_html][und][0][value] = 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer nec odio. Praesent libero. Sed cursus ante dapibus diam. Sed nisi. Nulla quis sem at nibh elementum imperdiet. Duis sagittis ipsum. Praesent mauris. Fusce nec tellus sed augue semper porta. Mauris massa. Vestibulum lacinia arcu eget nulla. Class aptent taciti sociosqu ad litora torquent per conubia nostra, per inceptos himenaeos. Curabitur sodales ligula in libero. Sed dignissim lacinia nunc. Curabitur tortor. Pellentesque nibh. Aenean quam. In scelerisque sem at dolor. Maecenas mattis. Sed convallis tristique sem. Proin ut ligula vel nunc egestas porttitor. Morbi lectus risus, iaculis vel, suscipit quis, luctus non, massa. Fusce ac turpis quis ligula lacinia aliquet. Mauris ipsum.'
+fieldable_panels_panes[school_recieves][field_freeform_html][und][0][format] = "full_html"
+
+; How Our Projects Are Funded - 16
+fieldable_panels_panes[how_projects_funded][admin_title] = "How Our Projects Are Funded"
+fieldable_panels_panes[how_projects_funded][title] = "How Our Projects Are Funded"
+fieldable_panels_panes[how_projects_funded][bundle] = freeform
+fieldable_panels_panes[how_projects_funded][category] = "Solar4Rschools elements"
+fieldable_panels_panes[how_projects_funded][field_freeform_html][und][0][value] = 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer sem diam, rutrum tristique est a, ultricies feugiat elit. Donec interdum nisl sit amet nisl bibendum, at fermentum nunc ornare. Nam venenatis enim orci, vitae accumsan risus sagittis nec. Curabitur auctor imperdiet justo ac pellentesque. Duis suscipit tincidunt massa et interdum. Morbi aliquet vestibulum elit, ac scelerisque ante condimentum vitae. Nunc lacinia lobortis purus id congue. Sed congue, metus sit amet sollicitudin rhoncus, ante felis pharetra dolor, nec malesuada massa nulla et felis. Morbi a venenatis ante, nec feugiat lectus. Nam porta lacus massa, nec auctor justo ultricies vitae. Vestibulum egestas leo in leo auctor suscipit. Morbi volutpat erat risus, vitae rutrum ligula mattis ac. Sed vitae mi ut elit tempor feugiat in quis dui.
+
+Donec varius commodo lectus ut pretium. Donec luctus arcu libero, quis luctus metus faucibus sed. Duis et elit sed metus consectetur dapibus a nec lacus. Pellentesque facilisis augue ac hendrerit aliquam. Nunc condimentum odio sit amet libero mollis, vel viverra orci dignissim. Morbi augue turpis, iaculis et turpis dapibus, faucibus commodo arcu. Donec ornare, mi eu ornare posuere, nisl lacus malesuada libero, quis egestas diam arcu non nibh. Integer a faucibus felis, accumsan dapibus mauris. Proin consectetur quis purus eu sagittis. Vestibulum pretium neque sed suscipit congue. Praesent a quam commodo, rutrum sem non, rutrum orci.
+
+Suspendisse potenti. Vivamus mollis odio a leo egestas vestibulum. Donec facilisis urna quis augue eleifend varius vel sed tortor. Donec viverra magna sem, vel auctor leo semper eget. Proin tincidunt purus urna, in aliquet neque mollis mollis. Mauris vel neque leo. In hendrerit molestie nulla quis vehicula. Pellentesque pulvinar enim et felis faucibus, ac placerat lectus rhoncus.'
+fieldable_panels_panes[how_projects_funded][field_freeform_html][und][0][format] = "full_html"
+
+; What Your School Will Receive - 17
+fieldable_panels_panes[what_school_receive][admin_title] = "What Your School Will Receive"
+fieldable_panels_panes[what_school_receive][title] = "What Your School Will Receive"
+fieldable_panels_panes[what_school_receive][bundle] = freeform
+fieldable_panels_panes[what_school_receive][category] = "Solar4Rschools elements"
+fieldable_panels_panes[what_school_receive][field_freeform_html][und][0][value] = 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer sem diam, rutrum tristique est a, ultricies feugiat elit. Donec interdum nisl sit amet nisl bibendum, at fermentum nunc ornare. Nam venenatis enim orci, vitae accumsan risus sagittis nec. Curabitur auctor imperdiet justo ac pellentesque. Duis suscipit tincidunt massa et interdum. Morbi aliquet vestibulum elit, ac scelerisque ante condimentum vitae. Nunc lacinia lobortis purus id congue. Sed congue, metus sit amet sollicitudin rhoncus, ante felis pharetra dolor, nec malesuada massa nulla et felis. Morbi a venenatis ante, nec feugiat lectus. Nam porta lacus massa, nec auctor justo ultricies vitae. Vestibulum egestas leo in leo auctor suscipit. Morbi volutpat erat risus, vitae rutrum ligula mattis ac. Sed vitae mi ut elit tempor feugiat in quis dui.
+
+Donec varius commodo lectus ut pretium. Donec luctus arcu libero, quis luctus metus faucibus sed. Duis et elit sed metus consectetur dapibus a nec lacus. Pellentesque facilisis augue ac hendrerit aliquam. Nunc condimentum odio sit amet libero mollis, vel viverra orci dignissim. Morbi augue turpis, iaculis et turpis dapibus, faucibus commodo arcu. Donec ornare, mi eu ornare posuere, nisl lacus malesuada libero, quis egestas diam arcu non nibh. Integer a faucibus felis, accumsan dapibus mauris. Proin consectetur quis purus eu sagittis. Vestibulum pretium neque sed suscipit congue. Praesent a quam commodo, rutrum sem non, rutrum orci.
+
+Suspendisse potenti. Vivamus mollis odio a leo egestas vestibulum. Donec facilisis urna quis augue eleifend varius vel sed tortor. Donec viverra magna sem, vel auctor leo semper eget. Proin tincidunt purus urna, in aliquet neque mollis mollis. Mauris vel neque leo. In hendrerit molestie nulla quis vehicula. Pellentesque pulvinar enim et felis faucibus, ac placerat lectus rhoncus.'
+fieldable_panels_panes[what_school_receive][field_freeform_html][und][0][format] = "full_html"
+
+; Slideshow slides - 18
+fieldable_panels_panes[slide1][admin_title] = "Idaho Power"
+fieldable_panels_panes[slide1][bundle] = carousel_slide
+fieldable_panels_panes[slide1][title] = "Idaho Power"
+fieldable_panels_panes[slide1][field_slideshow_slide_image][und][0][fid] = 9
+fieldable_panels_panes[slide1][field_slideshow_slide_link][und][0][url] = "users/idaho-power"
+
+; Slideshow slides - 19
+fieldable_panels_panes[slide2][admin_title] = "FOX Broadcasting Company"
+fieldable_panels_panes[slide2][bundle] = carousel_slide
+fieldable_panels_panes[slide2][title] = "FOX Broadcasting Company"
+fieldable_panels_panes[slide2][field_slideshow_slide_image][und][0][fid] = 10
+fieldable_panels_panes[slide2][field_slideshow_slide_link][und][0][url] = "users/fox-broadcasting-company"
+
+; Slideshow slides - 20
+fieldable_panels_panes[slide3][admin_title] = "Wells Fargo"
+fieldable_panels_panes[slide3][bundle] = carousel_slide
+fieldable_panels_panes[slide3][title] = "Wells Fargo"
+fieldable_panels_panes[slide3][field_slideshow_slide_image][und][0][fid] = 11
+fieldable_panels_panes[slide3][field_slideshow_slide_link][und][0][url] = "users/wells-fargo"
+
+; Slideshow slides - 21
+fieldable_panels_panes[slide4][admin_title] = "The North Face"
+fieldable_panels_panes[slide4][bundle] = carousel_slide
+fieldable_panels_panes[slide4][title] = "The North Face"
+fieldable_panels_panes[slide4][field_slideshow_slide_image][und][0][fid] = 12
+fieldable_panels_panes[slide4][field_slideshow_slide_link][und][0][url] = "users/north-face"
+
+; Slideshow slides - 22
+fieldable_panels_panes[slide5][admin_title] = "MLS"
+fieldable_panels_panes[slide5][bundle] = carousel_slide
+fieldable_panels_panes[slide5][title] = "MLS"
+fieldable_panels_panes[slide5][field_slideshow_slide_image][und][0][fid] = 13
+fieldable_panels_panes[slide5][field_slideshow_slide_link][und][0][url] = "users/major-league-soccer"
+
+; Slideshow. 23
+fieldable_panels_panes[slideshow1][admin_title] = "Front page carousel"
+fieldable_panels_panes[slideshow1][bundle] = carousel_slideshow
+fieldable_panels_panes[slideshow1][title] = "Projects supported by:"
+fieldable_panels_panes[slideshow1][category] = "Solar4Rschools elements"
+fieldable_panels_panes[slideshow1][field_slideshow_cslide][und][0][target_id] = 18
+fieldable_panels_panes[slideshow1][field_slideshow_cslide][und][1][target_id] = 19
+fieldable_panels_panes[slideshow1][field_slideshow_cslide][und][2][target_id] = 20
+fieldable_panels_panes[slideshow1][field_slideshow_cslide][und][3][target_id] = 21
+fieldable_panels_panes[slideshow1][field_slideshow_cslide][und][4][target_id] = 22

@@ -1,0 +1,6 @@
+.bowerrc
+component.json
+components/
+node_modules/
+.sass-cache/
+vendor/

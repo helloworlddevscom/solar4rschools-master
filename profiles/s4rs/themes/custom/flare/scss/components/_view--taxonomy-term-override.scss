@@ -1,0 +1,11 @@
+/**
+ * Taxonomy Term Override view.
+ */
+
+.view-id-taxonomy_term_override {
+  > .view-content {
+    @include view-list;
+  }
+}
+
+

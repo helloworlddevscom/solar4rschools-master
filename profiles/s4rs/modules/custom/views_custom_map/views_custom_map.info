@@ -1,0 +1,8 @@
+; $Id: views_custom_map.info 88 2009-04-02 01:58:26Z jhedstrom $
+name = Views Custom Map
+description = Provides a style plugin for overlaying points on a custom map image.
+dependencies[] = views
+dependencies[] = imageapi
+dependencies[] = os_state_center
+core = 7.x
+files[] = views_plugin_style_custom_map.inc

@@ -1,0 +1,117 @@
+diff --git a/viewfield.module b/viewfield.module
+index 7c9cecd..e94007f 100644
+--- a/viewfield.module
++++ b/viewfield.module
+@@ -104,2 +104,30 @@
+     }
++
++    // Loop through each items to check if the view returns any result or,
++    // at least, has something to output if no result.
++    foreach($instance_items as $delta => &$item) {
++      // @todo Store name and display separately.
++      list($view_name, $view_display) = explode('|', $item['vname'], 2);
++      // @todo Store views arguments serialized.
++      $args = _viewfield_get_view_args($item['vargs'], $entity_type, $entities[$entity_id]);
++
++      // Get and execute the view here to check for it's results or at least
++      // an empty value if is set.
++      $view = views_get_view($view_name);
++      // Override the view's path to the current path. Otherwise, exposed
++      // views filters would submit to the front page.
++      $view->override_path = current_path();
++      $view->preview($view_display, $args);
++
++      $item['vdisplay'] = $view_display;
++      $item['view'] = $view;
++
++      // If we don't have any results or an empty value for this item, unset
++      // it's delta because is an empty row in fact.
++      if (empty($view->result) && empty($view->empty)) {
++        unset($instance_items[$delta]);
++      }
++    }
++    // Ensure consecutive deltas.
++    $instance_items = array_values($instance_items);
+   }
+@@ -128,5 +156,4 @@
+       foreach ($items as $delta => $item) {
+-        // @todo Store name and display separately.
+-        list($view_name, $view_display) = explode('|', $item['vname'], 2);
+-        $view = views_get_view($view_name);
++        $view = $item['view'];
++        $view_display = $item['vdisplay'];
+ 
+@@ -136,8 +163,2 @@
+           '#view' => $view,
+-          '#view_name' => $view_name,
+-          '#view_display' => $view_display,
+-          '#view_arguments' => $item['vargs'],
+-          '#entity_type' => $entity_type,
+-          '#entity_id' => $entity_id,
+-          '#entity' => $entity,
+         );
+@@ -154,53 +175,5 @@
+   $types['viewfield'] = array(
+-    '#pre_render' => array('viewfield_pre_render'),
+     '#theme' => 'viewfield_formatter_default',
+-    '#post_render' => array('viewfield_post_render'),
+   );
+   return $types;
+-}
+-
+-/**
+- * #pre_render callback for a viewfield field.
+- *
+- * @see viewfield_field_formatter_view()
+- * @see viewfield_post_render()
+- */
+-function viewfield_pre_render($element) {
+-  $stack = &drupal_static('viewfield_stack', array());
+-
+-  // Abort rendering in case the view could not be loaded.
+-  if (empty($element['#view'])) {
+-    // @todo Output an error message?
+-    $element['#printed'] = TRUE;
+-  }
+-  // Abort rendering in case of recursion.
+-  elseif (isset($stack[$element['#entity_type']][$element['#entity_id']])) {
+-    $element['#printed'] = TRUE;
+-  }
+-  // Otherwise, add the rendered entity to the stack to prevent recursion.
+-  else {
+-    $stack[$element['#entity_type']][$element['#entity_id']] = TRUE;
+-
+-    // Override the view's path to the current path. Otherwise, exposed
+-    // views filters would submit to the front page.
+-    $element['#view']->override_path = current_path();
+-
+-    // @todo Store views arguments serialized.
+-    $element['#view_arguments'] = _viewfield_get_view_args($element['#view_arguments'], $element['#entity_type'], $element['#entity']);
+-  }
+-  return $element;
+-}
+-
+-/**
+- * #post_render callback for a viewfield field.
+- *
+- * @see viewfield_pre_render()
+- * @see viewfield_field_formatter_view()
+- */
+-function viewfield_post_render($content, $element) {
+-  $stack = &drupal_static('viewfield_stack', array());
+-
+-  unset($stack[$element['#entity_type']][$element['#entity_id']]);
+-
+-  return $content;
+ }
+@@ -214,4 +187,8 @@
+   $element = $variables['element'];
++  $view = $element['#view'];
+ 
+-  return $element['#view']->preview($element['#view_display'], $element['#view_arguments']);
++  // No need to reexecute the view here. If other module needs it
++  // to be reexecuted it must reinvoke $view->preview and store it
++  // back in the element.
++  return $view->display_handler->output;;
+ }
+ 

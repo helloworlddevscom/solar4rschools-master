@@ -1,0 +1,121 @@
+/**
+ * Events List view.
+ */
+
+.pane-events-list {
+  padding-bottom: 15px;
+  border-bottom: 1px $color--medium-gray dotted;
+
+  @include breakpoint($bp--medium) {
+    padding-bottom: 0;
+    border-bottom: none;
+  }
+}
+
+.pane-events-list .views-field-title {
+  margin-bottom: 5px;
+}
+
+.pane-events-list .views-row {
+  padding: 10px 0;
+  border-bottom: 1px solid $color--light-gray;
+}
+
+.pane-events-list .view-footer {
+  margin: 20px 0;
+}
+
+
+/**
+ * Events calendar view/page.
+ */
+
+.page-events .main-container {
+  padding-top: 0;
+}
+
+.page-events .breadcrumb {
+  display: none;
+}
+
+.page-events #page-title {
+  margin-top: 0;
+}
+
+.view-calendar {
+  margin-bottom: 40px;
+}
+
+.view-calendar .pager {
+  margin: 20px 0 0;
+}
+
+.view-calendar .pager .date-prev,
+.view-calendar .pager .date-next {
+  position: relative;
+  top: auto;
+  left: auto;
+  right: auto;
+  height: auto;
+  padding: 0;
+  background: none;
+}
+
+.view-calendar .pager .date-prev a,
+.view-calendar .pager .date-next a {
+  padding: 7px 10px;
+  color: white;
+  transition: background-color, .3s;
+}
+
+.view-calendar .pager .date-prev a {
+  border-top-left-radius: 5px;
+  border-bottom-left-radius: 5px;
+}
+
+.view-calendar .pager .date-next a {
+  border-top-right-radius: 5px;
+  border-bottom-right-radius: 5px;
+}
+
+.calendar-calendar .month-view .full td.single-day div.monthview,
+.calendar-calendar .month-view .full td.multi-day div.monthview {
+  padding: 5px;
+  background-color: #D5EEFF;
+}
+
+.calendar-calendar .month-view .full td.multi-day div.monthview {
+  height: 2.6em;
+}
+
+.calendar-calendar .month-view .full td.multi-day .inner .monthview .cutoff {
+  background-color: #D5EEFF;
+}
+
+.view-calendar .month-view .views-field-title {
+  margin-bottom: 5px;
+}
+
+.view-calendar .month-view .views-field-title a,
+.view-calendar .calendar.monthview a {
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.view-calendar .month-view .views-field-field-date .date-display-single,
+.view-calendar .month-view .views-field-field-date .date-display-start,
+.view-calendar .month-view .views-field-field-date .date-display-end,
+.calendar-calendar td span.date-display-single,
+.calendar-calendar td span.date-display-start,
+.calendar-calendar td span.date-display-end,
+.calendar-calendar td span.date-display-separator,
+.view-calendar .calendar-calendar .month-view .full td.multi-day .calendar.monthview .contents {
+  font-size: 12px;
+  font-weight: 500;
+  color: #5F5F5F;
+}
+
+.calendar-calendar .month-view .full td.multi-day .inner div a,
+.calendar-calendar .month-view .full td .inner div.calendar.monthview div a {
+  margin-right: 5px;
+}

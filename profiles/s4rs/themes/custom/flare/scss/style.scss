@@ -1,0 +1,22 @@
+/*
+ * This is an attempt in 2019 to begin cleaning up the CSS for this site because it so messy.
+ * See gulpfile.js for commands to build and watch SCSS files.
+ */
+
+// Import breakpoint-sass NPM module
+@import "breakpoint";
+
+// Import variables
+@import "./config/_variables.scss";
+
+// Import base styling
+@import './base/*.scss';
+
+// Import helper classes/mixins
+@import './helpers/*.scss';
+
+// Import components directory
+@import "./components/*.scss";
+
+// Import page specific styling
+@import "./pages/**/*.scss";

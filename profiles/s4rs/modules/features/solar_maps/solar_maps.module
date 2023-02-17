@@ -1,0 +1,277 @@
+<?php
+/**
+ * @file
+ * Code for the Solar Maps feature.
+ */
+
+include_once 'solar_maps.features.inc';
+
+/**
+ * Implements hook_library().
+ *
+ * Adding some leaflet libraries.
+ */
+function solar_maps_library() {
+  $libraries = array();
+
+  // Leaflet MarkerCluster.
+  $path = libraries_get_path('leaflet_markercluster') . '/dist';
+  $libraries['leaflet_markercluster'] = array(
+    'title' => 'Leaflet Markercluster',
+    'version' => 0.4,
+    'js' => array(
+      array(
+        'type' => 'file',
+        'data' => $path . '/leaflet.markercluster.js',
+        'group' => JS_LIBRARY,
+        'preprocess' => FALSE,
+        'weight' => 1,
+      ),
+    ),
+    'css' => array(
+      $path . '/MarkerCluster.css' => array(
+        'type' => 'file',
+        'media' => 'screen',
+      ),
+      $path . '/MarkerCluster.Default.css' => array(
+        'type' => 'file',
+        'media' => 'screen',
+      ),
+    ),
+  );
+
+  // Leaflet Fullscreen.
+  $path = libraries_get_path('leaflet.fullscreen') . '/dist';
+  $libraries['leaflet.fullscreen'] = array(
+    'title' => 'Leaflet Fullscreen',
+    'version' => 1.1,
+    'js' => array(
+      array(
+        'type' => 'file',
+        'data' => $path . '/Leaflet.fullscreen.js',
+        'group' => JS_LIBRARY,
+        'preprocess' => FALSE,
+        'weight' => 1,
+      ),
+    ),
+    'css' => array(
+      $path . '/leaflet.fullscreen.css' => array(
+        'type' => 'file',
+        'media' => 'screen',
+      ),
+    ),
+  );
+
+  // Sprite animation (for loading spinner).
+  $path = libraries_get_path('animate_sprite') . '/scripts';
+  $libraries['animate_sprite'] = array(
+    'title' => 'Animate Sprite',
+    'version' => 1.2,
+    'js' => array(
+      array(
+        'type' => 'file',
+        'data' => $path . '/jquery.animateSprite.js',
+        'group' => JS_LIBRARY,
+        'preprocess' => FALSE,
+        'weight' => 10,
+      ),
+    ),
+  );
+
+  return $libraries;
+}
+
+/**
+ * Implements hook_leaflet_map_info_alter().
+ *
+ * We're adding the fullscreen control, so add it to the settings
+ * here regardless of what module (leaflet, leaflet_more_maps, etc)
+ * provides the default settings.
+ */
+function solar_maps_leaflet_map_info_alter(&$map_info) {
+  foreach ($map_info as $map_key => $spec) {
+    $map_info[$map_key]['settings']['fullscreenControl'] = TRUE;
+    $map_info[$map_key]['settings']['scrollWheelZoom'] = FALSE;
+  }
+}
+
+/**
+ * Implements hook_leaflet_map_prebuild_alter().
+ */
+function solar_maps_leaflet_map_prebuild_alter(&$settings) {
+
+  // Add the fullscreen button needs from the libarary.
+  drupal_add_library('solar_maps', 'leaflet.fullscreen');
+
+  // Add the markercluster needs from the library.
+  drupal_add_library('solar_maps', 'leaflet_markercluster');
+
+  // Add the sprite animator from the library.
+  drupal_add_library('solar_maps', 'animate_sprite');
+
+  $module_path = drupal_get_path('module', 'solar_maps');
+
+  // Add our custom marker cluster behavior.
+  drupal_add_js($module_path . '/solar_maps.js', array(
+    'weight' => 10,
+  ));
+
+  // Add some default CSS.
+  drupal_add_css($module_path .  '/solar_maps.css');
+}
+
+/**
+ * Implements hook_menu().
+ */
+function solar_maps_menu() {
+  $items = array();
+
+  // We are delaying map popup content loading until click,
+  // so here we define an ajax callback and delivery menu
+  // item so we can load the node in a specific veiw mode
+  // from JS.
+  $items['node/load/ajax/%node/%'] = array(
+    'page callback' => 'solar_maps_node_load_ajax',
+    'page arguments' => array(3, 4),
+    'type' => MENU_CALLBACK,
+    'access arguments' => array('access content'),
+    'delivery callback' => 'solar_maps_node_render_ajax_deliver',
+  );
+
+  // Load a map companion list (view pane) with AJAX.
+  $items['solar-maps/location-list/%/%/%'] = array(
+    'page callback' => 'solar_maps_views_pane_load_ajax',
+    'page arguments' => array(2, 3, 4, 5),
+    'type' => MENU_CALLBACK,
+    'access arguments' => array('access content'),
+    'delivery callback' => 'solar_maps_views_pane_render_ajax_deliver',
+  );
+
+  return $items;
+}
+
+/**
+ * Page callback to return a node in a specific view mode.
+ *
+ * @param object $node
+ *   The loaded node object.
+ * @param string $view_mode
+ *   THe machine name of a view mode to produce.
+ *
+ * @return array
+ *   A renderable array as expected by drupal_render().
+ */
+function solar_maps_node_load_ajax($node, $view_mode) {
+  return node_view($node, $view_mode);
+}
+
+/**
+ * Ajax delivery callback to print the requested html.
+ *
+ * @param array $page_callback_result
+ *   A renderable array representing content.
+ */
+function solar_maps_node_render_ajax_deliver($page_callback_result) {
+  print drupal_render($page_callback_result);
+
+  // Make sure the delivered content is cached.
+  drupal_page_footer();
+}
+
+/**
+ * Loads a view and produces the associated html output.
+ *
+ * @param string $view_name
+ *   The machine name of the view.
+ * @param string $view_display_id
+ *   The machine name of the display id within the view.
+ * @param string $nids
+ *   A comma-sep'd list of node ids to pass to the view as a contextual filter.
+ *
+ * @return string
+ *   HTML string representing the view of interest.
+ */
+function solar_maps_views_pane_load_ajax($view_name, $view_display_id, $nids) {
+  // Get the HTML output of the view.
+  $view = views_get_view($view_name);
+  $view->set_display($view_display_id);
+  if ($nids != 'all') {
+    $view->set_arguments(array($nids));
+  }
+  $view->pre_execute();
+  $view->execute();
+  return $view->render();
+}
+
+/**
+ * Ajax delivery function for map companion lists.
+ *
+ * @param string $page_callback_result
+ *   The content of the callback result.
+ */
+function solar_maps_views_pane_render_ajax_deliver($page_callback_result) {
+  print $page_callback_result;
+
+  // Make sure the output is cached.
+  drupal_page_footer();
+}
+
+/**
+ * Implements hook_preprocess_panels_pane().
+ *
+ * Add view attributes to JS settings for views panes that are map companion
+ * lists.
+ */
+function solar_maps_preprocess_panels_pane(&$vars) {
+  if ($vars['pane']->type === 'views_panes') {
+    $is_target = strpos($vars['pane']->subtype, 'pane_map_companion_list');
+    if ($is_target !== FALSE) {
+      $parts = explode('-', $vars['pane']->subtype);
+      $settings = array();
+      $settings['view_attributes'] = array(
+        'view_name' => $parts[0],
+        'view_display_id' => $parts[1],
+      );
+      drupal_add_js(array('solar_maps' => $settings), 'setting');
+    }
+  }
+}
+
+/**
+ * Implements hook_leaflet_geojson_source_info_alter.
+ */
+function solar_maps_leaflet_geojson_source_info_alter(&$source_info) {
+  // We've added a contextual filter placeholder to the view URL for the
+  // current users UID in the funder projects view. Trim off the url-encoded
+  // percent sign, we will add the argument later just before we render
+  // the pane, when we have the user context available.
+  $search = urlencode('%');
+  $url = $source_info['solar_map_funder_projects_map_feed_funder_projects']['url'];
+  $feed_url = str_replace($search, '', $url);
+  $source_info['solar_map_funder_projects_map_feed_funder_projects']['url']
+    = $feed_url;
+
+  foreach ($source_info as $key => $info) {
+    if (isset($info['url'])) {
+      // Remove the base_url, because it cannot be cached this way if there are
+      // multiple domains this page is accessible from.
+      $len = drupal_strlen($GLOBALS['base_url']);
+      if (strpos($info['url'], $GLOBALS['base_url']) === 0) {
+        $source_info[$key]['url'] = drupal_substr($info['url'], $len);
+      }
+    }
+  }
+}
+
+/**
+ * Implements hook_leaflet_geojson_map_pane_alter.
+ */
+function solar_maps_leaflet_geojson_map_pane_alter(&$map_pane_data) {
+  // Add back the user id argument onto the url of the layer of interest,
+  // but only if the argument exists.
+  if (isset($map_pane_data['panels_args'][0])) {
+    $url = $map_pane_data['data_layers_info']['leaflet_1']['url'];
+    $url .= $map_pane_data['panels_args'][0];
+    $map_pane_data['data_layers_info']['leaflet_1']['url'] = $url;
+  }
+}

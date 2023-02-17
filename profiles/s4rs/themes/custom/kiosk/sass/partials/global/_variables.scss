@@ -1,0 +1,89 @@
+////////////////////////////////////////////////////////////////////////////////
+// Variables Partials
+//
+// All of your variables should go in this file.
+////////////////////////////////////////////////////////////////////////////////
+
+////////////////////////
+// Kiosk variables
+////////////////////////
+$kiosk-width: 1080px;
+$kiosk-base-margin: 11px;
+
+$kiosk-content-bg: #EDEDED;
+$kiosk-white: #FFFFFF;
+$kiosk-equivalency-grey: #666666;
+$kiosk-header-blue: #00AFDB;
+
+$kiosk-header-height: 163px;
+$kiosk-tab-height: 38px;
+
+$kiosk-tab-sprite-height: 40px;
+
+$kiosk-tab-width-view: 108px;
+$kiosk-tab-width-how-it-works: 137px;
+$kiosk-tab-width-about-project: 141px;
+$kiosk-tab-width-about-partners: 154px;
+$kiosk-tab-width-green-tech: 184px;
+$kiosk-tab-width-renewable-benefits: 194px;
+$kiosk-tab-width-call-to-action: 140px;
+
+$kiosk-tab-sprite-view: 0;
+$kiosk-tab-sprite-how-it-works: $kiosk-tab-sprite-view + $kiosk-tab-width-view;
+$kiosk-tab-sprite-about-project: $kiosk-tab-sprite-how-it-works + $kiosk-tab-width-how-it-works;
+$kiosk-tab-sprite-about-partners: $kiosk-tab-sprite-about-project + $kiosk-tab-width-about-project;
+$kiosk-tab-sprite-green-tech: $kiosk-tab-sprite-about-partners + $kiosk-tab-width-about-partners;
+$kiosk-tab-sprite-renewable-benefits: $kiosk-tab-sprite-green-tech + $kiosk-tab-width-green-tech;
+$kiosk-tab-sprite-call-to-action: $kiosk-tab-sprite-renewable-benefits + $kiosk-tab-width-renewable-benefits;
+
+$kiosk-green-tech-tab-height: 28px;
+
+$kiosk-green-tech-tab-fg: $kiosk-white;
+$kiosk-green-tech-tab-bg: #EF6123;
+$kiosk-green-tech-tab-active-bg: #C03838;
+
+$container-width: $kiosk-width;
+$small-container-width: $kiosk-width;
+$medium-container-width: $kiosk-width;
+$large-container-width: $kiosk-width;
+$xlarge-container-width: $kiosk-width;
+
+////////////////////////
+// Breakpoints
+////////////////////////
+$small: 500px;
+$medium: 800px;
+$large: 1100px;
+$xlarge: 1400px;
+
+// Old IE support
+$breakpoint-no-query-fallbacks: true;
+$no-query: '.lt-ie9';
+
+////////////////////////
+// Grids
+////////////////////////
+$grids: add-grid(3);
+$grids: add-grid(6 at $small);
+$grids: add-grid(18 at $medium);
+$grids: add-grid(30 at $large);
+
+$gutters: add-gutter(1/5);
+$gutters: add-gutter(1/3 at $small);
+$gutters: add-gutter(1/2 at $medium);
+$gutters: add-gutter(1 at $large);
+
+$output: 'isolation';
+
+// Grid color for debugging
+$background-grid-color: rgba(117, 125, 138, 1);
+
+////////////////////////
+// Layout
+////////////////////////
+/* $container-width: 320px; */
+
+/* $small-container-width: 480px; */
+/* $medium-container-width: 720px; */
+/* $large-container-width: 960px; */
+/* $xlarge-container-width: 1200px; */

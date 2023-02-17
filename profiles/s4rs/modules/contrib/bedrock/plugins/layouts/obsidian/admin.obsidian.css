@@ -1,0 +1,18 @@
+/**
+ * @file
+ * Bedrock Obsidian panels layout Admin CSS.
+ */
+
+.obsidian-column {
+  float: left;
+  margin-right: 1%;
+  width: 32%;
+}
+
+.obsidian-column-middle {
+  width: 34%;
+}
+
+.obsidian-column-right {
+  margin-right: 0;
+}

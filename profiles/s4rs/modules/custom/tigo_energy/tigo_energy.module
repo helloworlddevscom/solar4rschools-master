@@ -1,0 +1,65 @@
+<?php
+
+include_once 'tigo_energy.features.inc';
+
+define('TIGO_API_HOST', 'api.tigoenergy.com');
+
+/**
+ * Implements hook_menu().
+ */
+function tigo_energy_menu() {
+  $items = array();
+  // Configuration/settings page.
+  $items['admin/config/generation/providers/tigo-energy'] = array(
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('tigo_energy_admin_settings_form'),
+    'access arguments' => array('administer tigo energy api'),
+    'title' => 'Tigo Energy',
+    'description' => 'Configuration settings for interacting with the Tigo Energy web service.',
+    'file' => 'tigo_energy.admin.inc',
+  );
+  $items['admin/config/generation/providers/tigo-energy/settings'] = array(
+    'title' => 'Settings',
+    'type' => MENU_DEFAULT_LOCAL_TASK,
+    'access arguments' => array('administer tigo energy api'),
+  );
+
+  // API Test page.
+  $items['admin/config/generation/providers/tigo-energy/test'] = array(
+    'title' => 'Test',
+    'type' => MENU_LOCAL_TASK,
+    'access arguments' => array('administer tigo energy api'),
+    'page callback' => 'tigo_energy_test_page',
+    'file' => 'tigo_energy.admin.inc',
+  );
+
+  return $items;
+}
+
+/**
+ * Implements hook_permission().
+ */
+function tigo_energy_permission() {
+  return array(
+    'administer tigo energy api' => array(
+      'title' => t('administer tigo energy api'),
+      'description' => t('Administer Tigo Energy API settings'),
+    ),
+  );
+}
+
+/**
+ * Implements hook_generation_providers().
+ */
+function tigo_energy_generation_providers() {
+  return array(
+    'tigo_energy' => array(
+      'name' => t('Tigo Energy'),
+      'description' => t('Queries data using the Tigo Energy API.'),
+      'site types' => array('tigo_energy'),
+      'provider class' => 'TigoEnergyGenerationProvider',
+      'file' => 'tigo_energy.generation.inc',
+      'configure' => 'admin/config/generation/providers/tigo-energy',
+    ),
+  );
+}

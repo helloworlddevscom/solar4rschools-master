@@ -1,0 +1,22 @@
+/**
+ * @file
+ * Bedrock Basalt panels layout Admin CSS.
+ */
+
+.basalt-content-header {
+  margin-bottom: 1%;
+}
+
+.basalt-column {
+  float: left;
+  margin-right: 1%;
+  width: 32%;
+}
+
+.basalt-column-middle {
+  width: 34%;
+}
+
+.basalt-column-right {
+  margin-right: 0;
+}

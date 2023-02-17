@@ -1,0 +1,71 @@
+/**
+ * Buttons & links.
+ */
+
+
+// Links
+
+a {
+  font-weight: 800;
+  cursor: pointer;
+}
+
+a:focus {
+  outline: thin dotted;
+}
+
+a:active,
+a:hover {
+  outline: 0;
+}
+
+// @TODO Remove these .node-project styles.
+a:link, .node-project h2 a:link {
+  color: #0081AB;
+  text-decoration: none;
+}
+
+a:visited, .node-project h2 a:visited {
+  color: #0081AB;
+  text-decoration: none;
+}
+
+a:hover, a:focus, .node-project h2 a:hover, .node-project h2 a:focus {
+  color: #0081AB;
+  text-decoration: underline;
+}
+
+a:active, .node-project h2 a:active {
+  color: #0081AB;
+}
+
+
+// Buttons
+
+a.button, input[type=button], input[type=submit] {
+  -webkit-box-shadow: rgba(0, 1, 1, 0.35) 0 5px 5px;
+  -moz-box-shadow: rgba(0, 1, 1, 0.35) 0 5px 5px;
+  box-shadow: rgba(0, 1, 1, 0.35) 0 5px 5px;
+  -webkit-border-radius: 10px;
+  -moz-border-radius: 10px;
+  -ms-border-radius: 10px;
+  -o-border-radius: 10px;
+  border-radius: 10px;
+  display: inline-block;
+  background-color: #0081AB;
+  border: 1px solid white;
+  color: white;
+  font-size: .8rem;
+  font-family: "DezenProMedium";
+  padding: 8px 17px 6px;
+  text-decoration: none;
+  text-transform: uppercase;
+  line-height: normal;
+  margin: 0 0 0.3125rem;
+}
+
+a.button, input[type=button], input[type=submit] {
+  + a.button, + input[type=button], + input[type=submit] {
+    margin-left: 10px;
+  }
+}

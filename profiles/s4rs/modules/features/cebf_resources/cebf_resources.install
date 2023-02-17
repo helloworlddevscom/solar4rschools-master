@@ -1,0 +1,8 @@
+<?php
+
+/**
+ * Enable create_resource and clamav modules.
+ */
+function cebf_resources_update_7001() {
+  module_enable(array('clamav'));
+}

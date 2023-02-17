@@ -1,0 +1,34 @@
+From 45d24d823c5a10d3248d1b6b39e106e50e8de3b8 Mon Sep 17 00:00:00 2001
+From: Jonathan Jordan <jojonaloha@1579186.no-reply.drupal.org>
+Date: Tue, 25 Aug 2015 22:07:16 -0700
+Subject: [PATCH] Issue #2480187 by dgtlmoon: Support for entity_types with
+ permissions on their bundles
+
+---
+ references_dialog.dialog_widgets.inc | 10 +++++++++-
+ 1 file changed, 9 insertions(+), 1 deletion(-)
+
+diff --git a/references_dialog.dialog_widgets.inc b/references_dialog.dialog_widgets.inc
+index 02efc48..dfe2886 100644
+--- a/references_dialog.dialog_widgets.inc
++++ b/references_dialog.dialog_widgets.inc
+@@ -302,7 +302,15 @@ function references_dialog_entityreference_link_helper($entity_type, $bundle = N
+       break;
+ 
+     default:
+-      $access = entity_access('create', $entity_type);
++      if (isset($info['entity keys']['bundle'])) {
++        $bundle_key = $info['entity keys']['bundle'];
++        // Create a stub entity of our given bundle
++        $entity = entity_create($entity_type, array($bundle_key => $bundle));
++        $access = entity_access('create', $entity_type, $entity);
++      }
++      else {
++        $access = entity_access('create', $entity_type);
++      }
+       break;
+   }
+ 
+-- 
+2.3.2 (Apple Git-55)
+

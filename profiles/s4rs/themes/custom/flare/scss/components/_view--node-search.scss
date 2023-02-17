@@ -1,0 +1,9 @@
+/**
+ * Node Search view.
+ */
+
+.view-id-node_search {
+  > .view-content {
+    @include view-list;
+  }
+}

@@ -1,0 +1,15 @@
+/**
+ * @file
+ * Bedrock Coal panels layout Admin CSS.
+ */
+
+.coal-column {
+  float: left;
+  margin-right: 1%;
+  width: 39%;
+}
+
+.coal-column-right {
+  margin-right: 0;
+  width: 60%;
+}

@@ -1,0 +1,106 @@
+<?php
+/**
+ * @file
+ * Code for the Solar applications feature.
+ */
+
+include_once 'solar_applications.features.inc';
+
+/**
+ * Implements hook_menu_alter().
+ *
+ * Redirects anonymous users to login or register.
+ */
+function solar_applications_menu_alter(&$items) {
+  if (isset($items['eform/submit/%entityform_empty'])) {
+    $items['eform/submit/%entityform_empty']['page callback'] = '_solar_applications_entityform_form_wrapper';
+    $items['eform/submit/%entityform_empty']['access callback'] = TRUE;
+  }
+  if (isset($items['eform/submit/%entityform_empty'])) {
+    $items['entityform/%entityform/edit']['access callback'] = '_solar_applications_entityform_access';
+  }
+}
+
+/**
+ * Helper function to send users to the login page if they're anonymous.
+ *
+ * @see entityform_form_wrapper()
+ * @see entityform_access()
+ */
+function _solar_applications_entityform_form_wrapper($entityform, $mode = 'submit', $form_context = 'page') {
+  global $user;
+
+  if (entityform_access($mode, $entityform)) {
+    return entityform_form_wrapper($entityform, $mode, $form_context);
+  }
+  elseif (user_is_anonymous()) {
+    drupal_set_message("Log in to begin your application");
+    drupal_goto('user/login', array('query' => array('destination' => current_path())));
+  }
+  elseif (isset($user->roles) && count($user->roles) == 1 && !in_array('educator', $user->roles)) {
+    // You should only be here if you're an auth user, and nothing else.
+    $role_name = 'educator';
+    $roles_flipped = array_flip(user_roles());
+    $user->roles[$roles_flipped[$role_name]] = $role_name;
+    module_invoke('user', 'save', $user, array('roles' => $user->roles));
+    return entityform_form_wrapper($entityform, $mode, $form_context);
+  }
+  else {
+    return drupal_access_denied();
+  }
+}
+
+/**
+ * Helper function to disallow editing of entityforms that aren't "In Progress".
+ *
+ * @see entityform_access();
+ */
+function _solar_applications_entityform_access($op, $entityform = NULL, $account = NULL) {
+  global $user;
+
+  if (
+    isset($entityform->field_status[LANGUAGE_NONE][0]['value'])
+  &&
+    $entityform->field_status[LANGUAGE_NONE][0]['value'] != 'in_progress'
+  &&
+    isset($entityform->uid)
+  &&
+    $entityform->uid == $user->uid
+  ) {
+    // The author of the entityform can only modify 'in_progress' applications.
+    return FALSE;
+  }
+  else {
+    return entityform_access($op, $entityform, $account);
+  }
+}
+
+/**
+ * Implements hook_form_BASE_FORM_ID_alter().
+ *
+ * Makes sure if you edit your previous submissions, you go to a page you can
+ * access.
+ */
+function solar_applications_form_entityform_edit_form_alter(&$form, &$form_state, $form_id) {
+  $info = entity_get_info('entityform_type');
+  if (!drupal_valid_path($info['admin ui']['path'])) {
+    $form_state['entityform_form_mode'] = 'submit';
+  }
+  if (isset($form['actions']['save']['#submit'])) {
+    $form['actions']['save']['#submit'][] = '_solar_applications_entityform_edit_form_submit';
+  }
+  $form['current_page'] = array('#type' => 'hidden', '#default_value' => '0');
+}
+
+/**
+ * Makes the draft submission button take you back to the form you were editing.
+ */
+function _solar_applications_entityform_edit_form_submit(&$form, &$form_state) {
+  $entityform = entity_ui_controller('entityform')->entityFormSubmitBuildEntity($form, $form_state);
+
+  if (isset($form_state['redirect']) && entity_ui_controller('entityform')->draft_path($entityform->type) && $form_state['redirect'] == entity_ui_controller('entityform')->draft_path($entityform->type)) {
+    // If our custom hash for your current page is set, jump there.
+    $options = isset($form_state['values']['current_page']) ? array('fragment' => $form_state['values']['current_page']) : array();
+    $form_state['redirect'] = array(entity_ui_controller('entityform')->submit_path($entityform->type), $options);
+  }
+}

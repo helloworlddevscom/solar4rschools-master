@@ -1,0 +1,14 @@
+name = Private Messaging Permissions
+description = Removes permission to use Private Messaging
+core = 7.x
+package = Metal Toad
+version = 7.x-1.0-alpha1
+project = private_messaging_permissions
+dependencies[] = features
+dependencies[] = privatemsg
+features[features_api][] = api:2
+features[user_permission][] = administer privatemsg settings
+features[user_permission][] = read all private messages
+features[user_permission][] = reply only privatemsg
+features[user_permission][] = select text format for privatemsg
+features[user_permission][] = use tokens in privatemsg

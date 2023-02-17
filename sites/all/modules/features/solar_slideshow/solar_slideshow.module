@@ -1,0 +1,7 @@
+<?php
+/**
+ * @file
+ * Code for the Solar Slideshow feature.
+ */
+
+include_once 'solar_slideshow.features.inc';

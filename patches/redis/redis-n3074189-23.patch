@@ -1,0 +1,105 @@
+diff --git a/lib/Redis/Cache/PhpRedis.php b/lib/Redis/Cache/PhpRedis.php
+index bc27af5..347db33 100644
+--- a/lib/Redis/Cache/PhpRedis.php
++++ b/lib/Redis/Cache/PhpRedis.php
+@@ -63,7 +63,7 @@ class Redis_Cache_PhpRedis extends Redis_Cache_Base
+ 
+         $ret = array();
+ 
+-        $pipe = $client->multi(Redis::PIPELINE);
++        $pipe = $client->multi();
+         foreach ($idList as $id) {
+             $pipe->hgetall($this->getKey($id));
+         }
+@@ -94,7 +94,7 @@ class Redis_Cache_PhpRedis extends Redis_Cache_Base
+         $client = $this->getClient();
+         $key    = $this->getKey($id);
+ 
+-        $pipe = $client->multi(Redis::PIPELINE);
++        $pipe = $client->multi();
+         $pipe->hmset($key, $data);
+ 
+         if (null !== $ttl) {
+@@ -112,7 +112,7 @@ class Redis_Cache_PhpRedis extends Redis_Cache_Base
+     {
+         $client = $this->getClient();
+ 
+-        $pipe = $client->multi(Redis::PIPELINE);
++        $pipe = $client->multi();
+         foreach ($idList as $id) {
+             $pipe->del($this->getKey($id));
+         }
+diff --git a/lib/Redis/Lock/PhpRedis.php b/lib/Redis/Lock/PhpRedis.php
+index f9ae845..508d724 100644
+--- a/lib/Redis/Lock/PhpRedis.php
++++ b/lib/Redis/Lock/PhpRedis.php
+@@ -108,7 +108,7 @@ class Redis_Lock_PhpRedis extends Redis_Lock_DefaultBackend {
+ 
+     if ($client->get($key) == $id) {
+       $client->multi();
+-      $client->delete($key);
++      $this->doDelete($client, $key);
+       $client->exec();
+     }
+     else {
+@@ -131,8 +131,28 @@ class Redis_Lock_PhpRedis extends Redis_Lock_DefaultBackend {
+       $owner = $client->get($key);
+ 
+       if (empty($owner) || $owner == $id) {
+-        $client->delete($key);
++        $this->doDelete($client, $key);
+       }
+     }
+   }
++
++  /**
++   * Wrapper for deleting items.
++   *
++   * This is necessary because of API changes in Redis.
++   *
++   * @param object $client
++   *   The client object to work with.
++   * @param string $key
++   *   The item that needs to be deleted.
++   */
++  protected function doDelete($client, $key) {
++    if (method_exists($client, 'del')) {
++      $client->del($key);
++    }
++    else {
++      $client->delete($key);
++    }
++  }
++
+ }
+diff --git a/lib/Redis/Queue/PhpRedis.php b/lib/Redis/Queue/PhpRedis.php
+index e3d590d..ea6ae96 100644
+--- a/lib/Redis/Queue/PhpRedis.php
++++ b/lib/Redis/Queue/PhpRedis.php
+@@ -23,7 +23,7 @@ class Redis_Queue_PhpRedis extends Redis_Queue_Base
+         $record->data = $data;
+         $record->timestamp = time();
+ 
+-        $pipe = $client->multi(Redis::PIPELINE);
++        $pipe = $client->multi();
+         // Thanks to the redis_queue standalone module maintainers for
+         // this piece of code, very effective. Note that we added the
+         // pipeline thought.
+@@ -73,7 +73,7 @@ class Redis_Queue_PhpRedis extends Redis_Queue_Base
+ 
+     public function deleteItem($item)
+     {
+-        $pipe = $this->getClient()->multi(Redis::PIPELINE);
++        $pipe = $this->getClient()->multi();
+         $pipe->lrem($this->getKeyForQueue(), $item->qid);
+         $pipe->lrem($this->getKeyForClaimed(), $item->qid);
+         $pipe->hdel($this->getKeyForData(), $item->qid);
+@@ -82,7 +82,7 @@ class Redis_Queue_PhpRedis extends Redis_Queue_Base
+ 
+     public function releaseItem($item)
+     {
+-        $pipe = $this->getClient()->multi(Redis::PIPELINE);
++        $pipe = $this->getClient()->multi();
+         $pipe->lrem($this->getKeyForClaimed(), $item->qid, -1);
+         $pipe->lpush($this->getKeyForQueue(), $item->qid);
+         $ret = $pipe->exec();

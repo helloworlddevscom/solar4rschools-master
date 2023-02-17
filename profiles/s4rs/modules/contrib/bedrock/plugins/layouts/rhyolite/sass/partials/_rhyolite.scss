@@ -1,0 +1,130 @@
+////////////////////////
+// Bedrock Rhyolite Layout Partial
+//
+// Layout specific to the Bedrock Rhyolite panel layout.
+//
+// Copy this file to your theme's Sass partial structure
+// and include in your SMACSS based layout file.
+//
+// Required Variables
+// - $small, $medium, $large, $xlarge (global breakpoints)
+// - $grids, set at global breakpoints
+// - $gutters, set at global breakpoints
+////////////////////////
+
+/*
+ * Rhyolite Layout
+ */
+.rhyolite {
+  //@include background-grid;
+
+  .rhyolite-content-header {
+    @include grid-span(3, 1);
+
+    @include breakpoint($small) {
+      @include grid-span(6, 1);
+    }
+
+    @include breakpoint($medium) {
+      @include grid-span(18, 1);
+    }
+
+    @include breakpoint($large) {
+      @include grid-span(30, 1);
+    }
+
+    @include breakpoint($xlarge) {
+      @include grid-span(30, 1);
+    }
+
+    margin-bottom: 1em;
+
+    .panel-pane {
+      margin-bottom: 1em;
+
+      &:last-child {
+        margin-bottom: 0;
+      }
+    }
+  }
+
+  .rhyolite-content-column-container {
+    @include grid-span(3, 1);
+
+    @include breakpoint($small) {
+      @include grid-span(6, 1);
+    }
+
+    @include breakpoint($medium) {
+      @include grid-span(18, 1);
+    }
+
+    @include breakpoint($large) {
+      @include grid-span(30, 1);
+    }
+
+    @include breakpoint($xlarge) {
+      @include grid-span(30, 1);
+    }
+
+    .rhyolite-content-main-column {
+      @include grid-span(3, 1);
+
+      @include breakpoint($small) {
+        @include grid-span(6, 1);
+      }
+
+      @include breakpoint($medium) {
+        @include grid-span(13.5, 1);
+      }
+
+      @include breakpoint($large) {
+        @include grid-span(15, 1);
+      }
+
+      @include breakpoint($xlarge) {
+        @include grid-span(15, 1);
+      }
+    }
+
+    .rhyolite-content-secondary-column {
+      @include grid-span(3, 1);
+
+      @include breakpoint($small) {
+        @include grid-span(6, 1);
+      }
+
+      @include breakpoint($medium) {
+        @include grid-span(4.5, 14.5);
+      }
+
+      @include breakpoint($large) {
+        @include grid-span(7.5, 23.5);
+      }
+
+      @include breakpoint($xlarge) {
+        @include grid-span(7.5, 23.5);
+      }
+    }
+
+    .rhyolite-content-tertiary-column {
+      @include grid-span(3, 1);
+
+      @include breakpoint($small) {
+        @include grid-span(6, 1);
+      }
+
+      @include breakpoint($medium) {
+        @include grid-span(18, 1);
+      }
+
+      @include breakpoint($large) {
+        @include grid-span(7.5, 16);
+      }
+
+      @include breakpoint($xlarge) {
+        @include grid-span(7.5, 16);
+      }
+    }
+  }
+}

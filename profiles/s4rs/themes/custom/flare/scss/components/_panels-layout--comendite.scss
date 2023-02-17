@@ -1,0 +1,17 @@
+/**
+ * Comendite Page Manager/Panels layout provided by Bedrock module.
+ * @TODO: There is much more styling for this in style.css that should be moved here.
+ */
+
+// Sidebar
+.comendite-content-secondary-column {
+  margin-top: 40px;
+  padding-top: 20px;
+  border-top: 1px dotted $color--gray;
+
+  @include breakpoint($bp--medium) {
+    margin-top: 0;
+    padding-top: 0;
+    border-top: none;
+  }
+}

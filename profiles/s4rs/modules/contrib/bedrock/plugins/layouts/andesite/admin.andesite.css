@@ -1,0 +1,33 @@
+/**
+ * @file
+ * Bedrock Andesite panels layout Admin CSS.
+ */
+
+.andesite-content-header-container {
+  margin-bottom: 1%;
+}
+
+.andesite-content-header {
+  float: left;
+  margin-right: 1%;
+  width: 49%;
+}
+
+.andesite-content-header-right {
+  margin-right: 0;
+  width: 50%;
+}
+
+.andesite-column {
+  float: left;
+  margin-right: 1%;
+  width: 32%;
+}
+
+.andesite-column-middle {
+  width: 34%;
+}
+
+.andesite-column-right {
+  margin-right: 0;
+}

@@ -1,0 +1,6 @@
+core = 7.x
+dependencies[] = generation
+description = "Provides blocks with generation statistics."
+name = "Generation Statistics"
+package = "Generation"
+

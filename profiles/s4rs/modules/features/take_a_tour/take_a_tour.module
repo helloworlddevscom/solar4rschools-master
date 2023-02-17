@@ -1,0 +1,80 @@
+<?php
+/**
+ * @file
+ * Code for the Take a tour feature.
+ */
+
+include_once 'take_a_tour.features.inc';
+
+
+/**
+ * Implements hook_block_info().
+ *
+ * Adds the Take a Tour block.
+ */
+function take_a_tour_block_info() {
+  $blocks['take_a_tour'] = array(
+    'info' => t('Take a tour'),
+    'cache' => DRUPAL_CACHE_PER_PAGE,
+  );
+
+  return $blocks;
+}
+
+/**
+ * Implements hook_block_view().
+ *
+ * Shows the Take a Tour block.
+ */
+function take_a_tour_block_view($delta = '') {
+  $block = array();
+
+  if ($delta == 'take_a_tour') {
+    $block['content'] = '';
+    // Convert the Drupal path to lowercase.
+    $path = drupal_strtolower(drupal_get_path_alias($_GET['q']));
+
+    // Do entity query on field_data_field_tour_video_pages starting with *
+    // or the same letter as $path.
+    $query = db_select('field_data_field_tour_video_pages', 'tour_pages')
+      ->fields('tour_pages');
+
+    $or = db_or()
+      ->condition('field_tour_video_pages_value', substr($path, 0, 1) . '%', 'LIKE')
+      ->condition('field_tour_video_pages_value', '*%', 'LIKE');
+
+    $results = $query->condition($or)
+      ->condition('deleted', 0)
+      ->execute();
+
+    $list_items = array();
+
+    foreach ($results as $result) {
+      // Convert path to lowercase. This allows comparison of the same path
+      // with different case. Ex: /Page, /page, /PAGE.
+      $pages = drupal_strtolower($result->field_tour_video_pages_value);
+      // Compare the lowercase internal and lowercase path alias (if any).
+      $page_match = drupal_match_path($path, $pages);
+      if ($path != $_GET['q']) {
+        $page_match = $page_match || drupal_match_path($_GET['q'], $pages);
+      }
+      if ($page_match) {
+        $entity = entity_load_single($result->entity_type, $result->entity_id);
+        $entity_view = entity_view($result->entity_type, array($entity));
+        $list_items[] = array(
+          'data' => render($entity_view),
+        );
+      }
+    }
+
+    if (!empty($list_items)) {
+      $block['content'] = array(
+        '#theme' => 'item_list',
+        '#items' => $list_items,
+        '#attributes' => array('class' => 'take-a-tour'),
+      );
+    }
+  }
+
+  return $block;
+}

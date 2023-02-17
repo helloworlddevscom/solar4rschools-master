@@ -1,0 +1,137 @@
+/**
+ * Activity node - Activity Center view mode.
+ */
+
+.node-activity.view-mode--activity-center {
+
+  .node__quick-view.has-image {
+    .quick-view__image {
+      width: 60%;
+    }
+
+    .quick-view__text {
+      width: 100%;
+    }
+  }
+
+  .quick-view__text {
+    padding: 20px 0;
+  }
+
+  .node--title {
+    a {
+      color: $color--light-blue;
+    }
+  }
+
+  .field-name-body {
+    p {
+      &:first-child {
+        margin-top: 0;
+      }
+
+      &:last-child {
+        margin-bottom: 0;
+      }
+    }
+  }
+
+  .more-details {
+    margin-top: 20px;
+    font-weight: bold;
+    cursor: pointer;
+
+    .more-details__icon {
+      display: inline-block;
+      width: 18px;
+      height: 18px;
+      margin-right: 7px;
+      line-height: 12px;
+      text-align: center;
+      border: 1px solid black;
+    }
+
+    .more-details__text {
+      display: inline-block;
+      vertical-align: middle;
+    }
+
+    .icon__closed {
+      display: block;
+    }
+
+    .icon__open {
+      display: none;
+    }
+
+    .text__closed {
+      display: block;
+    }
+
+    .text__open {
+      display: none;
+    }
+
+    &.expanded {
+      .icon__closed {
+        display: none;
+      }
+
+      .icon__open {
+        display: block;
+      }
+
+      .text__closed {
+        display: none;
+      }
+
+      .text__open {
+        display: block;
+      }
+    }
+  }
+
+  .node__expanded-view {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height ease-in-out .3s;
+  }
+
+  .node__expanded-view.expanded {
+    max-height: 1000px;
+  }
+
+
+  // MEDIUM
+
+  @include breakpoint($bp--medium) {
+    .node__quick-view.has-image {
+      .quick-view__image {
+        float: right;
+        width: 35%;
+        padding: 0 0 20px 20px;
+      }
+
+      .quick-view__text {
+        float: left;
+        width: 65%;
+        padding-top: 0;
+      }
+    }
+  }
+
+
+  // LARGE
+
+  @include breakpoint($bp--large) {
+    .node__quick-view.has-image {
+      .quick-view__image {
+        width: 37%;
+      }
+
+      .quick-view__text {
+        width: 63%;
+      }
+    }
+  }
+}

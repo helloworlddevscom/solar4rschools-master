@@ -1,0 +1,111 @@
+/**
+ * Styling for Teacher Activity Center sidebar minipanel and contents.
+ */
+
+.pane-teacher-activity-center-sidebar {
+  padding: 10px 15px;
+  background-color: $color--light-gray;
+
+  .pane-title {
+    color: $color--dark-gray;
+    cursor: pointer;
+    display: block;
+    font-size: .875rem;
+    font-weight: bold;
+    text-transform: none;
+    margin-bottom: .5rem;
+  }
+
+  .block--ajax_facets {
+    // Title will not stop rendering despite settings.
+    .pane-title {
+      display: none;
+    }
+  }
+
+  .ajax-facets--range-slider {
+    margin-bottom: 20px;
+
+    // Hide weird text field inputs above ajax_facets module range slider.
+    .range-slider__inputs {
+      display: none;
+    }
+
+    .value-labels__label {
+      // Based on number of options.
+      width: 7%;
+    }
+
+    .label__text {
+      transform: rotate(0deg);
+    }
+  }
+
+  .teacher-activity-center-sidebar__help-text {
+    margin-bottom: 12px;
+
+    p {
+      margin: 0;
+      font-size: 13px;
+      font-style: italic;
+    }
+  }
+}
+
+// Teacher Activity Center view exposed form.
+#views-exposed-form-teacher-activity-center-panel-pane-search {
+  margin-top: 0;
+
+  .views-widget-filter-search_api_views_fulltext {
+    width: 100%;
+    padding-top: 0;
+    padding-right: 0;
+
+    .form-item {
+      position: relative;
+
+      // Custom submit button for full text search field.
+      .submit-button {
+        content: '';
+        display: block;
+        position: absolute;
+        right: 6px;
+        top: 6px;
+        bottom: 0;
+        width: 18px;
+        height: 18px;
+        background-image: url('../../images/icons/search--gray.svg');
+        background-size: contain;
+        cursor: pointer;
+      }
+
+      .form-text {
+        padding-right: 28px;
+        margin-bottom: 12px;
+      }
+    }
+  }
+
+  // The only purpose of this field is to trigger Drupal Chosen module to apply Chosen
+  // to all select/multiselect fields on the page. For some reason the multiselects from Ajax Facets module
+  // do not trigger Drupal Chosen on their own.
+  .views-widget-filter-field_unit_title {
+    display: none;
+  }
+
+  .views-submit-button {
+    padding-top: 0;
+
+    .form-submit {
+      margin-top: 0;
+    }
+  }
+
+  .views-reset-button {
+    padding-top: 0;
+
+    .form-submit {
+      margin-top: 0;
+    }
+  }
+}

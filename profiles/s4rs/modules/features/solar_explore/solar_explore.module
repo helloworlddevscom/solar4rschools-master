@@ -1,0 +1,7 @@
+<?php
+/**
+ * @file
+ * Code for the Solar Explore feature.
+ */
+
+include_once 'solar_explore.features.inc';

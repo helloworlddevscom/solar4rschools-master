@@ -1,0 +1,26 @@
+/**
+ * @file
+ * Bedrock Jadeite panels layout Admin CSS.
+ */
+
+.jadeite-content-header {
+    margin-bottom: 1%;
+}
+
+.jadeite-column-container-top {
+  margin-bottom: 1%;
+}
+
+.jadeite-column {
+  float: left;
+  margin-right: 1%;
+  width: 32%;
+}
+
+.jadeite-column-middle {
+  width: 34%;
+}
+
+.jadeite-column-right {
+  margin-right: 0;
+}

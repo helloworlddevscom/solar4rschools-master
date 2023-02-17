@@ -1,0 +1,394 @@
+<?php
+
+/**
+ * @file
+ * Generation Math Equation module.
+ */
+
+/**
+ * Implements hook_field_info().
+ *
+ * Defines our custom field type.
+ */
+function generation_equation_field_info() {
+  return array(
+    'generation_math_equation' => array(
+      'label' => t('Generation equation'),
+      'description' => t("Calculates a value based on an input."),
+      'settings' => array(
+        'allowed_values' => array(),
+        'allowed_values_function' => '',
+      ),
+      'default_widget' => 'generation_math_equation',
+      'default_formatter' => 'generation_math_equation',
+      'property_type' => 'generation_source_calculation',
+      'property_callbacks' => array('_generation_equation_field_callback'),
+    ),
+  );
+}
+
+/**
+ * Implements hook_field_validate().
+ */
+function generation_equation_field_validate($entity_type, $entity, $field, $instance, $langcode, $items, &$errors) {
+  foreach ($items as $delta => $item) {
+    // ...
+  }
+}
+
+/**
+ * Implements hook_field_is_empty().
+ */
+function generation_equation_field_is_empty($item, $field) {
+  $temp = array_keys($field['columns']);
+  $key = array_shift($temp);
+  return empty($item[$key]);
+}
+
+/**
+ * Implements hook_field_widget_info().
+ */
+function generation_equation_field_widget_info() {
+  return array(
+    'generation_math_equation' => array(
+      'label' => t('Calculated math equation'),
+      'field types' => array('generation_math_equation'),
+    ),
+  );
+}
+
+/**
+ * Implements hook_field_widget_form().
+ */
+function generation_equation_field_widget_form(&$form, &$form_state, $field, $instance, $langcode, $items, $delta, $element) {
+  if ($instance['widget']['type'] == 'generation_math_equation') {
+    module_load_include('inc', 'generation');
+    // Here I need to get a list of:
+    // 1) All variables that might be returned by queryInstantSummary
+    // 2) All variables that might be returned by queryWindowSummary
+    // 3) All fields attached to the entities.
+    // 4) All summation fields attached to the profile.
+    // 5) The classroom field on a project.
+    $instant_data = _generation_get_instant_summary();
+    $constant_data = field_info_field_map();
+    foreach ($constant_data as $field_name => $field) {
+      if (isset($field['bundles']['generation_site']) || (isset($field['bundles']['profile2']) && $field['type'] == 'computed')) {
+        $constant_options[$field_name] = $field_name;
+      }
+    }
+    // TODO: This is hard-coded for now, and that's bad. In an ideal world, the
+    // specific fields accessible by the dropdown would be configurable either
+    // on a field-instance basis or in an alternative table.
+    $constant_options['field_classrooms_reached'] = 'field_classrooms_reached';
+    $options = array(
+      '' => t('- None -'),
+      'Instant data' => array_combine(array_keys($instant_data), array_keys($instant_data)),
+      'Lifetime data' => array('generation' => 'generation'),
+      'Constant data' => $constant_options,
+    );
+
+    // Dropdown of possible values.
+    $element['source'] = array(
+      '#type' => 'select',
+      '#title' => t('Choose a source'),
+      '#options' => $options,
+      '#description' => t('What Generation Variable will be manipulated by this formula?'),
+      '#default_value' => isset($items[$delta]['source']) ? $items[$delta]['source'] : '',
+    );
+
+    // Textfield for the equation.
+    $element['equation'] = array(
+      '#type' => 'textfield',
+      '#title' => t('Equation'),
+      '#size' => 60,
+      '#maxlength' => 255,
+      '#description' => t('Enter an arithmetic equation. Allowed operators are /, *, +, -.'),
+      '#default_value' => isset($items[$delta]['equation']) ? $items[$delta]['equation'] : '',
+    );
+
+    // Textfield for the equation.
+    $element['label'] = array(
+      '#type' => 'text_format',
+      '#title' => t('Label'),
+      '#maxlength' => 255,
+      '#description' => t('Enter a label to follow the calculated result.'),
+      '#default_value' => isset($items[$delta]['label']) ? $items[$delta]['label'] : '',
+      '#format' => isset($items[$delta]['label_format']) ? $items[$delta]['label_format'] : 'filtered_html',
+    );
+  }
+  return $element;
+}
+
+/**
+ * Implements hook_field_formatter_info().
+ */
+function generation_equation_field_formatter_info() {
+  return array(
+    'generation_math_equation' => array(
+      'label' => t('Sources calculated'),
+      'field types' => array('generation_math_equation'),
+    ),
+  );
+}
+
+/**
+ * Implements hook_field_formatter_view().
+ *
+ * This field will only output information if displayed on a node page.
+ */
+function generation_equation_field_formatter_view($entity_type, $entity, $field, $instance, $langcode, $items, $display) {
+  $element = array();
+  $nodes = array();
+  $delta = 0;
+  $summaries[0] = array();
+
+  if ($display['type'] == 'generation_math_equation') {
+    if (arg(0) == 'node' && $node = node_load(arg(1))) {
+      if ($node->type == "funder") {
+        if (isset($node->field_funder_schools['und']) && count($node->field_funder_schools['und'])) {
+          $ids = array();
+          foreach ($node->field_funder_schools['und'] as $school) {
+            $ids[] = $school['target_id'];
+          }
+          $nodes = node_load_multiple($ids);
+        }
+      } else {
+        $nodes[] = $node;
+        $summaries[$delta]['field_classrooms_reached'] = isset($node->field_classrooms_reached[LANGUAGE_NONE][0]['value']) ? $node->field_classrooms_reached[LANGUAGE_NONE][0]['value'] : '';
+      }
+    }
+    elseif (arg(0) == 'user' && $user = user_load(arg(1))) {
+      if (in_array('Funder', $user->roles)) {
+        $projects = og_get_groups_by_user($user);
+        $nodes = node_load_multiple($projects['node']);
+        $profile = profile2_load_by_user($user, 'funder');
+        $profile_fields = field_info_instances('profile2', 'funder');
+        foreach ($profile_fields as $machine_name => $field) {
+          if (isset($field['widget']['type']) && $field['widget']['type'] == 'computed' && isset($profile->{$machine_name}[LANGUAGE_NONE][0]['value'])) {
+            // Computed field doesn't seem to work with entity wrapper.
+            $summaries[$delta][$machine_name] = $profile->{$machine_name}[LANGUAGE_NONE][0]['value'];
+          }
+        }
+      }
+    }
+
+    foreach ($nodes as $node) {
+      if (isset($node) && isset($node->field_data_collection_site[LANGUAGE_NONE][0]['target_id'])) {
+        $site = generation_site_load($node->field_data_collection_site[LANGUAGE_NONE][0]['target_id']);
+        if ($site) {
+          $provider = generation_get_provider($site);
+          $results = $provider->queryInstantSummary($site);
+          if ($results) {
+            $summaries[$delta] += $results;
+          }
+        }
+      }
+      $delta++;
+      $summaries[$delta] = array();
+    }
+
+    $summary = keyed_array_sum($summaries);
+
+    foreach ($items as $delta => $value) {
+      if (isset($summary[$value['source']])) {
+        $element[$delta][0]['#theme'] = 'html_tag';
+        $element[$delta][0]['#tag'] = 'span';
+        $element[$delta][0]['#attributes'] = array('class' => array('value'));
+        $element[$delta][0]['#value'] = _generation_equation_do_maths($summary[$value['source']] . $value['equation']);
+
+        $element[$delta][1]['#theme'] = 'html_tag';
+        $element[$delta][1]['#tag'] = 'span';
+        $element[$delta][1]['#attributes'] = array('class' => array('label'));
+        $element[$delta][1]['#value'] = $value['label'];
+      }
+    }
+  }
+
+  return $element;
+}
+
+/**
+ * Checks an expression for general mathematical soundness returns value.
+ */
+function _generation_equation_do_maths($expression) {
+  $o = 0;
+
+  if (!empty($expression)) {
+    eval('$o = ' . preg_replace('/[^0-9\+\-\*\/\(\)\.]/', '', $expression) . ';');
+  }
+  return round($o);
+}
+
+/**
+ * Implements hook_field_presave().
+ *
+ * Turns the value/format array pair into the correct table columns.
+ */
+function generation_equation_field_presave($entity_type, $entity, $field, $instance, $langcode, &$items) {
+  if ($field['type'] == 'generation_math_equation') {
+    foreach ($items as $delta => $value) {
+      $items[$delta]['label_format'] = $value['label']['format'];
+      $items[$delta]['label'] = $value['label']['value'];
+    }
+  }
+}
+
+/**
+ * Field callback for information about this field.
+ *
+ * This has to exist in order to view/save using the entity wrappers.
+ */
+function _generation_equation_field_callback(&$info, $entity_type, $field, $instance, $field_type) {
+  $name = $field['field_name'];
+  $property = &$info[$entity_type]['bundles'][$instance['bundle']]['properties'][$name];
+
+  $property['type'] = ($field['cardinality'] != 1) ? 'list<generation_math_equation>' : 'generation_math_equation';
+  $property['getter callback'] = 'entity_metadata_field_verbatim_get';
+  $property['setter callback'] = 'entity_metadata_field_verbatim_set';
+  $property['property info'] = _generation_equation_data_property_info();
+
+  unset($property['query callback']);
+}
+
+/**
+ * Defines info for the properties of the equation field data structure.
+ */
+function _generation_equation_data_property_info($name = NULL) {
+  // Build an array of basic property information for the equation field.
+  $properties = array(
+    'source' => array(
+      'label' => t('Source'),
+    ),
+    'equation' => array(
+      'label' => t('Equation'),
+    ),
+    'label_value' => array(
+      'label' => t('Label'),
+    ),
+    'label_format' => array(
+      'label' => t('Label format'),
+    ),
+  );
+
+  // Add the default values for each of the equation field properties.
+  foreach ($properties as $key => &$value) {
+    $value += array(
+      'description' => !empty($name) ? t('!label of field %name', array('!label' => $value['label'], '%name' => $name)) : '',
+      'type' => 'text',
+      'getter callback' => 'entity_property_verbatim_get',
+      'setter callback' => 'entity_property_verbatim_set',
+    );
+  }
+
+  return $properties;
+}
+
+/**
+ * Array merges all items within an array, summing values instead of replacing.
+ *
+ * Initial array looks like this:
+ *
+ * $arrays = array (
+ *  0 => array(
+ *    key1 => 2
+ *    key2 => 1
+ *  ),
+ *  1 => array(
+ *    key1 => 2
+ *    key2 => 1
+ *  ),
+ *  ...
+ *  n => array(
+ *    key1 => 2
+ *    key2 => 1
+ *  ),
+ * );
+ *
+ * It will produce output like this:
+ *
+ * $collapsed_array = array (
+ *   key1 => 6 (sum of all key1s),
+ *   key2 => 3 (sum of all key2s)
+ * )
+ *
+ * @param array $arrays
+ *   An array of arrays.
+ *
+ * @return array
+ *   An array summarizing all child arrays into one, with numeric values summed.
+ */
+function keyed_array_sum($arrays) {
+  $collapsed_array = array();
+
+  foreach ($arrays as $delta => $array) {
+    foreach ($array as $key => $value) {
+      if (is_numeric($value)) {
+        $collapsed_array[$key] = isset($collapsed_array[$key]) ? $collapsed_array[$key] + $value : $value;
+      }
+    }
+  }
+
+  return $collapsed_array;
+}
+
+/**
+ * Computes the sum of all project classrooms for a given funder.
+ *
+ * Used by the computed field module.
+ */
+function computed_field_field_sum_classrooms_compute(&$entity_field, $entity_type, $entity, $field, $instance, $langcode, $items) {
+  $sum = _generation_equation_query($entity, 'field_data_field_classrooms_reached', 'fcr', 'SUM(field_classrooms_reached_value)');
+  $entity_field[0]['value'] = $sum;
+}
+
+/**
+ * Computes the sum of all project classrooms for a given funder.
+ *
+ * Used by the computed field module.
+ */
+function computed_field_field_sum_states_compute(&$entity_field, $entity_type, $entity, $field, $instance, $langcode, $items) {
+  $count = _generation_equation_query($entity, 'field_data_field_project_location', 'fpl', 'COUNT(DISTINCT field_project_location_administrative_area)');
+  $entity_field[0]['value'] = $count;
+}
+
+/**
+ * Computes the sum of all projects for a given funder.
+ *
+ * Used by the computed field module.
+ */
+function computed_field_field_number_of_projects_compute(&$entity_field, $entity_type, $entity, $field, $instance, $langcode, $items) {
+  $count = 0;
+  if (isset($entity->uid)) {
+    $user = user_load($entity->uid);
+
+    if (in_array('Funder', $user->roles)) {
+      $projects = og_get_groups_by_user($user);
+      $count = count($projects);
+    }
+  }
+  $entity_field[0]['value'] = $count;
+}
+
+/**
+ * Formats a query to do math to a table column.
+ */
+function _generation_equation_query($entity, $table, $alias, $expression) {
+  $result = 0;
+
+  $query = db_select($table, $alias);
+
+  if (isset($entity->uid)) {
+    $user = user_load($entity->uid);
+
+    if (in_array('Funder', $user->roles)) {
+      $projects = og_get_groups_by_user($user);
+      $query->condition($alias . '.entity_id', $projects['node']);
+    }
+  }
+
+  $query->addExpression($expression, 'value');
+
+  $result = $query->execute()->fetchField();
+
+  return $result;
+}

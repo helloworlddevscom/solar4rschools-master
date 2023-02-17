@@ -1,0 +1,110 @@
+////////////////////////
+// Bedrock Comendite Layout Partial
+//
+// Layout specific to the Bedrock Comendite panel layout.
+//
+// Copy this file to your theme's Sass partial structure
+// and include in your SMACSS based layout file.
+//
+// Required Variables
+// - $small, $medium, $large, $xlarge (global breakpoints)
+// - $grids, set at global breakpoints
+// - $gutters, set at global breakpoints
+////////////////////////
+
+/*
+ * Comendite Layout
+ */
+.comendite {
+  //@include background-grid;
+
+  .comendite-content-header {
+    @include grid-span(3, 1);
+
+    @include breakpoint($small) {
+      @include grid-span(6, 1);
+    }
+
+    @include breakpoint($medium) {
+      @include grid-span(18, 1);
+    }
+
+    @include breakpoint($large) {
+      @include grid-span(30, 1);
+    }
+
+    @include breakpoint($xlarge) {
+      @include grid-span(30, 1);
+    }
+
+    margin-bottom: 1em;
+
+    .panel-pane {
+      margin-bottom: 1em;
+
+      &:last-child {
+        margin-bottom: 0;
+      }
+    }
+  }
+
+  .comendite-content-column-container {
+    @include grid-span(3, 1);
+
+    @include breakpoint($small) {
+      @include grid-span(6, 1);
+    }
+
+    @include breakpoint($medium) {
+      @include grid-span(18, 1);
+    }
+
+    @include breakpoint($large) {
+      @include grid-span(30, 1);
+    }
+
+    @include breakpoint($xlarge) {
+      @include grid-span(30, 1);
+    }
+
+    .comendite-content-main-column {
+      @include grid-span(3, 1);
+
+      @include breakpoint($small) {
+        @include grid-span(6, 1);
+      }
+
+      @include breakpoint($medium) {
+        @include grid-span(13.5, 1);
+      }
+
+      @include breakpoint($large) {
+        @include grid-span(22.5, 1);
+      }
+
+      @include breakpoint($xlarge) {
+        @include grid-span(22.5, 1);
+      }
+    }
+
+    .comendite-content-secondary-column {
+      @include grid-span(3, 1);
+
+      @include breakpoint($small) {
+        @include grid-span(6, 1);
+      }
+
+      @include breakpoint($medium) {
+        @include grid-span(4.5, 14.5);
+      }
+
+      @include breakpoint($large) {
+        @include grid-span(7.5, 23.5);
+      }
+
+      @include breakpoint($xlarge) {
+        @include grid-span(7.5, 23.5);
+      }
+    }
+  }
+}

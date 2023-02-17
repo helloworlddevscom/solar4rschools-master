@@ -1,0 +1,12 @@
+/**
+ * Rows separated by large vertical spacing and light gray line.
+ */
+
+@mixin view-list {
+  > .views-row {
+    padding: 0 10px;
+    margin: 45px 0;
+    padding-bottom: 50px;
+    border-bottom: 1px dotted $color--gray;
+  }
+}

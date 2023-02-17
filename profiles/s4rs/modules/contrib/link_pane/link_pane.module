@@ -1,0 +1,65 @@
+<?php
+
+/**
+ * @file link_pane.module
+ *
+ * This module provides link data storage and link rendering in panel pane.
+ */
+
+
+/**
+ * Implementation of hook_permission().
+ */
+function link_pane_permission() {
+  return array(
+    'administer link_pane' => array(
+      'title' => t('Administer link pane links.'),
+      'description' => t('Administer links available in link panes.')
+    )
+  );
+}
+
+/**
+* Implementation of hook_ctools_plugin_api().
+*
+* Tell CTools that we support the default_link_pane_presets API.
+*/
+function link_pane_ctools_plugin_api($owner, $api) {
+  if ($owner == 'link_pane' && $api == 'default_link_pane_presets') {
+    return array('version' => 1);
+  }
+}
+
+/**
+* Implementation of hook_default_link_pane_preset().
+*
+* Provide a couple of default presets.
+*/
+function link_pane_default_link_pane_preset() {
+  $export = array();
+
+  $preset = new stdClass;
+  $preset->api_version = 1;
+  $preset->admin_title = 'Sample link to front page';
+  $preset->name = 'sample_link_to_front';
+  $preset->description = 'Sample preset of link to front page.';
+  $preset->text = 'Click here to go to front page';
+  $preset->path = '<front>';
+//  $preset->query = '';
+//  $preset->fragment = '';
+//  $preset->id = '';
+//  $preset->class = '';
+//  $preset->title = '';
+  $export['default_link_preset'] = $preset;
+
+  return $export;
+}
+
+/**
+ * Implementation of hook_ctools_plugin_directory().
+ */
+function link_pane_ctools_plugin_directory($module, $plugin) {
+  if ($module == 'ctools') {
+    return 'plugins/' . $plugin;
+  }
+}

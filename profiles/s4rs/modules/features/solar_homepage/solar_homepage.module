@@ -1,0 +1,68 @@
+<?php
+/**
+ * @file
+ * Code for the Solar Homepage feature.
+ */
+
+include_once 'solar_homepage.features.inc';
+
+/**
+ * Implements hook_entity_info_alter().
+ *
+ * Create Fieldable Panel Pane bundles:
+ *  * `homepage_callouts` - content for the homepage callout.
+ */
+function solar_homepage_entity_info_alter(&$entity_info) {
+  if (isset($entity_info['fieldable_panels_pane'])) {
+    $entity_info['fieldable_panels_pane']['bundles']['homepage_callouts'] = array(
+      'label' => t('Homepage Callouts'),
+      'admin' => array(
+        'path' => 'admin/structure/fieldable-panels-panes/manage/%fieldable_panels_panes_type',
+        'bundle argument' => 4,
+        'real path' => 'admin/structure/fieldable-panels-panes/manage/homepage_callouts',
+        'access arguments' => array('administer fieldable panels panes'),
+      ),
+    );
+
+    // Slides for slideshow.
+    $entity_info['fieldable_panels_pane']['bundles']['carousel_slide'] = array(
+      'label' => t('Carousel Slide'),
+      'admin' => array(
+        'path' => 'admin/structure/fieldable-panels-panes/manage/%fieldable_panels_panes_type',
+        'bundle argument' => 4,
+        'real path' => 'admin/structure/fieldable-panels-panes/manage/carousel-slide',
+        'access arguments' => array('administer fieldable panels panes'),
+      ),
+    );
+
+    // Slideshow itself.
+    $entity_info['fieldable_panels_pane']['bundles']['carousel_slideshow'] = array(
+      'label' => t('Carousel Slideshow'),
+      'admin' => array(
+        'path' => 'admin/structure/fieldable-panels-panes/manage/%fieldable_panels_panes_type',
+        'bundle argument' => 4,
+        'real path' => 'admin/structure/fieldable-panels-panes/manage/carousel-slideshow',
+        'access arguments' => array('administer fieldable panels panes'),
+      ),
+      'pane category' => t('Widgets'),
+      // Place slideshow creation at the top level.
+      'pane top level' => TRUE,
+      // Add an icon because we can.
+      'pane icon' => drupal_get_path('module', 'bedrock_fpp') . '/icons/icon-slideshow.png',
+    );
+  }
+}
+
+/**
+ * Implements hook_references_dialog_entity_admin_paths().
+ */
+function solar_homepage_references_dialog_entity_admin_paths() {
+  // We define the add and edit page callbacks for core entities here.
+  $admin_paths = array(
+    'fieldable_panels_pane' => array(
+      'add' => 'admin/structure/fieldable-panels-panes/manage/[bundle-sanitized]/add',
+      'edit' => 'admin/structure/fieldable-panels-panes/view/[entity_id]/edit',
+    ),
+  );
+  return $admin_paths;
+}

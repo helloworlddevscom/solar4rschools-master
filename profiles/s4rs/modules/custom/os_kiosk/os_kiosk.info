@@ -1,0 +1,6 @@
+name = Kiosk content
+description = Custom logic for the Solar Kiosk pages.
+package = Solar 4R Schools
+core = 7.x
+dependencies[] = generation_charts
+dependencies[] = solar_kiosk

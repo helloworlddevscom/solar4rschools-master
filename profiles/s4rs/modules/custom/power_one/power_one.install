@@ -1,0 +1,133 @@
+<?php
+/**
+ * @file
+ * Installation code for Power-One API.
+ */
+
+/**
+ * Implements hook_install().
+ */
+function power_one_install() {
+  // A generation site bundle for Power-One sites.
+  $bundle = new Bundle();
+  $bundle->name = 'power_one';
+  $bundle->label = 'Power-One';
+  $bundle->entity_type = 'generation_site';
+  $bundle->save();
+
+  // Create an entity type for devices. A default bundle of the same name and
+  // label is created automatically by ECK.
+  $device = new EntityType();
+  $device->name = 'pow_device';
+  $device->label = 'Power-One Device';
+  $device->addProperty('pow_name', 'Device name', 'text', 'title');
+  $device->addProperty('pow_eid', 'Power-One Entity ID', 'positive_integer');
+  $device->addProperty('pow_logger_eid', 'Power-One Logger Entity ID', 'positive_integer');
+  $device->save();
+
+  $bundle = new Bundle();
+  $bundle->name = 'device';
+  $bundle->label = 'Device';
+  $bundle->entity_type = 'pow_device';
+  $bundle->save();
+
+  // Create an entity type for loggers.
+  $logger = new EntityType();
+  $logger->name = 'pow_logger';
+  $logger->label = 'Power-One Logger';
+  $logger->addProperty('pow_name', 'Logger name', 'text', 'title');
+  $logger->addProperty('pow_eid', 'Power-One Entity ID', 'positive_integer');
+  $logger->addProperty('pow_lid', 'Power-One Logger ID', 'text');
+  $logger->save();
+
+  $bundle = new Bundle();
+  $bundle->name = 'logger';
+  $bundle->label = 'Logger';
+  $bundle->entity_type = 'pow_logger';
+  $bundle->save();
+}
+
+/**
+ * Implements hook_uninstall().
+ */
+function power_one_uninstall() {
+  $entity_types = array('pow_device', 'pow_logger');
+  foreach ($entity_types as $name) {
+    if ($type = EntityType::loadByName($name)) {
+      $type->delete();
+    }
+  }
+
+  if ($bundle = Bundle::loadByMachineName('generation_site_power_one')) {
+    $bundle->delete();
+  }
+}
+
+/**
+ * Implements hook_schema().
+ */
+function power_one_schema() {
+  // Fields.
+  $schema['power_one_entity_fields'] = array(
+    'description' => 'Available fields for a given entity ID.',
+    'fields' => array(
+      'pow_eid' => array(
+        'description' => 'Power-One entity ID.',
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'fields' => array(
+        'description' => 'Serialized array of available fields.',
+        'type' => 'text',
+        'size' => 'medium',
+        'not null' => TRUE,
+      ),
+    ),
+    'primary key' => array('pow_eid'),
+  );
+
+  // Categories.
+  $schema['power_one_asset_category'] = array(
+    'description' => 'Categorize loggers and devices.',
+    'fields' => array(
+      'pow_eid' => array(
+        'description' => 'Power-One entity ID.',
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'category' => array(
+        'description' => 'Power-One device or logger category.',
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+      ),
+    ),
+    'indexes' => array(
+      'pow_eid' => array('pow_eid'),
+      'category' => array('category'),
+    ),
+  );
+
+  return $schema;
+}
+
+/**
+ * Updates fields available for Power One devices and loggers.
+ */
+function power_one_update_7101() {
+  // Add new taxonomy for categories.
+  $edit = array(
+    'name' => 'Power One device categories',
+    'machine_name' => 'power_one_device_categories',
+    'description' => t('Categories for Power One loggers and devices.'),
+    'module' => 'taxonomy',
+  );
+  $vocabulary = (object) $edit;
+  taxonomy_vocabulary_save($vocabulary);
+
+  // Remove unused double-reference to loggers.
+  field_delete_field('field_loggers');
+  field_purge_batch();
+}

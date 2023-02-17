@@ -1,0 +1,10 @@
+name = "S4rs migration"
+description = "Contains logic for migrating D6 information to D7."
+core = 7.x
+dependencies[] = migrate
+dependencies[] = migrate_d2d
+dependencies[] = migrate_extras
+
+files[] = includes/custom.inc
+files[] = includes/node.inc
+files[] = solar_migrate.migrate.inc

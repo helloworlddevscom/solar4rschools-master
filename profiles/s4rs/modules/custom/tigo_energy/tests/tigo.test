@@ -1,0 +1,76 @@
+<?php
+
+/**
+ * Test Tigo API.
+ */
+class TigoAPIIntegrationTest extends DrupalUnitTestCase {
+
+  public static function getInfo() {
+    return array(
+      'name' => 'Tigo API',
+      'description' => 'Integration Tests for the Tigo API.',
+      'group' => 'Generation',
+    );
+  }
+
+  function testData() {
+    // Load the systems
+    $url = 'https://' . variable_get('tigo_energy_api_username') . ':' .
+      variable_get('tigo_energy_api_password') . '@' . TIGO_API_HOST . '/api/data?cmd=list';
+    $response = drupal_http_request($url);
+    $this->assertFalse(isset($response->error), 'Successful list command.');
+
+    $xml = simplexml_load_string($response->data);
+    $this->assertTrue($xml, 'XML is valid.');
+
+    $systems = $xml->xpath('//System');
+    $sysid = (string)$systems[0]['SysID'];
+    $tz = (string)$systems[0]->DateTime[0]['TZ'];
+    $todays_energy = (float)$systems[0]->DataSource[0]->Energy[0];
+
+    $this->assertTrue(strlen($sysid) > 0, 'Found SysID.');
+    $this->assertTrue(new DateTimeZone($tz), 'Found valid system timezone.');
+    $this->assertTrue($todays_energy > 0, 'Found valid energy value for today.');
+
+
+    // Load the objects
+    $url = 'https://' . variable_get('tigo_energy_api_username') . ':' .
+      variable_get('tigo_energy_api_password') . '@' . TIGO_API_HOST . '/api/data?cmd=objects' .
+      "&sysid=$sysid";
+    $response = drupal_http_request($url);
+    $this->assertFalse(isset($response->error), 'Successful objects command.');
+
+    $xml = simplexml_load_string($response->data);
+    $this->assertTrue($xml, 'XML is valid.');
+
+    $panels = $xml->xpath('//Object[@Type="Panel"]');
+    $this->assertTrue(count($panels) > 0, 'Panels found in object list.');
+
+    // Load 30 days of data for the first system.
+    $date = new DateTime('+1 day');
+    $date->setTimezone(new DateTimeZone($tz));
+    $date->setTime(0, 0, 0);
+
+    $start_date = clone $date;
+    $start_date->sub(new DateInterval('P30D'));
+
+    $url = 'https://' . variable_get('tigo_energy_api_username') . ':' .
+      variable_get('tigo_energy_api_password') . '@' . TIGO_API_HOST . '/api/data?cmd=data' .
+      "&sysid=$sysid" . '&start=' . $start_date->format('Y-m-d_H-i-s') . '&end=' .
+      $date->format('Y-m-d_H-i-s') . '&level=day&agg=sum';
+
+    $response = drupal_http_request($url);
+    $this->assertFalse(isset($response->error), 'Successful data command.');
+
+    $power_data = array();
+    foreach (explode("\n", $response->data) as $line) {
+      if (strstr($line, 'DATETIME')) {
+        continue;
+      }
+      $power_data[] = str_getcsv($line);
+    }
+    $this->assertTrue(count($power_data) >= 29, 'Daily data is valid.'); // 29 instead of 30, current day may be absent
+
+  }
+
+}

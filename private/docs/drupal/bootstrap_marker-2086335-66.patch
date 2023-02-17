@@ -1,0 +1,44 @@
+diff --git a/includes/common.inc b/includes/common.inc
+index a32930a519..c5fbc50d4e 100644
+--- a/includes/common.inc
++++ b/includes/common.inc
+@@ -2491,6 +2491,9 @@ function l($text, $path, array $options = array()) {
+   global $language_url;
+   static $use_theme = NULL;
+ 
++  // Don't reference the value as only the bootstrap process should change it.
++  $bootstrap_complete = drupal_static('drupal_bootstrap_complete', FALSE);
++
+   // Merge in defaults.
+   $options += array(
+     'attributes' => array(),
+@@ -2516,7 +2519,7 @@ function l($text, $path, array $options = array()) {
+   // benchmarks indicate that invoking theme() can slow down the l() function
+   // by 20% or more, and that some of the link-heavy Drupal pages spend more
+   // than 10% of the total page request time in the l() function.
+-  if (!isset($use_theme) && function_exists('theme')) {
++  if ($bootstrap_complete && !isset($use_theme) && function_exists('theme')) {
+     // Allow edge cases to prevent theme initialization and force inline link
+     // rendering.
+     if (variable_get('theme_link', TRUE)) {
+@@ -5247,6 +5250,10 @@ function drupal_valid_token($token, $value = '', $skip_anonymous = FALSE) {
+ function _drupal_bootstrap_full() {
+   static $called = FALSE;
+ 
++  // Set a referenceable marker to indicate whether the bootstrap phase is in
++  // progress or has completed.
++  $bootstrap_complete = &drupal_static('drupal_bootstrap_complete', FALSE);
++
+   if ($called) {
+     return;
+   }
+@@ -5309,6 +5316,9 @@ function _drupal_bootstrap_full() {
+     drupal_theme_initialize();
+     module_invoke_all('init');
+   }
++
++  // Update the static variable that the bootstrapping has completed.
++  $bootstrap_complete = TRUE;
+ }
+ 
+ /**

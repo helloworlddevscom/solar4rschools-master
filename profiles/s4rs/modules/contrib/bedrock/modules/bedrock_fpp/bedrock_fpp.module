@@ -1,0 +1,115 @@
+<?php
+/**
+ * @file
+ * Code for the bedrock_fpp feature.
+ */
+
+include_once 'bedrock_fpp.features.inc';
+
+/**
+ * Implements hook_entity_info_alter().
+ *
+ * Create Fieldable Panels Pane bundles:
+ *  * `freeform` - full HTML text area, no fields.
+ *  * `image_link` - An image field linked to a destination.
+ *  * `slide` - can be placed into slideshows, these are not placed in panels
+ *    themselves.
+ *  * `slideshow` - A slideshow pane.
+ *  * `tout` - An image, heading, text and link.
+ */
+function bedrock_fpp_entity_info_alter(&$entity_info) {
+  if (isset($entity_info['fieldable_panels_pane'])) {
+    // Slides for slideshow.
+    $entity_info['fieldable_panels_pane']['bundles']['slide'] = array(
+      'label' => t('Slide'),
+      'admin' => array(
+        'path' => 'admin/structure/fieldable-panels-panes/manage/%fieldable_panels_panes_type',
+        'bundle argument' => 4,
+        'real path' => 'admin/structure/fieldable-panels-panes/manage/slide',
+        'access arguments' => array('administer fieldable panels panes'),
+      ),
+    );
+    // Custom view mode for slideshow.
+    $entity_info['fieldable_panels_pane']['view modes']['slide'] = array(
+      'label' => t('Slide'),
+      'custom settings' => TRUE,
+    );
+
+    // Slideshow itself.
+    $entity_info['fieldable_panels_pane']['bundles']['slideshow'] = array(
+      'label' => t('Slideshow'),
+      'admin' => array(
+        'path' => 'admin/structure/fieldable-panels-panes/manage/%fieldable_panels_panes_type',
+        'bundle argument' => 4,
+        'real path' => 'admin/structure/fieldable-panels-panes/manage/slideshow',
+        'access arguments' => array('administer fieldable panels panes'),
+      ),
+      'pane category' => t('Widgets'),
+      // Place slideshow creation at the top level.
+      'pane top level' => TRUE,
+      // Add an icon because we can.
+      'pane icon' => drupal_get_path('module', 'bedrock_fpp') . '/icons/icon-slideshow.png',
+    );
+
+    // Tout.
+    $entity_info['fieldable_panels_pane']['bundles']['tout'] = array(
+      'label' => t('tout'),
+      'admin' => array(
+        'path' => 'admin/structure/fieldable-panels-panes/manage/%fieldable_panels_panes_type',
+        'bundle argument' => 4,
+        'real path' => 'admin/structure/fieldable-panels-panes/manage/tout',
+        'access arguments' => array('administer fieldable panels panes'),
+      ),
+      'pane category' => t('Widgets'),
+      'pane top level' => TRUE,
+      // Add an icon because we can.
+      'pane icon' => drupal_get_path('module', 'bedrock_fpp') . '/icons/icon-image.png',
+    );
+
+    // Free-form.
+    $entity_info['fieldable_panels_pane']['bundles']['freeform'] = array(
+      'label' => t('Free-form text or HTML'),
+      'admin' => array(
+        'path' => 'admin/structure/fieldable-panels-panes/manage/%fieldable_panels_panes_type',
+        'bundle argument' => 4,
+        'real path' => 'admin/structure/fieldable-panels-panes/manage/freeform',
+        'access arguments' => array('administer fieldable panels panes'),
+      ),
+      'pane category' => t('Widgets'),
+      'pane top level' => TRUE,
+      // Add an icon because we can.
+      'pane icon' => drupal_get_path('module', 'bedrock_fpp') . '/icons/icon-html.png',
+    );
+
+    // Image link.
+    $entity_info['fieldable_panels_pane']['bundles']['image_link'] = array(
+      'label' => t('Image link'),
+      'admin' => array(
+        'path' => 'admin/structure/fieldable-panels-panes/manage/%fieldable_panels_panes_type',
+        'bundle argument' => 4,
+        'real path' => 'admin/structure/fieldable-panels-panes/manage/image_link',
+        'access arguments' => array('administer fieldable panels panes'),
+      ),
+      'pane category' => t('Widgets'),
+      'pane top level' => TRUE,
+      // Add an icon because we can.
+      // @todo use a different icon than the tout.
+      'pane icon' => drupal_get_path('module', 'bedrock_fpp') . '/icons/icon-image.png',
+    );
+
+    // Content lister.
+    $entity_info['fieldable_panels_pane']['bundles']['content_lister'] = array(
+      'label' => t('Content lister'),
+      'admin' => array(
+        'path' => 'admin/structure/fieldable-panels-panes/manage/%fieldable_panels_panes_type',
+        'bundle argument' => 4,
+        'real path' => 'admin/structure/fieldable-panels-panes/manage/content_lister',
+        'access arguments' => array('administer fieldable panels panes'),
+      ),
+      'pane category' => t('Widgets'),
+      'pane top level' => TRUE,
+      // Add an icon because we can.
+      'pane icon' => drupal_get_path('module', 'bedrock_fpp') . '/icons/icon-list.png',
+    );
+  }
+}

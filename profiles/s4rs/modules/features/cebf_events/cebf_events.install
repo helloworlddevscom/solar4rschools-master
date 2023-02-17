@@ -1,0 +1,11 @@
+<?php
+
+/**
+ * Delete deprecated calendar view.
+ */
+function cebf_events_update_7000() {
+  $view = views_get_view('events_calendar');
+  if (!empty($view)) {
+    views_delete_view($view);
+  }
+}

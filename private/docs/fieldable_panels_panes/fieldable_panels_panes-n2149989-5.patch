@@ -1,0 +1,36 @@
+diff --git a/includes/admin.inc b/includes/admin.inc
+index d0e8911..9718612 100644
+--- a/includes/admin.inc
++++ b/includes/admin.inc
+@@ -16,8 +16,13 @@ function fieldable_panels_panes_entities_list_page($type) {
+  * Page callback to add a new pane entity.
+  */
+ function fieldable_panels_panes_entities_add_page($type) {
++  $entity_info = entity_get_info('fieldable_panels_pane');
++  $values = array(
++    'bundle' => $type,
++    'category' => isset($entity_info['bundles'][$type]['pane category']) ? $entity_info['bundles'][$type]['pane category'] : '',
++  );
+   $form_state = array(
+-    'entity' => fieldable_panels_panes_create(array('bundle' => $type)),
++    'entity' => fieldable_panels_panes_create($values),
+     'add submit' => TRUE,
+   );
+ 
+diff --git a/plugins/content_types/fieldable_panels_pane.inc b/plugins/content_types/fieldable_panels_pane.inc
+index bd7eac3..9dbe8e3 100644
+--- a/plugins/content_types/fieldable_panels_pane.inc
++++ b/plugins/content_types/fieldable_panels_pane.inc
+@@ -285,7 +285,11 @@ function fieldable_panels_panes_load_entity($subtype_name) {
+ 
+   // This means we're probably in the process of creating a new one.
+   if (isset($subtype_info['bundle'])) {
+-    return fieldable_panels_panes_create(array('bundle' => $subtype_info['bundle']));
++    $values = array(
++      'bundle' => $subtype_info['bundle'],
++      'category' => isset($subtype_info['category']) ? $subtype_info['category'] : '',
++    );
++    return fieldable_panels_panes_create($values);
+   }
+ 
+   // And try it this way.

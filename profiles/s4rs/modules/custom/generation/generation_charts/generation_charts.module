@@ -1,0 +1,617 @@
+<?php
+/**
+ * @file
+ * Generation charts module.
+ */
+
+/**
+ * Implements hook_menu().
+ */
+function generation_charts_menu() {
+  $items = array();
+  // Create AJAX route for charts.
+  $items['generation-charts/%generation_site/%/%/%'] = array(
+    'title' => 'Generation Chart Ajax Callback',
+    'page callback' => 'generation_charts_chart_page',
+    'page arguments' => array(1, 2, 3, 4),
+    'access arguments' => array('access content'),
+    'file' => 'generation_charts.pages.inc',
+    'type' => MENU_CALLBACK,
+  );
+  // Create AJAX route for chart logging.
+  $items['generation-charts-log/%/%'] = array(
+    'title' => 'Generation Chart Ajax Callback Log',
+    'page callback' => 'generation_charts_log',
+    'page arguments' => array(1, 2),
+    'access arguments' => array('access content'),
+    'file' => 'generation_charts.pages.inc',
+    'type' => MENU_CALLBACK,
+  );
+
+  foreach (Bundle::loadByEntityType(EntityType::loadByName('generation_site')) as $bundle) {
+    $items['generation_site/' . $bundle->name . '/%generation_site/charts'] = array(
+      'title' => 'Charts',
+      'description' => 'Configure energy generation API.',
+      'access callback' => 'eck__entity_menu_access',
+      'access arguments' => array(
+        'edit',
+        'generation_site',
+        $bundle->name,
+        '2',
+      ),
+      'page callback' => 'drupal_get_form',
+      'page arguments' => array('generation_charts_site_chart_block_form', 2),
+      'weight' => 2,
+      'type' => MENU_LOCAL_TASK,
+      'file' => 'generation_charts.admin.inc',
+    );
+    $items['generation_site/' . $bundle->name . '/%generation_site/charts/chart-block'] = array(
+      'title' => 'Kiosk',
+      'description' => 'Configure which variable presets to display on site chart block.',
+      'weight' => -10,
+      'file' => 'generation_charts.admin.inc',
+      'type' => MENU_DEFAULT_LOCAL_TASK,
+    );
+    // @todo: Should the callbacks be moved out of the general administer page?
+    $items['generation_site/' . $bundle->name . '/%generation_site/charts/devices'] = array(
+      'title' => 'Device presets',
+      'page callback' => 'drupal_get_form',
+      'page arguments' => array('generation_charts_admin_device_presets_form', 2),
+      'type' => MENU_LOCAL_TASK,
+      'access arguments' => array('administer generation api'),
+      'file' => 'generation_charts.admin.inc',
+    );
+  }
+
+  return $items;
+}
+
+/**
+ * Implements hook_permission().
+ */
+function generation_charts_permission() {
+  return array(
+    'administer generation charts variables' => array(
+      'title' => t('administer generation charts variables'),
+      'description' => t('Allow administering charts variables'),
+    ),
+  );
+}
+
+/**
+ * Implements hook_theme().
+ */
+function generation_charts_theme() {
+  return array(
+    'generation_charts_period_selector' => array(
+      'variables' => array('options' => array()),
+    ),
+    'generation_charts_placeholder' => array(
+      'variables' => array('options' => array()),
+    ),
+  );
+}
+
+/**
+ * Implements hook_entity_load().
+ */
+function generation_charts_entity_load(array $entities, $entity_type) {
+  if ($entity_type === 'generation_site') {
+    foreach ($entities as $entity) {
+      // Initialize an empty preset array for each chart period.
+      $entity->site_chart_presets = array();
+      foreach (_generation_charts_get_periods() as $period => $label) {
+        $entity->site_chart_presets[$period] = array();
+      }
+
+      $results = db_select('generation_charts_site_presets', 'gcsp')
+        ->fields('gcsp')
+        ->condition('site_id', $entity->id)
+        ->execute();
+
+      foreach ($results as $row) {
+        $preset_id = $row->preset_id;
+
+        if ($preset = generation_variable_preset_load($preset_id)) {
+          $entity->site_chart_presets[$row->period][$preset_id] = $preset;
+        }
+      }
+    }
+  }
+}
+
+/**
+ * Implements hook_entity_delete().
+ */
+function generation_charts_entity_delete($entity, $entity_type) {
+  if ($entity_type === 'generation_site') {
+    db_delete('generation_charts_site_presets')
+      ->condition('site_id', $entity->id)
+      ->execute();
+  }
+}
+
+/**
+ * Implements hook_node_validate().
+ */
+function generation_charts_node_validate($node, array $form) {
+  // @todo: This should stay as NODE validate. Generation sites don't have
+  // published/unpublished status.
+  // @todo: Check for generation site reference field here.
+  if ($site_id = FALSE) {
+    $site = generation_site_load($site_id);
+    if ($node->status) {
+      // Node form has 'Published' checked; don't allow node to be saved as
+      // published if it's missing site chart presets.
+      foreach (array_keys(_generation_charts_get_periods()) as $period) {
+        if (count($site->site_chart_presets[$period]) < 1) {
+          $url = "generation_site/{$site->type}/{$site->id}/charts";
+          $link = l(t('this page'), $url);
+          $message = t('Please configure charts on !link before publishing this site.',
+            array('!link' => $link));
+          form_set_error('status', $message);
+          break;
+        }
+      }
+    }
+  }
+}
+
+/**
+ * Implements hook_libraries_info().
+ */
+function generation_charts_libraries_info() {
+  $libraries = array();
+  $libraries['highstock'] = array(
+    'name' => 'Highstock',
+    'vendor url' => 'http://www.highcharts.com/products/highstock',
+    'download url' => 'http://code.highcharts.com/zips/Highstock-1.3.7.zip',
+    'path' => 'js',
+    'version arguments' => array(
+      'file' => 'js/highstock.js',
+      'pattern' => '/Highstock JS v([\d+\.]*\d+)/',
+    ),
+    'files' => array(
+      'js' => array('highstock.js'),
+    ),
+    'variants' => array(
+      'source' => array(
+        'files' => array(
+          'js' => array('highstock.src.js'),
+        ),
+      ),
+    ),
+  );
+
+  return $libraries;
+}
+
+/**
+ * Returns an array of valid chart types.
+ *
+ * @return array
+ *   Key of array is chart type, value is for display.
+ */
+function generation_charts_chart_types() {
+  return array(
+    'area' => t('Area'),
+    'areaspline' => t('Areaspline'),
+    'column' => t('Column'),
+    'line' => t('Line'),
+    'spline' => t('Spline'),
+    'scatter' => t('Scatter'),
+  );
+}
+
+/**
+ * Converts a start date and end date to DateTime objects.
+ *
+ * Each date must either be in string format, such as 2011-12-31 (considered to
+ * be in the site node's timezone), or a numeric UNIX timestamp.
+ *
+ * @param object $site
+ *   Site entity that the dates are associated with.
+ * @param string $date_start
+ *   Start date. Modified.
+ * @param string $date_end
+ *   End date. Modified.
+ * @param array $options
+ *   If $options['inclusive'] is TRUE, treats the dates as an inclusive
+ *   interval (by adding a day to the end date).
+ */
+function generation_charts_convert_dates($site, &$date_start, &$date_end, array $options = array('inclusive' => TRUE)) {
+  // Convert to DateTime objects.
+  if (!$date_start) {
+    $date_start = new GenerationLifetimeStartDateTime();
+  }
+  else {
+    $date_start = generation_new_datetime_site($site, $date_start);
+  }
+  $date_end = generation_new_datetime_site($site, $date_end);
+
+  if (isset($options['inclusive']) && $options['inclusive']) {
+    // Add one day so that we chart inclusively of the selected "end".
+    // We don't use the DateInterval class here because it isn't in PHP 5.2.
+    $date_end->modify('+1 day');
+  }
+}
+
+/**
+ * Returns default array of colors, in CSS hexadecimal notation.
+ */
+function generation_charts_default_colors() {
+  // Solar 4R Schools colors.
+  return array('#00afdb', '#d96318', '#d9da56', '#73c167');
+}
+
+/**
+ * Returns default array of colors, in CSS hexadecimal notation.
+ */
+function generation_charts_default_dash_styles() {
+  return array('Solid', 'ShortDash', 'LongDash', 'DashDot');
+}
+
+/**
+ * Returns default chart configuration, including Highstock configuration.
+ */
+function generation_charts_default_options() {
+  $colors = generation_charts_default_colors();
+  return array(
+    'chart' => array(
+      'chart' => array(
+        'borderRadius' => 0,
+        'renderTo' => 'generation-chart',
+      ),
+      'credits' => array(
+        'enabled' => FALSE,
+      ),
+      'global' => array(
+        // Don't adjust the timestamps we send. Highstock doesn't have any
+        // capability to display times in specific timezones, so we handle that
+        // by altering the timestamps before sending them to JavaScript.
+        'useUTC' => TRUE,
+      ),
+      'legend' => array(
+        'enabled' => TRUE,
+        'backgroundColor' => '#ffffff',
+        'shadow' => TRUE,
+        'itemStyle' => array(
+          'paddingBottom' => '3px',
+        ),
+      ),
+      'navigator' => array(
+        'enabled' => FALSE,
+        'top' => 460,
+        'series' => array(
+          'color' => $colors[0],
+          'fillOpacity' => 1.0,
+        ),
+        'xAxis' => array(
+          'gridZIndex' => 4,
+          'gridLineColor' => '#999999',
+          'labels' => array(
+            'style' => array(
+              'color' => '#FFFFFF',
+              'fontWeight' => 'bold',
+            ),
+          ),
+        ),
+      ),
+      'rangeSelector' => array(
+        'enabled' => FALSE,
+        'buttonTheme' => array(
+          'width' => 64,
+          'height' => 17,
+        ),
+        'buttons' => array(
+          array('type' => 'hour', 'count' => 1, 'text' => 'Hour'),
+          array('type' => 'day', 'count' => 1, 'text' => 'Day'),
+          array('type' => 'week', 'count' => 1, 'text' => 'Week'),
+          array('type' => 'month', 'count' => 1, 'text' => 'Month'),
+          array('type' => 'year', 'count' => 1, 'text' => 'Year'),
+        ),
+        'selected' => 4,
+      ),
+      'scrollbar' => array(
+        'enabled' => FALSE,
+      ),
+      'tooltip' => array(
+        'pointFormat' => '<span style="color:{series.color}">{series.name}:</span> <b>{point.y}</b><br/>',
+        'xDateFormat' => '%A, %B %e, %l:%M%P',
+        'yDecimals' => 2,
+      ),
+      'xAxis' => array(
+        'ordinal' => FALSE,
+        'dateTimeLabelFormats' => array(
+          'second' => '%l:%M:%S%P',
+          'minute' => '%l:%M%P',
+          'hour' => '%l:%M',
+          'day' => '%b %e',
+          'week' => '%b %e',
+          'month' => '%b \'%y',
+          'year' => '%Y',
+        ),
+      ),
+    ),
+    'css' => array(
+      'width' => 894,
+      'height' => 450,
+      'clear' => 'both',
+    ),
+    'messages' => array(
+      'noData' => t('No data available for this time period.'),
+      'error' => t('Unable to retrieve data for chart from server. Please try again in a few moments.'),
+    ),
+    'selector' => '#generation-chart',
+  );
+}
+
+/**
+ * Adds chart assets and configuration.
+ *
+ * This allows a chart to be rendered on this page request via Ajax -- the chart
+ * data isn't sent via this function, just the configuration.
+ *
+ * @param object $site
+ *   Site entity to create chart for.
+ * @param array $preset_ids
+ *   (optional) Array of variable preset ids. If an empty array is supplied, the
+ *   default presets for the period will be used (the 'site_chart_presets').
+ * @param array $options
+ *   array containing:
+ *   - 'chart'  => array Overrides/additions to default Highstock options.
+ *   - 'css'    => array Overrides/additions to default chart container CSS.
+ *                 Can be used to set the chart's size.
+ *   - 'period' => string (optional) Initial period (hour, day, week, month,
+ *                 year). Applies only when including period_selector on page.
+ *   - 'from'   => (optional) DateTime Start time (DateTime object) for custom
+ *                 time period.
+ *   - 'to'     => (optional) DateTime End time (DateTime object) for custom
+ *                 time period.
+ *   - 'messages' => array
+ *   - 'selector' => string CSS/jQuery selector for chart container.
+ *   Either 'period' must be given, or both 'from' and 'to' must be.
+ *   .@see generation_charts_default_options()
+ *
+ * @return array
+ *   Chart configuration array.
+ *
+ * @see generation_charts_chart_page()
+ * @see theme_generation_charts_placeholder()
+ */
+function generation_charts_configure_chart($site, $preset_ids = array(), $options = array()) {
+  // Allow caller's options to override our defaults.
+  $options = array_smart_merge(generation_charts_default_options(), $options);
+
+  assert(isset($options['period']) || (is_object($options['from']) && is_object($options['to'])));
+  assert(!empty($preset_ids) || isset($options['period']));
+
+  $options['site_id'] = $site->id;
+  if (empty($preset_ids)) {
+    $options['preset_ids'] = $site->site_chart_presets[$options['period']];
+  }
+  else {
+    $options['preset_ids'] = $preset_ids;
+  }
+
+  // If we're displaying a custom time period, we send 'dataUrl' to JavaScript.
+  // Otherwise, we're displaying one of the preset time periods, and the period
+  // selector code adds dataUrls for each period.
+  if (isset($options['from']) && is_object($options['from'])) {
+    $options['dataUrl'] = _generation_charts_data_url($site, $options['preset_ids'], $options['from'], $options['to']);
+    // Send Unix timestamps to JavaScript.
+    $options['from'] = $options['from']->format('U');
+    $options['to'] = $options['to']->format('U');
+  }
+
+  // Add Highstock using our custom function because they need the
+  // newer jQuery version. Use non-minified versions for development.
+  $variant = module_exists('devel') ? 'source' : NULL;
+  libraries_load('highstock', $variant);
+
+  $module_path = drupal_get_path('module', 'generation_charts');
+  $options['triggerImageUrl'] = base_path() . $module_path . '/images/question-mark.png';
+
+  drupal_add_css($module_path . '/generation_charts.css');
+  drupal_add_js($module_path . '/generation_charts.js');
+  drupal_add_js(array('generationCharts' => $options), array('type' => 'setting', 'scope' => JS_DEFAULT));
+  return $options;
+}
+
+/**
+ * Formats a data URL.
+ *
+ * @param object $site
+ *   Generation site node.
+ * @param array $preset_ids
+ *   Array of variable preset IDs.
+ * @param DateTime $from
+ *   Starting date (date only).
+ * @param DateTime $to
+ *   Ending date, inculsive (date only).
+ *
+ * @return string
+ *   URL.
+ */
+function _generation_charts_data_url($site, array $preset_ids, DateTime $from, DateTime $to) {
+  return url('generation-charts/' . $site->id . '/' .
+    generation_urlencode_preset_ids($preset_ids) . '/' . $from->format('U')
+    . '/' . $to->format('U'));
+}
+
+/**
+ * Returns array of chart periods used for the site chart block.
+ */
+function _generation_charts_get_periods() {
+  $periods = array(
+    'day' => t('Today'),
+    'week' => t('Week'),
+    'month' => t('Month'),
+    'year' => t('Year'),
+    'lifetime' => t('Lifetime'),
+  );
+
+  // Allow other modules to modify the periods.
+  drupal_alter('generation_charts_periods', $periods);
+
+  return $periods;
+}
+
+/**
+ * Themes placeholder markup for a chart to be rendered via JavaScript.
+ *
+ * @param array $variables
+ *   Theme variables, containing chart configuration array returned by
+ *   generation_charts_configure_chart().
+ */
+function theme_generation_charts_placeholder(array $variables) {
+  $options = $variables['options'];
+  return '<div id="generation-chart-wrapper"><div id="generation-chart"></div></div>';
+}
+
+/**
+ * Calculates start and end dates for a period, based off of the current time.
+ *
+ * @param object $site
+ *   Node object for generation site in question.
+ * @param string $period
+ *   Period desired.
+ *
+ * @return array
+ *   array containing 'start' date object and 'end' date object.
+ */
+function _generation_charts_get_period_dates($site, $period) {
+  assert(is_object($site));
+  assert(in_array($period, array('day', 'week', 'month', 'year', 'lifetime')));
+
+  $date_end = generation_new_datetime_site($site, 'now');
+
+  if ($period === 'lifetime') {
+    if ($site) {
+      $provider = generation_get_provider($site);
+      $date_start = $provider->getInstallDate($site);
+    }
+    else {
+      $date_start = generation_new_datetime_site($site, '2005-01-01');
+    }
+  }
+  elseif ($period === 'day') {
+    $date_start = generation_new_datetime_site($site, 'today');
+    $date_end = clone $date_start;
+    $date_end->modify('+1 day');
+  }
+  else {
+    $date_start = clone $date_end;
+    $date_start->modify('-1 ' . $period);
+  }
+  return array($date_start, $date_end);
+}
+
+/**
+ * Themes a chart period selector.
+ *
+ * @param array $variables
+ *   Theme variables, containing options for chart corresponding to the
+ *   period selector.
+ */
+function theme_generation_charts_period_selector(array $variables) {
+  $options = $variables['options'];
+  // Add our JavaScript configuration.
+  _generation_charts_period_selector_js($options);
+
+  // Build the verbose arrays we need to generate the href="#..." links.
+  $links = array();
+  foreach (_generation_charts_get_periods() as $period => $title) {
+    $class = 'period-' . $period;
+    $links[$class] = array(
+      'title' => $title,
+      'href' => '',
+      'external' => TRUE,
+      'fragment' => $class,
+    );
+  }
+
+  // Allow other modules to modify $links.
+  drupal_alter('generation_charts_period_selector', $links, $options);
+
+  return theme('links', array('links' => $links, 'attributes' => array('class' => 'generation-charts-period-selector clear-block')));
+}
+
+/**
+ * Adds js configuration necessary for a period selector.
+ */
+function _generation_charts_period_selector_js(array $options) {
+  // Alias variables from the chart configuration.
+  $site = generation_site_load($options['site_id']);
+
+  // Build data URLs used for fetching data for each chart viewing period.
+  $data_urls = array();
+  foreach (array('day', 'week', 'month', 'year', 'lifetime') as $period) {
+    list($from, $to) = _generation_charts_get_period_dates($site, $period);
+
+    $preset_ids = array_keys($site->site_chart_presets[$period]);
+    if (count($preset_ids) > 0) {
+      $data_urls[$period] = _generation_charts_data_url($site, $preset_ids, $from, $to);
+    }
+    else {
+      $data_urls[$period] = FALSE;
+    }
+  }
+
+  drupal_add_js(array(
+    'generationCharts' => array(
+      'periodSelector' => array(
+        'dataUrls' => $data_urls,
+      ),
+    ),
+  ), array('type' => 'setting', 'scope' => JS_DEFAULT, 'cache' => FALSE));
+}
+
+/**
+ * Adds variable presets to a site's chart presets for the given periods.
+ *
+ * @param object $site
+ *   Generation site node.
+ * @param array $preset_ids
+ *   Array of variable preset IDs.
+ * @param array $periods
+ *   Array of strings, each of which is the name of a period.
+ */
+function generation_charts_add_site_presets($site, array $preset_ids, array $periods) {
+  foreach ($preset_ids as $preset_id) {
+    assert(is_numeric($preset_id));
+
+    foreach ($periods as $period) {
+      assert(in_array($period, array('day', 'week', 'month', 'year', 'lifetime')));
+
+      $record = array(
+        'site_id' => $site->id,
+        'preset_id' => $preset_id,
+        'period' => $period,
+      );
+      drupal_write_record('generation_charts_site_presets', $record);
+    }
+  }
+}
+
+if (!function_exists('array_smart_merge')) {
+  /**
+   * Smarter version of array_merge_recursive: overwrites scalar values.
+   *
+   * From:
+   * http://www.php.net/manual/en/function.array-merge-recursive.php#82976.
+   */
+  function array_smart_merge($array, $override) {
+    if (is_array($array) && is_array($override)) {
+      foreach ($override as $k => $v) {
+        if (isset($array[$k]) && is_array($v) && is_array($array[$k])) {
+          $array[$k] = array_smart_merge($array[$k], $v);
+        }
+        else {
+          $array[$k] = $v;
+        }
+      }
+    }
+    return $array;
+  }
+}

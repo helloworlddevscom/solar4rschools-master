@@ -1,0 +1,53 @@
+/**
+ * Project node - Teaser view mode.
+ */
+
+
+.node-project.view-mode--teaser {
+  position: relative;
+
+  .field-thumbnail-image {
+    float: left;
+    display: block;
+    width: auto;
+    padding: 0;
+    margin-bottom: 20px;
+    border: 1px solid $color--gray;
+    -webkit-box-shadow: rgba(0, 1, 1, 0.35) 4px 6px 6px;
+    -moz-box-shadow: rgba(0, 1, 1, 0.35) 4px 6px 6px;
+    box-shadow: rgba(0, 1, 1, 0.35) 4px 6px 6px;
+
+    .field {
+      display: block;
+    }
+  }
+
+  .body {
+    p:last-child {
+      margin-bottom: 0;
+    }
+  }
+
+  .group-row-2 {
+    clear: both;
+  }
+
+  // MEDIUM
+
+  @include breakpoint($bp--medium) {
+    .field-thumbnail-image {
+      float: right;
+      margin-left: 20px;
+    }
+
+    .group-row-2 {
+      clear: none;
+    }
+
+    .group-row-2,
+    .group-row-3,
+    .field-wrapper.body {
+      width: calc(100% - 242px);
+    }
+  }
+}

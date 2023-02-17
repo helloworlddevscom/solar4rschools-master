@@ -1,0 +1,361 @@
+<?php
+/**
+ * @file
+ * Installation logic for the S4RS Activities feature.
+ */
+
+/**
+ * Disable preview on Activities.
+ */
+function solar_activities_update_7001() {
+  variable_set('node_preview_activity', 0);
+}
+
+/**
+ * Create taxonomy terms for NGSS Disciplinary Core Idea vocabulary.
+ */
+function solar_activities_update_7002() {
+  $vocab = taxonomy_vocabulary_machine_name_load('ngss_disciplinary_core_idea');
+  $terms = array(
+    array('name' => 'ESS1.B: Solar System', 'weight' => '0'),
+    array('name' => 'ESS1.C: Earth History', 'weight' => '1'),
+    array('name' => 'ESS2.A: Earth Materials & Systems', 'weight' => '2'),
+    array('name' => 'ESS2.C: Water on Earth', 'weight' => '3'),
+    array('name' => 'ESS2.D: Weather & Climate', 'weight' => '4'),
+    array('name' => 'ESS3.A: Natural Resources', 'weight' => '5'),
+    array('name' => 'ESS3.C: Human Impact', 'weight' => '6'),
+    array('name' => 'ESS3.D: Climate Change', 'weight' => '7'),
+    array('name' => 'LS2.B: Matter & Energy Cycles', 'weight' => '8'),
+    array('name' => 'LS2.C: Ecosystem Dynamics', 'weight' => '9'),
+    array('name' => 'LS4.D: Biodiversity & Humans', 'weight' => '10'),
+    array('name' => 'PS1.A: Matter: Structure & Properties', 'weight' => '11'),
+    array('name' => 'PS1.B: Chemical Reactions', 'weight' => '12'),
+    array('name' => 'PS1.C: Nuclear Processes', 'weight' => '13'),
+    array('name' => 'PS2.A: Forces & Motion', 'weight' => '14'),
+    array('name' => 'PS2.B: Interactions Between Forces', 'weight' => '15'),
+    array('name' => 'PS3.A: Energy Definitions', 'weight' => '16'),
+    array('name' => 'PS3.B: Energy Conservation & Transfer', 'weight' => '17'),
+    array('name' => 'PS3.C: Energy & Forces', 'weight' => '18'),
+    array('name' => 'PS3.D: Energy in Chemical Processes', 'weight' => '18'),
+    array('name' => 'PS4.A: Wave Properties', 'weight' => '19'),
+    array('name' => 'PS4.B: Electromagnetic Radiation', 'weight' => '20'),
+    array('name' => 'PS4.C: Information Technologies', 'weight' => '21'),
+  );
+  foreach ($terms as $key => $term) {
+    $term = (object) array(
+      'vid' => $vocab->vid,
+      'name' => $term['name'],
+      'weight' => $term['weight'],
+    );
+    taxonomy_term_save($term);
+  }
+}
+
+/**
+ * Create taxonomy terms for Energy Content vocabulary.
+ */
+function solar_activities_update_7003() {
+  $vocab = taxonomy_vocabulary_machine_name_load('energy_content');
+  $terms = array(
+    array('name' => 'Batteries & Storage', 'weight' => '0'),
+    array('name' => 'Biomass Energy', 'weight' => '1'),
+    array('name' => 'Circuitry', 'weight' => '2'),
+    array('name' => 'Demand Response', 'weight' => '3'),
+    array('name' => 'Electrical Energy', 'weight' => '4'),
+    array('name' => 'Electrical Grid (Transmission & Distribution)', 'weight' => '5'),
+    array('name' => 'Electricity and Magnetism', 'weight' => '6'),
+    array('name' => 'Electricity Generation', 'weight' => '7'),
+    array('name' => 'Electronics', 'weight' => '8'),
+    array('name' => 'Electrons', 'weight' => '9'),
+    array('name' => 'Energy Efficiency', 'weight' => '10'),
+    array('name' => 'Energy Fundamentals', 'weight' => '11'),
+    array('name' => 'Fuels', 'weight' => '12'),
+    array('name' => 'Geothermal Energy', 'weight' => '13'),
+    array('name' => 'Hydrogen Fuel Cells', 'weight' => '14'),
+    array('name' => 'Hydropower', 'weight' => '15'),
+    array('name' => 'Light (Visible)', 'weight' => '16'),
+    array('name' => 'Materials Science', 'weight' => '17'),
+    array('name' => 'Microgrids', 'weight' => '18'),
+    array('name' => 'Ocean Thermal Energy Conversion', 'weight' => '18'),
+    array('name' => 'Next Generation Manufacturing', 'weight' => '19'),
+    array('name' => 'Potential & Kinetic Energy', 'weight' => '20'),
+    array('name' => 'Smart Grid', 'weight' => '21'),
+    array('name' => 'Solar Photovoltaic', 'weight' => '22'),
+    array('name' => 'Solar Thermal', 'weight' => '23'),
+    array('name' => 'Sound', 'weight' => '24'),
+    array('name' => 'Sources of Energy', 'weight' => '25'),
+    array('name' => 'Thermal Energy (Heat)', 'weight' => '26'),
+    array('name' => 'Tidal Energy', 'weight' => '27'),
+    array('name' => 'Wind Energy', 'weight' => '28'),
+  );
+  foreach ($terms as $key => $term) {
+    $term = (object) array(
+      'vid' => $vocab->vid,
+      'name' => $term['name'],
+      'weight' => $term['weight'],
+    );
+    taxonomy_term_save($term);
+  }
+}
+
+/**
+ * Create taxonomy terms for Education & Science Practice vocabulary.
+ */
+function solar_activities_update_7004() {
+  $vocab = taxonomy_vocabulary_machine_name_load('education_science_practice');
+  $terms = array(
+    array('name' => 'Multilingual Strategies', 'weight' => '0'),
+    array('name' => 'English Language Learning Strategies', 'weight' => '1'),
+    array('name' => 'Engineering Design', 'weight' => '2'),
+    array('name' => 'Cultural Relevance', 'weight' => '3'),
+    array('name' => 'Early Childhood Learning', 'weight' => '4'),
+    array('name' => 'Field Work', 'weight' => '5'),
+    array('name' => 'Group Work/Collaboration', 'weight' => '6'),
+    array('name' => 'Hands-on Materials', 'weight' => '7'),
+    array('name' => 'Multiple Learning Styles', 'weight' => '8'),
+    array('name' => 'Phenomena-Driven Instruction', 'weight' => '9'),
+    array('name' => 'Place-Based Learning', 'weight' => '10'),
+    array('name' => 'Project-Based Learning', 'weight' => '11'),
+    array('name' => 'SEP: Observation & Questioning', 'weight' => '12'),
+    array('name' => 'SEP: Modeling', 'weight' => '13'),
+    array('name' => 'SEP: Investigation', 'weight' => '14'),
+    array('name' => 'SEP: Data Analysis', 'weight' => '15'),
+    array('name' => 'SEP: Math & Computational Thinking', 'weight' => '16'),
+    array('name' => 'SEP: Constructing Explanations & Designing Solutions', 'weight' => '17'),
+    array('name' => 'SEP: Communicating Arguments', 'weight' => '18'),
+  );
+  foreach ($terms as $key => $term) {
+    $term = (object) array(
+      'vid' => $vocab->vid,
+      'name' => $term['name'],
+      'weight' => $term['weight'],
+    );
+    taxonomy_term_save($term);
+  }
+}
+
+/**
+ * Create taxonomy terms for Other Subjects Covered vocabulary.
+ */
+function solar_activities_update_7005() {
+  $vocab = taxonomy_vocabulary_machine_name_load('other_subjects_covered');
+  $terms = array(
+    array('name' => 'Computer Science', 'weight' => '0'),
+    array('name' => 'CTE: Career & Technical Education', 'weight' => '1'),
+    array('name' => 'ELA: Informational Text', 'weight' => '2'),
+    array('name' => 'ELA: Speaking & Listening', 'weight' => '3'),
+    array('name' => 'ELA: Vocabulary Development', 'weight' => '4'),
+    array('name' => 'ELA: Writing', 'weight' => '5'),
+    array('name' => 'Math: Addition, Subtraction, Multiplication, Division', 'weight' => '6'),
+    array('name' => 'Math: Algebra', 'weight' => '7'),
+    array('name' => 'Math: Graphing & Representation', 'weight' => '8'),
+    array('name' => 'Math: Measurement', 'weight' => '9'),
+    array('name' => 'Math: Statistics & Probability', 'weight' => '10'),
+    array('name' => 'Social Sciences: Analysis', 'weight' => '11'),
+    array('name' => 'Social Sciences: Civics', 'weight' => '12'),
+    array('name' => 'Social Sciences: Economics', 'weight' => '13'),
+    array('name' => 'Social Sciences: Geography', 'weight' => '14'),
+    array('name' => 'Social Sciences: History', 'weight' => '15'),
+    array('name' => 'Social Sciences: Multicultural Studies', 'weight' => '16'),
+  );
+  foreach ($terms as $key => $term) {
+    $term = (object) array(
+      'vid' => $vocab->vid,
+      'name' => $term['name'],
+      'weight' => $term['weight'],
+    );
+    taxonomy_term_save($term);
+  }
+}
+
+/**
+ * Enable modules necessary for Teacher Activity Center refactor.
+ */
+function solar_activities_update_7006() {
+  $modules = [
+    'ajax_facets',
+    'multiselect',
+    'ajax_throbber',
+    'better_exposed_filters',
+    'persist_url_params',
+    'mini_panels'
+  ];
+
+  module_enable($modules);
+}
+
+/**
+ * Remove th, nd, etc. from grade_levels taxonomy terms.
+ */
+function solar_activities_update_7007() {
+  $vocab = taxonomy_vocabulary_machine_name_load('grade_levels');
+  $terms = entity_load('taxonomy_term', FALSE, array('vid' => $vocab->vid));
+  foreach ($terms as $key => $term) {
+    $term_name = str_replace('th', '', $term->name);
+    $term_name = str_replace('nd', '', $term_name);
+    $term_name = str_replace('st', '', $term_name);
+    $term_name = str_replace('rd', '', $term_name);
+    $term->name = $term_name;
+    taxonomy_term_save($term);
+  }
+}
+
+/**
+ * Enable views_natural_sort module.
+ */
+function solar_activities_update_7008() {
+  $modules = [
+    'views_natural_sort',
+    'views_natural_sort_text_field'
+  ];
+
+  module_enable($modules);
+}
+
+/**
+ * Another attempt to enable modules for TAC.
+ */
+function solar_activities_update_7009() {
+  $modules = [
+    'ajax_facets',
+    'multiselect',
+    'ajax_throbber',
+    'better_exposed_filters',
+    'persist_url_params',
+    'mini_panels',
+    'facetapi_pretty_paths'
+  ];
+
+  module_enable($modules);
+}
+
+/**
+ * Another attempt to enable modules for TAC. Try enabling dependencies.
+ */
+function solar_activities_update_7010() {
+  $modules = [
+    'ajax_facets',
+    'multiselect',
+    'ajax_throbber',
+    'better_exposed_filters',
+    'persist_url_params',
+    'mini_panels',
+    'facetapi_pretty_paths'
+  ];
+
+  module_enable($modules, TRUE);
+}
+
+/**
+ * Another attempt to enable modules for TAC. Last attempt. Otherwise we will have to manually enable modules on deploy.
+ */
+function solar_activities_update_7011() {
+  $modules = [
+    'multiselect',
+    'ajax_facets',
+    'ajax_throbber',
+    'better_exposed_filters',
+    'persist_url_params',
+    'mini_panels',
+    'facetapi_pretty_paths'
+  ];
+
+  module_enable($modules, TRUE);
+}
+
+/**
+ * Enable feeds modules and cebf_resources feature/module.
+ */
+function solar_activities_update_7012() {
+  $modules = [
+    'feeds_ui',
+    'feeds_tamper',
+    'feeds_tamper_ui',
+    'cebf_resources'
+  ];
+
+  module_enable($modules, TRUE);
+}
+
+/**
+ * Create taxonomy terms for Geography vocabulary.
+ */
+function solar_activities_update_7013() {
+  $vocab = taxonomy_vocabulary_machine_name_load('geography');
+  $terms = array(
+    array('name' => 'National', 'weight' => '0'),
+    array('name' => 'West/Pacific NW', 'weight' => '1'),
+    array('name' => 'Southeast', 'weight' => '2'),
+    array('name' => 'Rockies', 'weight' => '3'),
+    array('name' => 'Plains', 'weight' => '4'),
+    array('name' => 'Midwest', 'weight' => '5'),
+    array('name' => 'Northeast', 'weight' => '6'),
+    array('name' => 'South', 'weight' => '7'),
+    array('name' => 'Southwest', 'weight' => '8'),
+    array('name' => 'International', 'weight' => '9'),
+  );
+  foreach ($terms as $key => $term) {
+    $term = (object) array(
+      'vid' => $vocab->vid,
+      'name' => $term['name'],
+      'weight' => $term['weight'],
+    );
+    taxonomy_term_save($term);
+  }
+}
+
+/**
+ * Create taxonomy terms for Grade Levels - Resources vocabulary.
+ */
+function solar_activities_update_7014() {
+  $vocab = taxonomy_vocabulary_machine_name_load('grade_levels_resource');
+  $terms = array(
+    array('name' => 'PreK-2', 'weight' => '0'),
+    array('name' => '3-5', 'weight' => '1'),
+    array('name' => 'MS', 'weight' => '2'),
+    array('name' => 'HS', 'weight' => '3'),
+    array('name' => 'OST', 'weight' => '4'),
+    array('name' => 'Post Secondary', 'weight' => '5'),
+  );
+  foreach ($terms as $key => $term) {
+    $term = (object) array(
+      'vid' => $vocab->vid,
+      'name' => $term['name'],
+      'weight' => $term['weight'],
+    );
+    taxonomy_term_save($term);
+  }
+}
+
+/**
+ * Create taxonomy terms for Resource Type vocabulary.
+ */
+function solar_activities_update_7015() {
+  $vocab = taxonomy_vocabulary_machine_name_load('resource_type');
+  $terms = array(
+    array('name' => 'Partners', 'weight' => '0'),
+    array('name' => 'Scholarships', 'weight' => '1'),
+    array('name' => 'Grants/Funding', 'weight' => '2'),
+    array('name' => 'Internships', 'weight' => '3'),
+    array('name' => 'Field Trips', 'weight' => '4'),
+    array('name' => 'Curriculum', 'weight' => '5'),
+    array('name' => 'Video', 'weight' => '6'),
+    array('name' => 'Research', 'weight' => '7'),
+    array('name' => 'Data', 'weight' => '8'),
+    array('name' => 'Infographic', 'weight' => '9'),
+    array('name' => 'App', 'weight' => '10'),
+    array('name' => 'Phenomena', 'weight' => '11'),
+    array('name' => 'Engineering Challenges', 'weight' => '12'),
+    array('name' => 'Interactive', 'weight' => '13'),
+    array('name' => 'Visualization/Simulation', 'weight' => '14'),
+    array('name' => 'At-Home', 'weight' => '15'),
+  );
+  foreach ($terms as $key => $term) {
+    $term = (object) array(
+      'vid' => $vocab->vid,
+      'name' => $term['name'],
+      'weight' => $term['weight'],
+    );
+    taxonomy_term_save($term);
+  }
+}

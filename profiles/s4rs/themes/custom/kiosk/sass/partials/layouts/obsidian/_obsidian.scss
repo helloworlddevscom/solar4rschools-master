@@ -1,0 +1,92 @@
+////////////////////////
+// Bedrock Obsidian Layout Partial
+//
+// Layout specific to the Bedrock Obsidian panel layout.
+//
+// Copy this file to your theme's Sass partial structure
+// and include in your SMACSS based layout file.
+//
+// Required Variables
+// - $small, $medium, $large, $xlarge (global breakpoints)
+// - $grids, set at global breakpoints
+// - $gutters, set at global breakpoints
+////////////////////////
+
+/*
+ * Obsidian Layout
+ */
+.obsidian {
+  //@include background-grid;
+
+  .obsidian-column-container {
+    .obsidian-column-left {
+      @include grid-span(3, 1);
+
+      @include breakpoint($small) {
+        @include grid-span(6, 1);
+      }
+
+      @include breakpoint($medium) {
+        @include grid-span(6, 1);
+      }
+
+      @include breakpoint($large) {
+        @include grid-span(10, 1);
+      }
+
+      @include breakpoint($xlarge) {
+        @include grid-span(10, 1);
+      }
+    }
+
+    .obsidian-column-middle {
+      @include grid-span(3, 1);
+
+      @include breakpoint($small) {
+        @include grid-span(6, 1);
+      }
+
+      @include breakpoint($medium) {
+        @include grid-span(6, 7);
+      }
+
+      @include breakpoint($large) {
+        @include grid-span(10, 11);
+      }
+
+      @include breakpoint($xlarge) {
+        @include grid-span(10, 11);
+      }
+    }
+
+    .obsidian-column-right {
+      @include grid-span(3, 1);
+
+      @include breakpoint($small) {
+        @include grid-span(6, 1);
+      }
+
+      @include breakpoint($medium) {
+        @include grid-span(6, 13);
+      }
+
+      @include breakpoint($large) {
+        @include grid-span(10, 21);
+      }
+
+      @include breakpoint($xlarge) {
+        @include grid-span(10, 21);
+      }
+    }
+
+    .obsidian-column {
+      .panel-pane {
+        margin-bottom: 1em;
+
+        &:last-child {
+          margin-bottom: 0;
+        }
+      }
+    }
+  }
+}

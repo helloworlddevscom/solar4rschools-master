@@ -1,0 +1,75 @@
+/**
+ * Activity node - All view modes.
+ *
+ * This is shared styling for all Activity node view modes.
+ */
+
+.node-activity {
+  @include node-meta;
+
+  .field-thumbnail-image {
+    padding: 0;
+    border: 1px solid $color--light-gray;
+
+    .field-type-image {
+      display: block;
+      text-align: center;
+    }
+  }
+
+  .field-wrapper.field-file-downloads,
+  .field-wrapper.field-activity-extensions,
+  .field-wrapper.field-materials-used {
+    @include clearfix;
+
+    > .field {
+      display: block;
+      float: left;
+      width: 40%;
+      margin: 0 1.25rem;
+      padding: 0.125rem 0;
+      border-bottom: 1px dotted #999999;
+
+      &:after {
+        content: '';
+      }
+
+      &:last-child,
+      &:nth-last-child(2) {
+        border-bottom: none;
+      }
+    }
+  }
+
+  .field-wrapper {
+    .label--above {
+      display: block;
+    }
+  }
+
+  .field-learning-goals-met .field-label,
+  .field-activity-extensions .field-label,
+  .field-wrapper.field-materials-used .field-label,
+  .field-wrapper.field-file-downloads .field-label,
+  .field-activity-extensions .field-label {
+    display: block;
+  }
+
+  .field-materials-used:after {
+    content: "";
+    display: table;
+    clear: both;
+  }
+
+  .field-activity-energy-content {
+    .field-name-field-activity-energy-content a {
+      color: $color--light-orange;
+    }
+  }
+
+  .field-name-body {
+    p {
+      font-size: 1rem;
+    }
+  }
+}

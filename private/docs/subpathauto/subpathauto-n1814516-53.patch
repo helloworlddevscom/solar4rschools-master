@@ -1,0 +1,87 @@
+diff --git a/subpathauto.module b/subpathauto.module
+index 4fd2eda..4a4aecb 100644
+--- a/subpathauto.module
++++ b/subpathauto.module
+@@ -22,7 +22,16 @@ function subpathauto_menu() {
+ function subpathauto_url_inbound_alter(&$path, $original_path, $language) {
+   // If the current menu item exists at this path, then we should not continue
+   // processing.
+-  $item = menu_get_item($path);
++  //
++  // We cannot use menu_get_item() at this point as it is too early in the
++  // bootstrap to trigger the theme layer. If the theme layer is triggered too
++  // early then the wrong theme could be loaded if someone trys to change it
++  // later using hook_custom_theme or some other method. For a thorough
++  // explanation of what is happening please visit:
++  // https://www.deeson.co.uk/labs/curious-incident-wrong-theme-being-used-after-cache-clear-drupal-7
++
++  // Get the menu item from our modified menu_get_item function.
++  $item = subpathauto_lightweight_menu_get_item($path);
+   if (!empty($item) && $item['href'] == $path) {
+     return FALSE;
+   }
+@@ -33,6 +42,64 @@ function subpathauto_url_inbound_alter(&$path, $original_path, $language) {
+ }
+ 
+ /**
++ * Lightweight alternative to menu_get_item().
++ *
++ * This is a re-write of the menu_get_item API function but with the code that
++ * triggers menu_rebuild() stripped out, for the sole purpose of avoiding
++ * triggering the theme layer too early in the bootstrap. Note: menu_get_item()
++ * should still be used instead of this function unless the theme specifically
++ * should not be loaded.
++ *
++ * @param string $path
++ *   The path; for example, 'node/5'. The function will find the corresponding
++ *   node/% item and return that. Defaults to the current path.
++ *
++ * @see menu_get_item()
++ * @see subpathauto_url_inbound_alter()
++ */
++function subpathauto_lightweight_menu_get_item($path) {
++  $original_map = arg(NULL, $path);
++  $parts = array_slice($original_map, 0, MENU_MAX_PARTS);
++  $ancestors = menu_get_ancestors($parts);
++  $router_item = db_query_range('SELECT * FROM {menu_router} WHERE path IN (:ancestors) ORDER BY fit DESC', 0, 1, array(':ancestors' => $ancestors))->fetchAssoc();
++
++  if ($router_item) {
++    $router_item['original_map'] = $original_map;
++
++    // Allow modules to alter the router item.
++    drupal_alter('menu_get_item', $router_item, $path, $original_map);
++
++    // Generate the link path for the page request or local tasks.
++    $link_map = explode('/', $router_item['path']);
++    $path_map = $original_map;
++    if (isset($router_item['tab_root'])) {
++      $tab_root_map = explode('/', $router_item['tab_root']);
++    }
++    if (isset($router_item['tab_parent'])) {
++      $tab_parent_map = explode('/', $router_item['tab_parent']);
++    }
++    for ($i = 0; $i < $router_item['number_parts']; $i++) {
++      if ($link_map[$i] == '%') {
++        $link_map[$i] = $path_map[$i];
++      }
++      if (isset($tab_root_map[$i]) && $tab_root_map[$i] == '%') {
++        $tab_root_map[$i] = $path_map[$i];
++      }
++      if (isset($tab_parent_map[$i]) && $tab_parent_map[$i] == '%') {
++        $tab_parent_map[$i] = $path_map[$i];
++      }
++    }
++    $router_item['href'] = implode('/', $link_map);
++    $router_item['tab_root_href'] = implode('/', $tab_root_map);
++    $router_item['tab_parent_href'] = implode('/', $tab_parent_map);
++    $router_item['options'] = array();
++
++  }
++
++  return $router_item;
++}
++
++/**
+  * Implements hook_url_outbound_alter().
+  */
+ function subpathauto_url_outbound_alter(&$path, $options, $original_path) {

@@ -1,0 +1,213 @@
+<?php
+/**
+ * @file
+ * Code for the S4RS core feature.
+ */
+
+include_once 'solar_core.features.inc';
+
+/**
+ * Implements hook_menu_alter().
+ *
+ * Renames user tabs to be more friendly.
+ */
+function solar_core_menu_alter(&$items) {
+  $items['user/%user/view']['access callback'] = FALSE;
+  $items['user/%user/edit']['title'] = 'My Profile';
+}
+
+/**
+ * Implements hook_menu_local_tasks_alter().
+ *
+ * Reorders tabs on user profile page.
+ */
+function solar_core_menu_local_tasks_alter(&$data, $router_item, $root_path) {
+  if ($root_path == 'user/%' && isset($data['tabs'][0]['output'])) {
+    if (count($data['tabs'][0]['output'])) {
+      foreach ($data['tabs'][0]['output'] as $pos => $val) {
+        // If current menu link is user profile, move it on top (beginning of array)
+        if ($val['#link']['path'] == 'user/%/edit') {
+          unset($data['tabs'][0]['output'][$pos]);
+          array_unshift($data['tabs'][0]['output'], $val);
+        }
+      }
+    }
+  }
+}
+
+/**
+ * Implements hook_entity_view().
+ *
+ * Adds a tooltip.
+ */
+function solar_core_entity_view($entity, $type, $view_mode, $langcode) {
+  if (property_exists($entity, 'type') && $entity->type) {
+    $flag_tooltip = variable_get('flag_tooltip_' . $entity->type);
+
+    // Special case for articles.
+    if ($entity->type == 'articles' && $flag_tooltip && isset($entity->content['flag_my_background_topics']) && isset($entity->content['flag_my_background_topics']['#markup'])) {
+      $flag = $entity->content['links']['flag'];
+
+      // Unset the flag links.
+      unset($entity->content['links']['flag']);
+
+      // Create a link and add the tooltip.
+      $flag['#links']['flag-my_background_topics']['title'] .= "<a title='$flag_tooltip' class='tooltip'>?</a>";
+      $entity->content['flag_my_background_topics'] = $flag;
+    }
+    // Every one elses flags.
+    elseif ($flag_tooltip && isset($entity->content['links']) && isset($entity->content['links']['flag'])) {
+      $flags = $entity->content['links']['flag'];
+      if ($flags['#links']) {
+        foreach ($flags['#links'] as $flag_name => $flag) {
+          if ($flag['title']) {
+            $flags['#links'][$flag_name]['title'] .= "<a title='$flag_tooltip' class='tooltip'>?</a>";
+          }
+        }
+      }
+      $entity->content['links']['flag'] = $flags;
+    }
+    return $entity;
+  }
+}
+
+/**
+ * Implements hook_form_FORM_ID_alter().
+ */
+function solar_core_form_node_type_form_alter(&$form, &$form_state) {
+  $node_type = $form['#node_type']->type;
+
+  $form['help_text'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Help text'),
+    '#collapsible' => TRUE,
+    '#group' => 'additional_settings',
+  );
+
+  $form['help_text']['flag_tooltip'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Flag Help Text'),
+    '#default_value' => variable_get('flag_tooltip_' . $node_type),
+    '#description' => 'Text that will appear next to some buttons that add this content type to a user\'s favorites-type list.',
+    '#size' => 64,
+    '#maxlength' => 128,
+  );
+  $form['help_text']['create_new_tooltip'] = array(
+    '#type' => 'textfield',
+    '#title' => t('"Create New" Help Text'),
+    '#default_value' => variable_get('create_new_tooltip_' . $node_type),
+    '#description' => 'Text that will appear next to some buttons that allow users to create new content of this type.',
+    '#size' => 64,
+    '#maxlength' => 128,
+  );
+}
+
+/**
+ * Implements hook_form_BASE_FORM_ID_alter().
+ *
+ * turns the username field into a hidden field, so it can't easily be changed.
+ */
+function solar_core_form_user_profile_form_alter(&$form, &$form_state, $form_id) {
+  if (isset($form['account']['name'])) {
+    $form['account']['name']['#type'] = 'hidden';
+  }
+}
+
+/**
+ * Implements hook_block_info().
+ *
+ * Adds the Facebook link block.
+ */
+function solar_core_block_info() {
+  $blocks['facebook'] = array(
+    'info' => t('Facebook'),
+    'cache' => DRUPAL_CACHE_GLOBAL,
+  );
+
+  $blocks['twitter'] = array(
+    'info' => t('Twitter'),
+    'cache' => DRUPAL_CACHE_GLOBAL,
+  );
+
+  return $blocks;
+}
+
+/**
+ * Implements hook_block_view().
+ *
+ * Shows the facebook block.
+ */
+function solar_core_block_view($delta = '') {
+  $block = array();
+
+  if ($delta == 'facebook') {
+    $src = url('//www.facebook.com/plugins/likebox.php', array(
+      'query' => array(
+        'href' => variable_get('solar_facebook_url', 'http://www.facebook.com/pages/Solar-4R-Schools/31250138813'),
+        'height' => 62,
+        'colorscheme' => 'light',
+        'layout' => 'button',
+        'show_faces' => FALSE,
+        'stream' => FALSE,
+        'appId' => '450139908403257',
+      ),
+    ));
+    $block['content'] = '<iframe src="' . $src . '" scrolling="no" frameborder="0" style="border:none; overflow:hidden; height:62px;" allowTransparency="true"></iframe>';
+  }
+
+  if ($delta == 'twitter') {
+    $block['content'] = '<a class="twitter-timeline" data-width="300" data-height="620" data-theme="light" data-link-color="#0074bd" href="https://twitter.com/CEbrightfutures?ref_src=twsrc%5Etfw">Tweets by CEbrightfutures</a> <script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>';
+  }
+
+  return $block;
+}
+
+/**
+ * Implements hook_block_configure().
+ *
+ * Configures the facebook block.
+ */
+function solar_core_block_configure($delta = '') {
+  $form = array();
+
+  if ($delta == 'facebook') {
+    $form['facebook_url'] = array(
+      '#type' => 'textfield',
+      '#title' => t('Url of facebook page'),
+      '#default_value' => variable_get('solar_facebook_url', 'http://www.facebook.com/pages/Solar-4R-Schools/31250138813'),
+    );
+  }
+
+  return $form;
+}
+
+
+/**
+ * Implements hook_block_save().
+ *
+ * Saves the facebook block.
+ */
+function solar_core_block_save($delta = '', $edit = array()) {
+  $block = array();
+
+  if ($delta == 'facebook') {
+    variable_set('solar_facebook_url', $edit['facebook_url']);
+  }
+}
+
+/**
+ * Implements hook_realname_pattern_alter().
+ *
+ * Shows the organization for a funder, removes it for non-funders.
+ */
+function solar_core_realname_pattern_alter(&$pattern, $account) {
+  $funder_role = user_role_load_by_name('Funder');
+  $roles = $account->roles;
+  $organization_token = '[user:field-organization]';
+  if (isset($roles[$funder_role->rid])) {
+    $pattern = $organization_token;
+  }
+  else {
+    $pattern = trim(str_replace($organization_token, '', $pattern));
+  }
+}
